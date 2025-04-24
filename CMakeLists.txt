@@ -10,7 +10,7 @@ add_library(PrimeDep STATIC
         include/PrimeDep/Resources/AssetId.hpp
         include/PrimeDep/Resources/ResourceFactory.hpp
         src/PrimeDep/Resources/Texture.cpp
-        include/PrimeDep/Resources/AudioGroup.cpp
+        src/PrimeDep/Resources/AudioGroup.cpp
         include/PrimeDep/Resources/AudioGroup.hpp
 )
 
