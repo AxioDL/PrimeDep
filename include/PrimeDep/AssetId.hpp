@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <athena/IStreamReader.hpp>
 #include <athena/IStreamWriter.hpp>
+
 namespace axdl::primedep {
 template <typename T = uint32_t, bool BigEndian = true>
 struct AssetId {

@@ -1,5 +1,5 @@
 #include "PrimeDep/Resources/AudioGroup.hpp"
-#include "PrimeDep/Resources/ResourceFactory.hpp"
+#include "include/PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/Resources/Texture.hpp"
 
 #include <iostream>
@@ -23,6 +23,14 @@ void from_json(const nlohmann::ordered_json& j, ResourceDatabase& db) {
   }
 }
 int main() {
+  const std::filesystem::path filename = "/home/antidote/MP1_0-00/files/Metroid8.pak";
+  if (!std::filesystem::exists(filename)) {
+    return 0;
+  }
+  
+  const std::filesystem::path outputPath = "/home/antidote/MP1_0-00/rep";
+  std::filesystem::create_directories(outputPath);
+
   axdl::primedep::ResourceFactory resourceFactory;
   resourceFactory.registerFactory(axdl::primedep::Texture::ResourceType(), axdl::primedep::Texture::create);
   resourceFactory.registerFactory(axdl::primedep::AudioGroup::ResourceType(), axdl::primedep::AudioGroup::create);
@@ -33,17 +41,17 @@ int main() {
 
   nlohmann::ordered_json js;
 
-  if (auto file = axdl::primedep::PakFile32Big::load("/home/antidote/MP1_0-00/files/Metroid4.pak", resourceFactory)) {
+  if (auto file = axdl::primedep::PakFile32Big::load(filename.generic_string(), resourceFactory)) {
     js["PackageName"] = std::filesystem::path(file->path()).filename().replace_extension().generic_string();
     auto& namedResources = js["NamedResources"] = nlohmann::json::array();
     for (const auto& named : file->namedResources()) {
-      const uint32_t type = athena::utility::swap32(named.type());
-      const std::string typeStr = std::format("{:.4}", reinterpret_cast<const char*>(&type));
       if (!db.assets.contains(named.assetId())) {
-        namedResources.push_back(
-            {{"Name", named.name()}, {"Type", typeStr}, {"AssetID", std::format("{:08x}", named.assetId().id)}});
+        namedResources.push_back({{"Name", named.name()},
+                                  {"Type", named.type().toString()},
+                                  {"AssetID", std::format("{:08x}", named.assetId().id)}});
       } else {
-        namedResources.push_back({{"Type", typeStr}, {"Name", named.name()}, {"File", db.assets[named.assetId()]}});
+        namedResources.push_back(
+            {{"Type", named.type().toString()}, {"Name", named.name()}, {"File", db.assets[named.assetId()]}});
       }
     }
 
@@ -54,19 +62,30 @@ int main() {
         continue;
       }
 
-      const uint32_t type = athena::utility::swap32(res.type());
-      const std::string typeStr = std::format("{:.4}", reinterpret_cast<const char*>(&type));
       if (!db.assets.contains(res.assetId())) {
-        resources.push_back({{"Type", typeStr},
+        std::string ext = res.type().toString();
+        athena::utility::tolower(ext);
+        const std::filesystem::path path =
+            outputPath / "Uncategorized" / res.type().toString() / std::format("{:08X}.{}", res.assetId().id, ext);
+        std::filesystem::create_directories(path.parent_path());
+        resources.push_back({{"Type", res.type().toString()},
                              {"AssetID", std::format("{:08x}", res.assetId().id)},
                              {"Compress", res.isCompressed()}});
+        file->writeUncompressedToFileSystem(path.generic_string(), res);
       } else {
-        resources.push_back({{"Type", typeStr}, {"File", db.assets[res.assetId()]}, {"Compress", res.isCompressed()}});
+        const auto path =
+            std::filesystem::path(db.assets[res.assetId()].substr(2, db.assets[res.assetId()].length() - 2));
+
+        std::cout << path << std::endl;
+        std::filesystem::create_directories(outputPath / path.parent_path());
+        resources.push_back(
+            {{"Type", res.type().toString()}, {"File", db.assets[res.assetId()]}, {"Compress", res.isCompressed()}});
+        file->writeUncompressedToFileSystem((outputPath / path).generic_string(), res);
       }
       writtenIds.emplace_back(res.assetId());
     }
   }
-  std::ofstream test("Metroid4.json");
+  std::ofstream test(outputPath / filename.filename().replace_extension(".json").generic_string());
   test << js.dump(4);
   return 0;
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "IResource.hpp"
-#include "athena/IStreamReader.hpp"
+#include "nlohmann/json_fwd.hpp"
+#include "PrimeDep/IResource.hpp"
+#include <athena/IStreamReader.hpp>
 
 namespace axdl::primedep {
 enum class EPaletteFormat {
@@ -41,7 +42,7 @@ private:
   std::unique_ptr<uint16_t[]> m_entries;
 };
 
-class Texture final : public ITypedResource<'TXTR'> {
+class Texture final : public ITypedResource<FourCC(SBIG('TXTR'))> {
 public:
   Texture(const char* ptr, std::size_t size);
 
@@ -52,6 +53,8 @@ public:
   [[nodiscard]] uint16_t height() const { return m_height; }
 
   [[nodiscard]] uint32_t numMips() const { return m_numMips; }
+
+  [[nodiscard]] nlohmann::ordered_json metadata() const override { return {}; }
 
 private:
   ETexelFormat m_format;

@@ -14,14 +14,14 @@ public:
    */
   using FactoryFunc = std::function<std::shared_ptr<IResource>(const char* ptr, std::size_t size)>;
 
-  void registerFactory(const uint32_t type, FactoryFunc func) {
+  void registerFactory(const FourCC& type, FactoryFunc func) {
     if (m_factories.contains(type)) {
       return;
     }
     m_factories[type] = std::move(func);
   }
 
-  [[nodiscard]] FactoryFunc factory(const uint32_t type) const {
+  [[nodiscard]] FactoryFunc factory(const FourCC& type) const {
     if (m_factories.contains(type)) {
       return m_factories.at(type);
     }
@@ -29,6 +29,6 @@ public:
   }
 
 private:
-  std::map<uint32_t, FactoryFunc> m_factories;
+  std::map<FourCC, FactoryFunc> m_factories;
 };
 } // namespace axdl::primedep

@@ -7,11 +7,11 @@ include(cmake/vendors.cmake)
 
 add_library(PrimeDep STATIC
         src/PrimeDep/Resources/PakFile.cpp
-        include/PrimeDep/Resources/AssetId.hpp
-        include/PrimeDep/Resources/ResourceFactory.hpp
         src/PrimeDep/Resources/Texture.cpp
         src/PrimeDep/Resources/AudioGroup.cpp
-        include/PrimeDep/Resources/AudioGroup.hpp
+        include/PrimeDep/ResourceDescriptor.hpp
+        include/PrimeDep/NamedResource.hpp
+        include/PrimeDep/ObjectTag.hpp
 )
 
 target_include_directories(PrimeDep PUBLIC include)
