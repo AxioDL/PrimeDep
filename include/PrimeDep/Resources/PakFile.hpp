@@ -2,6 +2,7 @@
 
 #include "PrimeDep/IResource.hpp"
 #include "PrimeDep/AssetId.hpp"
+#include "PrimeDep/IResourceSource.hpp"
 #include "PrimeDep/NamedResource.hpp"
 #include "PrimeDep/ObjectTag.hpp"
 #include "PrimeDep/ResourceDescriptor.hpp"
@@ -11,32 +12,29 @@
 #include <map>
 
 namespace axdl::primedep {
-class ResourceFactory;
-
-class PakFile32Big final {
+// TODO: LZO and compression block handling?
+class PakFile32Big final : public IResourceSource<ResourceDescriptor32Big, ObjectTag32Big> {
 public:
+  explicit PakFile32Big(const std::string_view path) : m_path(path) {}
+
   static constexpr uint32_t kMagicNumber = 0x00030005;
-  static std::optional<PakFile32Big> load(std::string_view path, const ResourceFactory& factory);
+  static std::shared_ptr<PakFile32Big> load(std::string_view path);
 
   PakFile32Big(const PakFile32Big& other)
-  : m_factory(other.m_factory)
-  , m_magic(other.m_magic)
+  : m_magic(other.m_magic)
   , m_path(other.m_path)
   , m_namedResources(other.m_namedResources)
-  , m_resourceDescriptors(other.m_resourceDescriptors)
-  , m_loadedResources(other.m_loadedResources) {};
+  , m_resourceDescriptors(other.m_resourceDescriptors) {};
 
   PakFile32Big(PakFile32Big&& other) noexcept
-  : m_factory(other.m_factory)
-  , m_magic(other.m_magic)
+  : m_magic(other.m_magic)
   , m_path(std::move(other.m_path))
   , m_namedResources(std::move(other.m_namedResources))
-  , m_resourceDescriptors(std::move(other.m_resourceDescriptors))
-  , m_loadedResources(std::move(other.m_loadedResources)) {}
+  , m_resourceDescriptors(std::move(other.m_resourceDescriptors)) {}
 
   explicit operator bool() const { return m_magic == kMagicNumber; }
 
-  [[nodiscard]] const std::string& path() const { return m_path; }
+  [[nodiscard]] const std::string& path() const override { return m_path; }
 
   [[nodiscard]] std::size_t namedResourceCount() const { return m_namedResources.size(); }
   [[nodiscard]] const std::vector<NamedResource32Big>& namedResources() const { return m_namedResources; }
@@ -45,30 +43,30 @@ public:
     return m_resourceDescriptors;
   }
 
-  [[nodiscard]] ResourceDescriptor32Big resourceDescriptorByName(std::string_view name) const;
+  bool hasResource(const ObjectTag32Big& tag) override;
+  bool hasNamedResource(std::string_view name) override;
 
-  std::shared_ptr<IResource> resourceByName(const std::string_view name) {
-    return std::move(resourceByDescriptor(resourceDescriptorByName(name)));
+  ResourceDescriptor32Big descriptorByName(std::string_view name) override;
+  ResourceDescriptor32Big descriptorById(const ObjectTag32Big& tag) override;
+
+  std::tuple<const char*, uint32_t> loadData(const ResourceDescriptor32Big& desc) override;
+
+  std::vector<ObjectTag32Big> tagsByType(const FourCC& type) override {
+    std::vector<ObjectTag32Big> tags;
+    for (const auto& res : m_resourceDescriptors) {
+      if (res.type() == type) {
+        tags.emplace_back(res.type(), res.assetId());
+      }
+    }
+    return tags;
   }
 
-  std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc);
-
-  std::shared_ptr<IResource> resourceById(const ObjectTag32Big& tag);
-
-  void writeUncompressedToFileSystem(std::string_view path, const ResourceDescriptor32Big& desc);
-
 private:
-  explicit PakFile32Big(const std::string_view path, const ResourceFactory& factory)
-  : m_factory(factory), m_path(path) {}
-
   bool loadHeader();
-
-  const ResourceFactory& m_factory;
   uint32_t m_magic{};
   std::string m_path;
   std::optional<athena::io::FileReader> m_reader = std::nullopt;
   std::vector<NamedResource32Big> m_namedResources;
   std::vector<ResourceDescriptor32Big> m_resourceDescriptors;
-  std::map<ResourceDescriptor32Big, std::shared_ptr<IResource>> m_loadedResources;
 };
 } // namespace axdl::primedep

@@ -32,12 +32,9 @@ struct AssetId {
   }
 
   T id{T(-1)};
-  bool operator==(const AssetId& other) const {
-    return id == other.id;
-  };
-  bool operator<(const AssetId& other) const  {
-    return id < other.id;
-  }
+  bool operator==(const AssetId& other) const { return id == other.id; };
+  bool operator<(const AssetId& other) const { return id < other.id; }
+  explicit operator bool() const { return id != T(-1); }
 };
 
 using AssetId32Big = AssetId<>;

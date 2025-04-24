@@ -1,11 +1,13 @@
 #pragma once
 
 #include <endian.h>
+#include <string_view>
+using namespace std::string_view_literals;
 
+namespace axdl::primedep {
 #undef bswap16
 #undef bswap32
 #undef bswap64
-
 /* Type-sensitive byte swappers */
 template <typename T>
 constexpr T bswap16(T val) noexcept {
@@ -122,3 +124,4 @@ constexpr double SBig(double val) noexcept { return val; }
 #define SBIG(q) (q)
 #endif
 #endif
+} // namespace axdl::primdep

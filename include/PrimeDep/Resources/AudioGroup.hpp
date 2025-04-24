@@ -5,10 +5,25 @@
 namespace axdl::primedep {
 class AudioGroup final : public ITypedResource<FourCC(SBIG('AGSC'))> {
 public:
-  AudioGroup(const char* data, std::size_t size);
+  AudioGroup(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
 
-  static std::shared_ptr<IResource> create(const char* data, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
+  
+  [[nodiscard]] bool writeUncooked(std::string_view path) const override;
+  [[nodiscard]] bool writeCooked(std::string_view path) const override;
 
-  [[nodiscard]] nlohmann::ordered_json metadata() const override { return {}; }
+  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
+
+private:
+  std::string m_moduleDir;
+  std::string m_moduleName;
+  std::unique_ptr<uint8_t[]> m_pool;
+  uint32_t m_poolSize;
+  std::unique_ptr<uint8_t[]> m_project;
+  uint32_t m_projectSize;
+  std::unique_ptr<uint8_t[]> m_samples;
+  uint32_t m_samplesSize;
+  std::unique_ptr<uint8_t[]> m_sampleDir;
+  uint32_t m_sampleDirSize;
 };
 } // namespace axdl::primedep

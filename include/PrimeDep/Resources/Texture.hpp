@@ -44,9 +44,9 @@ private:
 
 class Texture final : public ITypedResource<FourCC(SBIG('TXTR'))> {
 public:
-  Texture(const char* ptr, std::size_t size);
+  Texture(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
-  static std::shared_ptr<IResource> create(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
   [[nodiscard]] ETexelFormat format() const { return m_format; }
   [[nodiscard]] uint16_t width() const { return m_width; }
@@ -54,7 +54,7 @@ public:
 
   [[nodiscard]] uint32_t numMips() const { return m_numMips; }
 
-  [[nodiscard]] nlohmann::ordered_json metadata() const override { return {}; }
+  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
 
 private:
   ETexelFormat m_format;

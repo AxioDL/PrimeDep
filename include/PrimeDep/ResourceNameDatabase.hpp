@@ -1,0 +1,20 @@
+#pragma once
+
+#include "ObjectTag.hpp"
+#include "PrimeDep/AssetId.hpp"
+#include <map>
+#include <nlohmann/json_fwd.hpp>
+
+namespace axdl::primedep {
+struct ResourceNameDatabase {
+  static ResourceNameDatabase& instance() {
+    static ResourceNameDatabase instance;
+    return instance;
+  }
+
+  void load(std::string_view filename);
+
+  std::string pathForAsset(const ObjectTag32Big& tag);
+  std::map<AssetId32Big, std::string> assets; // ID -> rep path
+};
+} // namespace axdl::primedep

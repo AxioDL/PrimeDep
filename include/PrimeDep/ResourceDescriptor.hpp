@@ -1,5 +1,6 @@
 #pragma once
-#include "FourCC.hpp"
+#include "PrimeDep/FourCC.hpp"
+#include "PrimeDep/AssetId.hpp"
 
 namespace axdl::primedep {
 template <typename T, bool BigEndian>
@@ -32,6 +33,9 @@ public:
   bool operator<(const ResourceDescriptor& other) const { return m_assetId < other.assetId(); }
 
   explicit operator bool() const { return m_assetId != AssetId<T, BigEndian>() && m_type != kInvalidFourCC; }
+  bool operator==(const ResourceDescriptor& other) const {
+    return m_isCompressed == other.m_isCompressed && m_assetId == other.assetId() && m_type == other.m_type;
+  }
 
 private:
   bool m_isCompressed{false};
@@ -42,4 +46,8 @@ private:
 };
 
 using ResourceDescriptor32Big = ResourceDescriptor<uint32_t, true>;
+using ResourceDescriptor32Little = ResourceDescriptor<uint32_t, false>;
+using ResourceDescriptor64Big = ResourceDescriptor<uint64_t, true>;
+using ResourceDescriptor64Little = ResourceDescriptor<uint64_t, false>;
+
 } // namespace axdl::primedep

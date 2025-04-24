@@ -1,5 +1,8 @@
 #include "PrimeDep/Resources/AudioGroup.hpp"
 #include "include/PrimeDep/ResourceFactory.hpp"
+#include "PrimeDep/ResourceNameDatabase.hpp"
+#include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/MetroidWorld.hpp"
 #include "PrimeDep/Resources/Texture.hpp"
 
 #include <iostream>
@@ -9,83 +12,101 @@
 
 using namespace std::string_view_literals;
 
-struct ResourceDatabase {
-  friend void from_json(const nlohmann::ordered_json& j, ResourceDatabase& db);
-  std::map<axdl::primedep::AssetId32Big, std::string> assets; // ID -> rep path
-};
+#include <filesystem>
+#include <string>
 
-void from_json(const nlohmann::ordered_json& j, ResourceDatabase& db) {
-  for (const auto& j : j.items()) {
-    std::string idStr;
-    j.value().get_to(idStr);
-    auto id = axdl::primedep::AssetId32Big(std::stol(idStr, nullptr, 16));
-    db.assets[id] = j.key();
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+std::filesystem::path executableDirectory() {
+#ifdef _WIN32
+  wchar_t path_buffer[MAX_PATH] = {0};
+  GetModuleFileNameW(nullptr, path_buffer, MAX_PATH);
+  return std::filesystem::path(path_buffer).parent_path();
+#else
+  char path_buffer[PATH_MAX] = {0};
+  ssize_t count = readlink("/proc/self/exe", path_buffer, PATH_MAX);
+  if (count == -1) {
+    return std::filesystem::path();
   }
+  return std::filesystem::path(std::string(path_buffer, (count > 0) ? count : 0)).parent_path();
+#endif
 }
-int main() {
-  const std::filesystem::path filename = "/home/antidote/MP1_0-00/files/Metroid8.pak";
-  if (!std::filesystem::exists(filename)) {
-    return 0;
+
+int main(int argc, char** argv) {
+  if (argc != 3) {
+    std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
+    return 1;
   }
-  
-  const std::filesystem::path outputPath = "/home/antidote/MP1_0-00/rep";
-  std::filesystem::create_directories(outputPath);
 
-  axdl::primedep::ResourceFactory resourceFactory;
-  resourceFactory.registerFactory(axdl::primedep::Texture::ResourceType(), axdl::primedep::Texture::create);
-  resourceFactory.registerFactory(axdl::primedep::AudioGroup::ResourceType(), axdl::primedep::AudioGroup::create);
+  axdl::primedep::ResourceNameDatabase::instance().load((executableDirectory() / "ResourceDB.json").generic_string());
+  // Initialize factory
+  axdl::primedep::ResourceFactory32Big factory;
+  factory.registerCookedFactory(axdl::primedep::Texture::ResourceType(), axdl::primedep::Texture::loadCooked);
+  factory.registerCookedFactory(axdl::primedep::AudioGroup::ResourceType(), axdl::primedep::AudioGroup::loadCooked);
+  factory.registerCookedFactory(axdl::primedep::MetroidWorld::ResourceType(), axdl::primedep::MetroidWorld::loadCooked);
 
-  std::ifstream dbFile("ResourceDB.json");
+  // Spin up the pool
+  auto* pool = axdl::primedep::ResourcePool32Big::instance();
+  pool->setFactory(factory);
 
-  ResourceDatabase db = ResourceDatabase(nlohmann::ordered_json::parse(dbFile));
+  // Gather paks
+  std::filesystem::path inputFolder = argv[1];
+  std::filesystem::path outputFolder = argv[2];
 
-  nlohmann::ordered_json js;
+  for (const auto& entry : std::filesystem::directory_iterator(inputFolder)) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    std::string extension = entry.path().extension();
+    athena::utility::tolower(extension);
 
-  if (auto file = axdl::primedep::PakFile32Big::load(filename.generic_string(), resourceFactory)) {
-    js["PackageName"] = std::filesystem::path(file->path()).filename().replace_extension().generic_string();
-    auto& namedResources = js["NamedResources"] = nlohmann::json::array();
-    for (const auto& named : file->namedResources()) {
-      if (!db.assets.contains(named.assetId())) {
-        namedResources.push_back({{"Name", named.name()},
-                                  {"Type", named.type().toString()},
-                                  {"AssetID", std::format("{:08x}", named.assetId().id)}});
-      } else {
-        namedResources.push_back(
-            {{"Type", named.type().toString()}, {"Name", named.name()}, {"File", db.assets[named.assetId()]}});
-      }
+    if (extension != ".pak") {
+      continue;
+    }
+    pool->addSource(axdl::primedep::PakFile32Big::load(entry.path().generic_string()));
+  }
+
+  std::cout << "Gathering worlds..." << std::endl;
+  auto worldTags = pool->tagsByType(axdl::primedep::FourCC("MLVL"sv));
+  std::ranges::sort(worldTags.begin(), worldTags.end(), std::less<>());
+
+  for (const auto& tag : worldTags) {
+    const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(tag);
+    auto fileOut = std::filesystem::path(repPath);
+    if (fileOut.generic_string().starts_with("$/")) {
+      fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
     }
 
-    std::vector<axdl::primedep::AssetId32Big> writtenIds;
-    auto& resources = js["Resources"] = nlohmann::json::array();
-    for (const auto& res : file->resourceDescriptors()) {
-      if (std::ranges::contains(writtenIds, res.assetId())) {
-        continue;
+    std::cout << "Found " << repPath << std::endl;
+    auto world = pool->resourceById(tag);
+    if (world) {
+      const auto outPath = (outputFolder / fileOut);
+      if (!std::filesystem::is_regular_file(outPath)) {
+        std::filesystem::create_directories(outPath.parent_path());
       }
+      world->writeMetadata(outPath.generic_string(), repPath);
+      std::cout << world->metadata(repPath).dump(4) << std::endl;
+      auto childTags = world->childTags();
+      if (childTags) {
+        for (const auto& t : *childTags) {
+          const auto d = pool->resourceDescriptorById(t);
+          const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(t);
+          auto fileOut = std::filesystem::path(repPath);
+          if (fileOut.generic_string().starts_with("$/")) {
+            fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
+          }
+          const auto outPath = (outputFolder / fileOut);
 
-      if (!db.assets.contains(res.assetId())) {
-        std::string ext = res.type().toString();
-        athena::utility::tolower(ext);
-        const std::filesystem::path path =
-            outputPath / "Uncategorized" / res.type().toString() / std::format("{:08X}.{}", res.assetId().id, ext);
-        std::filesystem::create_directories(path.parent_path());
-        resources.push_back({{"Type", res.type().toString()},
-                             {"AssetID", std::format("{:08x}", res.assetId().id)},
-                             {"Compress", res.isCompressed()}});
-        file->writeUncompressedToFileSystem(path.generic_string(), res);
-      } else {
-        const auto path =
-            std::filesystem::path(db.assets[res.assetId()].substr(2, db.assets[res.assetId()].length() - 2));
-
-        std::cout << path << std::endl;
-        std::filesystem::create_directories(outputPath / path.parent_path());
-        resources.push_back(
-            {{"Type", res.type().toString()}, {"File", db.assets[res.assetId()]}, {"Compress", res.isCompressed()}});
-        file->writeUncompressedToFileSystem((outputPath / path).generic_string(), res);
+          std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", d.dataSize(), t.id.id, outPath.generic_string(),
+                                   d.isCompressed() ? "c" : "n")
+                    << std::endl;
+        }
       }
-      writtenIds.emplace_back(res.assetId());
     }
   }
-  std::ofstream test(outputPath / filename.filename().replace_extension(".json").generic_string());
-  test << js.dump(4);
   return 0;
 }

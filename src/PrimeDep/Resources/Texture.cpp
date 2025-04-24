@@ -1,6 +1,7 @@
 #include "PrimeDep/Resources/Texture.hpp"
 
 #include <athena/MemoryReader.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 namespace axdl::primedep {
 
@@ -34,7 +35,7 @@ GraphicsPalette::GraphicsPalette(athena::io::IStreamReader& in) {
   in.readUBytesToBuf(m_entries.get(), entryCount() * sizeof(uint16_t));
 }
 
-Texture::Texture(const char* ptr, const std::size_t size) {
+Texture::Texture(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc) : ITypedResource(desc) {
   athena::io::MemoryReader in(ptr, size, true);
 
   m_format = static_cast<ETexelFormat>(in.readUint32Big());
@@ -54,8 +55,18 @@ Texture::Texture(const char* ptr, const std::size_t size) {
   }
 }
 
-std::shared_ptr<IResource> Texture::create(const char* ptr, std::size_t size) {
-  return std::make_shared<Texture>(ptr, size);
+std::shared_ptr<IResource> Texture::loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc) {
+  return std::make_shared<Texture>(ptr, size, desc);
+}
+
+nlohmann::ordered_json Texture::metadata(const std::string_view path) const {
+  nlohmann::ordered_json json = ITypedResource::metadata(path);
+  json["Format"] = magic_enum::enum_name<ETexelFormat>(format());
+  json["Width"] = m_width;
+  json["Height"] = m_height;
+  json["NumMips"] = m_numMips;
+
+  return json;
 }
 
 } // namespace axdl::primedep
