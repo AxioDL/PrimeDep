@@ -42,7 +42,7 @@ private:
   std::unique_ptr<uint16_t[]> m_entries;
 };
 
-class Texture final : public ITypedResource<FourCC(SBIG('TXTR'))> {
+class Texture final : public ITypedResource<FOURCC('TXTR')> {
 public:
   Texture(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
@@ -54,7 +54,14 @@ public:
 
   [[nodiscard]] uint32_t numMips() const { return m_numMips; }
 
-  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
+  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view repPath) const override;
+
+  static bool canInjest(const nlohmann::ordered_json& metadata) {
+    return metadata["ResourceType"] == ResourceType().toString();
+  }
+  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+    return nullptr;
+  }
 
 private:
   ETexelFormat m_format;

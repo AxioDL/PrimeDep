@@ -2,6 +2,10 @@
 
 #include <endian.h>
 #include <string_view>
+#include <string>
+#include <codecvt>
+#include <locale>
+
 using namespace std::string_view_literals;
 
 namespace axdl::primedep {
@@ -124,4 +128,14 @@ constexpr double SBig(double val) noexcept { return val; }
 #define SBIG(q) (q)
 #endif
 #endif
-} // namespace axdl::primdep
+
+static std::u16string convertStringToUTF16(const std::string& str) {
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  return convert.from_bytes(str);
+}
+
+static std::string convertUTF16ToString(const std::u16string& str) {
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  return convert.to_bytes(str);
+}
+} // namespace axdl::primedep

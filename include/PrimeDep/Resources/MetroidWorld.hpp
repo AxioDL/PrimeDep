@@ -8,7 +8,8 @@
 #include "PrimeDep/Math/AABox.hpp"
 
 namespace axdl::primedep {
-class MetroidWorld final : public ITypedResource<FourCC(SBIG('MLVL'))> {
+class StringTable;
+class MetroidWorld final : public ITypedResource<FOURCC('MLVL')> {
 public:
   static constexpr uint32_t kWorldMagic = 0xDEAFBABE;
   enum class EVersion {
@@ -97,11 +98,20 @@ public:
     return childTags;
   }
 
+  std::optional<std::vector<std::shared_ptr<IResource>>> children() const override;
+
+  static bool canInjest(const nlohmann::ordered_json& metadata) {
+    return metadata["ResourceType"] == ResourceType().toString();
+  }
+  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+    return nullptr;
+  }
+
 private:
   uint32_t m_magic{0};
   EVersion m_version{};
   AssetId32Big m_worldNameId;
-  std::shared_ptr<IResource> m_worldName;
+  std::shared_ptr<StringTable> m_worldName;
   AssetId32Big m_saveWorldId;
   std::shared_ptr<IResource> m_saveWorld;
   AssetId32Big m_skyboxId;
@@ -109,6 +119,7 @@ private:
   std::vector<Relay> m_relays;
   std::vector<Area> m_areas;
   AssetId32Big m_mapWorldId;
+  std::shared_ptr<IResource> m_mapWorld;
   // TODO: ScriptLayer
   std::vector<SoundGroupData> m_soundGroups;
   std::string m_defaultAudioTrack;

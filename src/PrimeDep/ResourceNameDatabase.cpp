@@ -22,7 +22,7 @@ void ResourceNameDatabase::load(const std::string_view filename) {
   for (const auto& j : json.items()) {
     std::string idStr;
     j.value().get_to(idStr);
-    auto id = AssetId32Big(std::stol(idStr, nullptr, 16));
+    auto id = AssetId32Big(std::stoll(idStr, nullptr, 16));
     assets[id] = j.key();
   }
 }

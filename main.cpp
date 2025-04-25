@@ -2,7 +2,9 @@
 #include "include/PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
 #include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/MapWorld.hpp"
 #include "PrimeDep/Resources/MetroidWorld.hpp"
+#include "PrimeDep/Resources/StringTable.hpp"
 #include "PrimeDep/Resources/Texture.hpp"
 
 #include <iostream>
@@ -45,9 +47,11 @@ int main(int argc, char** argv) {
   axdl::primedep::ResourceNameDatabase::instance().load((executableDirectory() / "ResourceDB.json").generic_string());
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
-  factory.registerCookedFactory(axdl::primedep::Texture::ResourceType(), axdl::primedep::Texture::loadCooked);
-  factory.registerCookedFactory(axdl::primedep::AudioGroup::ResourceType(), axdl::primedep::AudioGroup::loadCooked);
-  factory.registerCookedFactory(axdl::primedep::MetroidWorld::ResourceType(), axdl::primedep::MetroidWorld::loadCooked);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::Texture>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::StringTable>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MapWorld>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioGroup>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidWorld>(factory);
 
   // Spin up the pool
   auto* pool = axdl::primedep::ResourcePool32Big::instance();
@@ -57,6 +61,7 @@ int main(int argc, char** argv) {
   std::filesystem::path inputFolder = argv[1];
   std::filesystem::path outputFolder = argv[2];
 
+  std::shared_ptr<axdl::primedep::PakFile32Big> metroid1;
   for (const auto& entry : std::filesystem::directory_iterator(inputFolder)) {
     if (!entry.is_regular_file()) {
       continue;
@@ -67,9 +72,26 @@ int main(int argc, char** argv) {
     if (extension != ".pak") {
       continue;
     }
-    pool->addSource(axdl::primedep::PakFile32Big::load(entry.path().generic_string()));
+    auto pak = axdl::primedep::PakFile32Big::load(entry.path().generic_string());
+    auto repPath = relative(entry.path(), inputFolder);
+    pak->writeMetadata((outputFolder / repPath).generic_string());
+    pool->addSource(pak);
   }
 
+#if 0
+  if (!metroid1) {
+    return 0;
+  }
+
+  for (const auto& desc : metroid1->resourceDescriptors()) {
+    std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", desc.dataSize(), desc.assetId().id,
+                             axdl::primedep::ResourceNameDatabase::instance().pathForAsset(
+                                 axdl::primedep::ObjectTag32Big(desc.type(), desc.assetId())),
+                             desc.isCompressed() ? "c" : "n")
+              << std::endl;
+  }
+#endif
+#if 0
   std::cout << "Gathering worlds..." << std::endl;
   auto worldTags = pool->tagsByType(axdl::primedep::FourCC("MLVL"sv));
   std::ranges::sort(worldTags.begin(), worldTags.end(), std::less<>());
@@ -85,28 +107,52 @@ int main(int argc, char** argv) {
     auto world = pool->resourceById(tag);
     if (world) {
       const auto outPath = (outputFolder / fileOut);
-      if (!std::filesystem::is_regular_file(outPath)) {
+      if (!std::filesystem::exists(outPath)) {
         std::filesystem::create_directories(outPath.parent_path());
       }
       world->writeMetadata(outPath.generic_string(), repPath);
-      std::cout << world->metadata(repPath).dump(4) << std::endl;
-      auto childTags = world->childTags();
-      if (childTags) {
-        for (const auto& t : *childTags) {
-          const auto d = pool->resourceDescriptorById(t);
-          const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(t);
-          auto fileOut = std::filesystem::path(repPath);
-          if (fileOut.generic_string().starts_with("$/")) {
-            fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
-          }
-          const auto outPath = (outputFolder / fileOut);
-
-          std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", d.dataSize(), t.id.id, outPath.generic_string(),
-                                   d.isCompressed() ? "c" : "n")
-                    << std::endl;
-        }
-      }
+      world->writeUncooked(outPath.generic_string());
+      // std::cout << world->metadata(repPath).dump(4) << std::endl;
+      //  auto childTags = world->childTags();
+      //  if (childTags) {
+      //    for (const auto& t : *childTags) {
+      //      const auto d = pool->resourceDescriptorById(t);
+      //      const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(t);
+      //      auto fileOut = std::filesystem::path(repPath);
+      //      if (fileOut.generic_string().starts_with("$/")) {
+      //        fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
+      //      }
+      //      const auto outPath = (outputFolder / fileOut);
+      //
+      //
+      //      std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", d.dataSize(), t.id.id, outPath.generic_string(),
+      //                               d.isCompressed() ? "c" : "n")
+      //                << std::endl;
+      //    }
+      //  }
     }
   }
+#endif
+#if 1
+  auto stringTags = pool->tagsByType(axdl::primedep::kInvalidFourCC);
+  for (const auto& tag : stringTags) {
+    const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(tag);
+    auto fileOut = std::filesystem::path(repPath);
+    if (fileOut.generic_string().starts_with("$/")) {
+      fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
+    }
+
+    std::cout << "Found " << repPath << std::endl;
+    auto string = pool->resourceById(tag);
+    if (string) {
+      const auto outPath = (outputFolder / fileOut);
+      if (!std::filesystem::exists(outPath)) {
+        std::filesystem::create_directories(outPath.parent_path());
+      }
+      string->writeMetadata(outPath.generic_string(), repPath);
+      string->writeUncooked(outPath.generic_string());
+    }
+  }
+#endif
   return 0;
 }

@@ -54,11 +54,26 @@ public:
   std::vector<ObjectTag32Big> tagsByType(const FourCC& type) override {
     std::vector<ObjectTag32Big> tags;
     for (const auto& res : m_resourceDescriptors) {
-      if (res.type() == type) {
+      if (res.type() == type || type == kInvalidFourCC) {
         tags.emplace_back(res.type(), res.assetId());
       }
     }
     return tags;
+  }
+
+  nlohmann::ordered_json metadata() const override;
+
+  void writeMetadata(const std::string_view path) const {
+    auto p = std::filesystem::path(path);
+    while (p.has_extension()) {
+      p.replace_extension();
+    }
+
+    p.replace_extension(".prj");
+
+    athena::io::FileWriter writer(p.generic_string());
+    const auto str = metadata().dump(4) + "\n";
+    writer.writeString(str, str.length());
   }
 
 private:

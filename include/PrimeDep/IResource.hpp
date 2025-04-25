@@ -2,10 +2,12 @@
 
 #include "ObjectTag.hpp"
 #include "ResourceDescriptor.hpp"
+#include "ResourceNameDatabase.hpp"
 
 #include <optional>
 #include <vector>
 #include <memory>
+#include <format>
 
 #include "PrimeDep/FourCC.hpp"
 #include <nlohmann/json.hpp>
@@ -24,8 +26,8 @@ public:
    * @return A flattened list of dependencies, including child dependencies
    */
   [[nodiscard]] virtual std::optional<std::vector<ObjectTag32Big>> childTags() const { return std::nullopt; }
-  
-  [[nodiscard]] virtual nlohmann::ordered_json metadata(std::string_view path) const = 0;
+
+  [[nodiscard]] virtual nlohmann::ordered_json metadata(std::string_view repPath) const = 0;
 
   [[nodiscard]] virtual bool writeUncooked(std::string_view path) const { return false; }
   [[nodiscard]] virtual bool writeCooked(std::string_view path) const { return false; }
@@ -33,10 +35,11 @@ public:
   void writeMetadata(const std::string_view path, const std::string_view repPath) const {
     const std::string file = std::string(path) + ".meta";
     athena::io::FileWriter writer(file);
-    writer.writeString(metadata(repPath).dump(4));
+    auto str = metadata(repPath).dump(4) + "\n";
+    writer.writeString(str, str.length());
   }
 
-private:
+protected:
   ResourceDescriptor32Big m_desc32Big;
 };
 
@@ -50,10 +53,19 @@ public:
   static FourCC ResourceType() { return TypeCode; }
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override {
-    return {{"ResourceType", typeCode().toString()}};
+    if (ResourceNameDatabase::instance().hasPath(ObjectTag32Big(m_desc32Big.type(), m_desc32Big.assetId()))) {
+      return {
+          {"ResourceType", typeCode().toString()},
+      };
+    }
+
+    return {
+        {"ResourceType", typeCode().toString()},
+        {"AssetID", std::format("{:08X}", m_desc32Big.assetId().id)},
+    };
   }
 
-private:
+protected:
   FourCC m_type = TypeCode;
 };
 } // namespace axdl::primedep

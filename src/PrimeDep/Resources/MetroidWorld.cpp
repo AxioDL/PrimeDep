@@ -2,6 +2,7 @@
 
 #include "athena/MemoryReader.hpp"
 #include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/StringTable.hpp"
 
 namespace axdl::primedep {
 MetroidWorld::Relay::Relay(athena::io::IStreamReader& in)
@@ -64,11 +65,12 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size, const Resour
   }
   /* TODO: Load assets */
   m_worldNameId = AssetId32Big(in);
-  m_worldName = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("STRG"sv), m_worldNameId));
+  m_worldName = std::dynamic_pointer_cast<StringTable>(
+      ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("STRG"sv), m_worldNameId)));
   m_saveWorldId = AssetId32Big(in);
-  m_worldName = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("SAVW"sv), m_saveWorldId));
+  m_saveWorld = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("SAVW"sv), m_saveWorldId));
   m_skyboxId = AssetId32Big(in);
-  m_worldName = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("CMDL"sv), m_skyboxId));
+  m_skybox = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("CMDL"sv), m_skyboxId));
 
   uint32_t relayCount = in.readUint32Big();
   while (relayCount--) {
@@ -104,6 +106,24 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size, const Resour
   while (areaLayerStartIndicesCount--) {
     m_areaLayerStartIndices.emplace_back(in.readUint32Big());
   }
+}
+std::optional<std::vector<std::shared_ptr<IResource>>> MetroidWorld::children() const {
+  // TODO: Areas
+  std::vector<std::shared_ptr<IResource>> children;
+  if (m_skybox) {
+    children.emplace_back(m_skybox);
+  }
+  if (m_worldName) {
+    children.emplace_back(m_worldName);
+  }
+  if (m_saveWorld) {
+    children.emplace_back(m_saveWorld);
+  }
+  if (m_mapWorld) {
+    children.emplace_back(m_mapWorld);
+  }
+
+  return children;
 }
 
 std::shared_ptr<IResource> MetroidWorld::loadCooked(const char* ptr, std::size_t size,

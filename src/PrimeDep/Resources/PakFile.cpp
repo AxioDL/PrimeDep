@@ -1,5 +1,6 @@
 #include "PrimeDep/Resources/PakFile.hpp"
 #include "PrimeDep/ResourceFactory.hpp"
+#include "PrimeDep/ResourceNameDatabase.hpp"
 
 #include <athena/Compression.hpp>
 #include <athena/FileWriter.hpp>
@@ -125,6 +126,20 @@ std::tuple<const char*, uint32_t> PakFile32Big::loadData(const ResourceDescripto
   }
 
   return {data, size};
+}
+
+nlohmann::ordered_json PakFile32Big::metadata() const {
+  nlohmann::ordered_json ret;
+  ret["PackageName"] = std::filesystem::path(path()).filename().replace_extension().generic_string();
+  auto& namedResources = ret["NamedResources"];
+  for (const auto& namedRes : m_namedResources) {
+    nlohmann::ordered_json& descriptor = namedResources.emplace_back();
+    descriptor["Name"] = namedRes.name();
+    const auto tag = ObjectTag32Big{namedRes.type(), namedRes.assetId()};
+    descriptor["File"] = ResourceNameDatabase::instance().pathForAsset(tag);
+  }
+
+  return ret;
 }
 
 } // namespace axdl::primedep

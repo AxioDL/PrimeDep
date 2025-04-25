@@ -15,6 +15,8 @@ add_library(PrimeDep STATIC
         src/PrimeDep/Math/Vector3f.cpp
         src/PrimeDep/ResourceNameDatabase.cpp
         src/PrimeDep/ResourcePool.cpp
+        src/PrimeDep/Resources/StringTable.cpp
+        src/PrimeDep/Resources/MapWorld.cpp
 )
 
 target_include_directories(PrimeDep PUBLIC include)
@@ -27,4 +29,7 @@ target_link_libraries(PrimeDep PUBLIC
 add_executable(test main.cpp)
 target_link_libraries(test
         PrimeDep
+)
+target_compile_options(PrimeDep PRIVATE
+        -Wno-multichar
 )

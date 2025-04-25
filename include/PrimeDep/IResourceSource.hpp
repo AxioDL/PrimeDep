@@ -1,5 +1,7 @@
 #pragma once
 #include <tuple>
+#include <nlohmann/json.hpp>
+#include <athena/FileWriter.hpp>
 
 namespace axdl::primedep {
 
@@ -15,5 +17,6 @@ public:
   virtual ResourceDescriptorType descriptorById(const ObjectTagType& tag) = 0;
   virtual std::tuple<const char*, uint32_t> loadData(const ResourceDescriptorType&) = 0;
   virtual std::vector<ObjectTagType> tagsByType(const FourCC& type) = 0;
+  virtual nlohmann::ordered_json metadata() const { return {}; };
 };
 } // namespace axdl::primedep
