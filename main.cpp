@@ -2,15 +2,25 @@
 #include "include/PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
 #include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/AnimPOIData.hpp"
+#include "PrimeDep/Resources/AnimSource.hpp"
+#include "PrimeDep/Resources/CharLayoutInfo.hpp"
+#include "PrimeDep/Resources/CollisionResponseData.hpp"
 #include "PrimeDep/Resources/MapWorld.hpp"
 #include "PrimeDep/Resources/MetroidWorld.hpp"
+#include "PrimeDep/Resources/Model.hpp"
+#include "PrimeDep/Resources/Particle.hpp"
+#include "PrimeDep/Resources/ParticleElectric.hpp"
+#include "PrimeDep/Resources/ParticleSwoosh.hpp"
 #include "PrimeDep/Resources/StringTable.hpp"
+#include "PrimeDep/Resources/SkinRules.hpp"
 #include "PrimeDep/Resources/Texture.hpp"
 
 #include <iostream>
 #include <PrimeDep/Resources/PakFile.hpp>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <set>
 
 using namespace std::string_view_literals;
 
@@ -18,6 +28,7 @@ using namespace std::string_view_literals;
 #include <string>
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -30,28 +41,73 @@ std::filesystem::path executableDirectory() {
   return std::filesystem::path(path_buffer).parent_path();
 #else
   char path_buffer[PATH_MAX] = {0};
-  ssize_t count = readlink("/proc/self/exe", path_buffer, PATH_MAX);
+  const auto count = readlink("/proc/self/exe", path_buffer, PATH_MAX);
   if (count == -1) {
-    return std::filesystem::path();
+    return {};
   }
   return std::filesystem::path(std::string(path_buffer, (count > 0) ? count : 0)).parent_path();
 #endif
 }
 
+void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::StringTable>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::Model>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::Texture>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::SkinRules>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AnimSource>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::CharLayoutInfo>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::CollisionResponseData>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::ParticleSwoosh>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::Particle>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::ParticleElectric>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::ProjectileWeapon>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::GuiFrame>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::RasterFont>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::ScannableObjectInfo>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AnimPOIData>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::AiFiniteStateMachine>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioGroup>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::CollidableOBBTreeGroup>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::DecalData>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioTranslationTable>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::PathFindArea>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MapWorld>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MapArea>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MapUniverse>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MidiData>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::SaveWorld>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidWorld>(factory);
+}
+
 int main(int argc, char** argv) {
-  if (argc != 3) {
-    std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
+  const auto locale = std::setlocale(LC_ALL, "");
+  std::cout << locale << std::endl;
+  std::cout.imbue(std::locale(locale));
+#if _WIN32
+  HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+  // Get the current console mode
+  DWORD dwMode = 0;
+  if (!GetConsoleMode(hConsole, &dwMode)) {
+    std::cerr << "Error hStdout console mode: " << GetLastError() << std::endl;
     return 1;
   }
 
+  // Enable virtual terminal processing
+  dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+  if (!SetConsoleMode(hStdout, dwMode)) {
+    std::cerr << "Error setting console mode: " << GetLastError() << std::endl;
+    return 1;
+  }
+  SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+#endif
+      if (argc != 3) {
+    std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
+    return 1;
+  }
   axdl::primedep::ResourceNameDatabase::instance().load((executableDirectory() / "ResourceDB.json").generic_string());
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::Texture>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::StringTable>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MapWorld>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioGroup>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidWorld>(factory);
+  addFactories(factory);
 
   // Spin up the pool
   auto* pool = axdl::primedep::ResourcePool32Big::instance();
@@ -74,6 +130,9 @@ int main(int argc, char** argv) {
     }
     auto pak = axdl::primedep::PakFile32Big::load(entry.path().generic_string());
     auto repPath = relative(entry.path(), inputFolder);
+    if (!exists(outputFolder)) {
+      create_directories(outputFolder);
+    }
     pak->writeMetadata((outputFolder / repPath).generic_string());
     pool->addSource(pak);
   }
@@ -135,14 +194,25 @@ int main(int argc, char** argv) {
 #endif
 #if 1
   auto stringTags = pool->tagsByType(axdl::primedep::kInvalidFourCC);
-  for (const auto& tag : stringTags) {
+  std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
+  auto uniqueTags = std::set(stringTags.begin(), stringTags.end());
+
+  printf("\n\n");
+  for (int i = 0; const auto& tag : uniqueTags) {
     const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(tag);
     auto fileOut = std::filesystem::path(repPath);
     if (fileOut.generic_string().starts_with("$/")) {
       fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
     }
 
-    std::cout << "Found " << repPath << std::endl;
+    std::cout << "\033[2;A";
+    std::cout << "\033[0;KProgress: " << (i + 1) << " of " << uniqueTags.size()
+              << std::format(
+                     " {:3}%\n",
+                     static_cast<int>((static_cast<float>(i + 1) / static_cast<float>(uniqueTags.size())) * 100.f));
+    std::cout << "\033[0;KProcessing " << repPath << "...\n";
+    std::flush(std::cout);
+
     auto string = pool->resourceById(tag);
     if (string) {
       const auto outPath = (outputFolder / fileOut);
@@ -150,9 +220,14 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories(outPath.parent_path());
       }
       string->writeMetadata(outPath.generic_string(), repPath);
-      string->writeUncooked(outPath.generic_string());
+      if (string->typeCode() == axdl::primedep::AnimPOIData::ResourceType()) {
+        (void)string->writeUncooked(outPath.generic_string());
+      }
     }
+    ++i;
   }
+  std::flush(std::cout);
+  printf("Complete!\n");
 #endif
   return 0;
 }

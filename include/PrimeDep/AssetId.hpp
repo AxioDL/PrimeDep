@@ -37,6 +37,15 @@ struct AssetId {
   explicit operator bool() const { return id != T(-1); }
 
   operator T() const { return id; }
+
+  std::string toString() const {
+    if constexpr (std::is_same<T, uint32_t>()) {
+      return std::format("{:08X}", id);
+    } else if constexpr (std::is_same<T, uint64_t>()) {
+      return std::format("{:016X}", id);
+    }
+    return std::format("{:X}", id);
+  }
 };
 
 using AssetId32Big = AssetId<>;

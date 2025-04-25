@@ -39,18 +39,28 @@ public:
     writer.writeString(str, str.length());
   }
 
+  virtual FourCC typeCode() const { return FourCC(); }
 protected:
   ResourceDescriptor32Big m_desc32Big;
 };
 
-template <FourCC TypeCode>
+template <auto N>
+struct TypeDescription {
+  constexpr TypeDescription(const char (&str)[N]) { std::copy_n(str, N, value); }
+
+  constexpr operator std::string_view() const { return std::string_view(value); }
+  char value[N]{};
+};
+
+template <FourCC TypeCode, TypeDescription Desc>
 class ITypedResource : public IResource {
 
 public:
   explicit ITypedResource(const ResourceDescriptor32Big& desc) : IResource(desc) {}
-  [[nodiscard]] FourCC typeCode() const { return m_type; }
+  [[nodiscard]] constexpr FourCC typeCode() const override { return m_type; }
 
-  static FourCC ResourceType() { return TypeCode; }
+  static constexpr FourCC ResourceType() { return TypeCode; }
+  static constexpr std::string_view Description() { return Desc; }
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override {
     if (ResourceNameDatabase::instance().hasPath(ObjectTag32Big(m_desc32Big.type(), m_desc32Big.assetId()))) {

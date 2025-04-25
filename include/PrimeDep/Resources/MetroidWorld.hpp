@@ -9,7 +9,7 @@
 
 namespace axdl::primedep {
 class StringTable;
-class MetroidWorld final : public ITypedResource<FOURCC('MLVL')> {
+class MetroidWorld final : public ITypedResource<FOURCC('MLVL'), "Metroid World Definition"> {
 public:
   static constexpr uint32_t kWorldMagic = 0xDEAFBABE;
   enum class EVersion {

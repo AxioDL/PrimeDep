@@ -3,7 +3,7 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class AudioGroup final : public ITypedResource<FOURCC('AGSC')> {
+class AudioGroup final : public ITypedResource<FOURCC('AGSC'), "MusyX Audio Group"> {
 public:
   AudioGroup(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
 

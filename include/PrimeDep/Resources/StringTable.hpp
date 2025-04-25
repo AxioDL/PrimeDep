@@ -2,7 +2,7 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class StringTable final : public ITypedResource<FOURCC('STRG')> {
+class StringTable final : public ITypedResource<FOURCC('STRG'), "Translatable String Table"> {
 public:
   static constexpr uint32_t kMagicNum = 0x87654321;
   enum class EVersion {

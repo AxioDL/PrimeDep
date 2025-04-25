@@ -31,7 +31,7 @@ bool MapWorld::writeUncooked(std::string_view path) const {
   athena::io::FileWriter writer(p.generic_string());
   std::string js = j.dump(4);
   writer.writeString(js, js.length());
-  return true;
+  return !writer.hasError();
 }
 
 std::shared_ptr<IResource> MapWorld::loadCooked(const char* data, std::size_t size,

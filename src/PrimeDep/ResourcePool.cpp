@@ -33,10 +33,11 @@ ResourcePool32Big::internalResourceByDescriptor(const ResourceDescriptor32Big& n
   if (const auto& factory = m_factory.cookedFactory(newDesc.type()); data != nullptr && size != 0 && factory) {
     auto ret = factory(data, size, newDesc);
     if (!ret) {
-      delete data;
+      delete[] data;
     }
     return ret;
   }
+  delete[] data;
   return nullptr;
 }
 

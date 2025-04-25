@@ -42,7 +42,7 @@ private:
   std::unique_ptr<uint16_t[]> m_entries;
 };
 
-class Texture final : public ITypedResource<FOURCC('TXTR')> {
+class Texture final : public ITypedResource<FOURCC('TXTR'), "GX Optimized Texture"> {
 public:
   Texture(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
