@@ -2,10 +2,10 @@
 
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep {
-// TODO: Figure out how best to handle CSKR, ANIM and CINF files
-class SkinRules final : public TypedResource('CSKR', ".cin.meta", ".cin", DESCRIPTION("Model Skinning Information")) {
+class AudioTranslationTable final
+: public TypedResource('ATBL', ".rawatbl", ".atbl", DESCRIPTION("Audio Translation Table")) {
 public:
-  SkinRules(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  AudioTranslationTable(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {

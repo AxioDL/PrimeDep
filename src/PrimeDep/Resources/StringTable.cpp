@@ -96,6 +96,6 @@ bool StringTable::writeUncooked(const std::string_view path) const {
   athena::io::FileWriter writer(p.generic_string());
   std::string js = json.dump(4);
   writer.writeString(js, js.length());
-  return true;
+  return !writer.hasError();
 }
 } // namespace axdl::primedep

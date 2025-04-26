@@ -19,8 +19,8 @@ public:
    */
   using CookedFactoryFunc =
       std::function<std::shared_ptr<IResource>(const char* ptr, std::size_t size, const ResourceDescriptor& desc)>;
-  using InjestValidationFunc = std::function<bool(const nlohmann::ordered_json& medata)>;
-  using InjestFactoryFunc =
+  using IngestValidationFunc = std::function<bool(const nlohmann::ordered_json& medata)>;
+  using IngestFactoryFunc =
       std::function<std::shared_ptr<IResource>(const nlohmann::ordered_json& metadata, std::string_view repPath)>;
 
   void registerCookedFactory(const FourCC& type, CookedFactoryFunc func) {
@@ -37,38 +37,38 @@ public:
     return nullptr;
   }
 
-  void registerInjestValidationFactory(const FourCC& type, InjestValidationFunc func) {
-    if (m_injestValidationFactories.contains(type)) {
+  void registerIngestValidationFactory(const FourCC& type, IngestValidationFunc func) {
+    if (m_ingestValidationFactories.contains(type)) {
       return;
     }
-    m_injestValidationFactories[type] = func;
+    m_ingestValidationFactories[type] = func;
   }
 
-  [[nodiscard]] InjestValidationFunc injestValidationFactory(const FourCC& type) const {
-    if (m_injestValidationFactories.contains(type)) {
-      return m_injestValidationFactories.at(type);
+  [[nodiscard]] IngestValidationFunc ingestValidationFactory(const FourCC& type) const {
+    if (m_ingestValidationFactories.contains(type)) {
+      return m_ingestValidationFactories.at(type);
     }
     return nullptr;
   }
 
-  void registerInjestFactory(const FourCC& type, InjestFactoryFunc func) {
-    if (m_injestFactories.contains(type)) {
+  void registerIngestFactory(const FourCC& type, IngestFactoryFunc func) {
+    if (m_ingestFactories.contains(type)) {
       return;
     }
-    m_injestFactories[type] = func;
+    m_ingestFactories[type] = func;
   }
 
-  [[nodiscard]] InjestFactoryFunc injestFactory(const FourCC& type) const {
-    if (m_injestFactories.contains(type)) {
-      return m_injestFactories.at(type);
+  [[nodiscard]] IngestFactoryFunc ingestFactory(const FourCC& type) const {
+    if (m_ingestFactories.contains(type)) {
+      return m_ingestFactories.at(type);
     }
     return nullptr;
   }
 
 private:
   std::map<FourCC, CookedFactoryFunc> m_cookedFactories;
-  std::map<FourCC, InjestValidationFunc> m_injestValidationFactories;
-  std::map<FourCC, InjestFactoryFunc> m_injestFactories;
+  std::map<FourCC, IngestValidationFunc> m_ingestValidationFactories;
+  std::map<FourCC, IngestFactoryFunc> m_ingestFactories;
 };
 
 using ResourceFactory32Big = ResourceFactory<ResourceDescriptor32Big>;
@@ -80,8 +80,8 @@ static void RegisterFactory32Big(ResourceFactory32Big& in) {
                            T::Description(), T::RawExtension(), T::CookedExtension())
             << std::endl;
   in.registerCookedFactory(T::ResourceType(), T::loadCooked);
-  in.registerInjestValidationFactory(T::ResourceType(), T::canIngest);
-  in.registerInjestFactory(T::ResourceType(), T::ingest);
+  in.registerIngestValidationFactory(T::ResourceType(), T::canIngest);
+  in.registerIngestFactory(T::ResourceType(), T::ingest);
 }
 
 } // namespace axdl::primedep

@@ -19,11 +19,15 @@ add_library(
   src/PrimeDep/Particles/ParticleData.cpp
   src/PrimeDep/ResourceNameDatabase.cpp
   src/PrimeDep/ResourcePool.cpp
+  src/PrimeDep/Resources/AiFiniteStateMachine.cpp
   src/PrimeDep/Resources/AnimPOINodeData.cpp
   src/PrimeDep/Resources/AnimSource.cpp
   src/PrimeDep/Resources/AudioGroup.cpp
+  src/PrimeDep/Resources/AudioTranslationTable.cpp
   src/PrimeDep/Resources/CharLayoutInfo.cpp
+  src/PrimeDep/Resources/CollidableOBBTreeGroup.cpp
   src/PrimeDep/Resources/CollisionResponseData.cpp
+  src/PrimeDep/Resources/DecalData.cpp
   src/PrimeDep/Resources/GuiFrame.cpp
   src/PrimeDep/Resources/MapWorld.cpp
   src/PrimeDep/Resources/MetroidWorld.cpp
@@ -32,6 +36,7 @@ add_library(
   src/PrimeDep/Resources/Particle.cpp
   src/PrimeDep/Resources/ParticleElectric.cpp
   src/PrimeDep/Resources/ParticleSwoosh.cpp
+  src/PrimeDep/Resources/PathFindArea.cpp
   src/PrimeDep/Resources/ProjectileWeapon.cpp
   src/PrimeDep/Resources/RasterFont.cpp
   src/PrimeDep/Resources/ScannableObjectInfo.cpp

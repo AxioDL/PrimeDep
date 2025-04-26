@@ -2,10 +2,14 @@
 #include "include/PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
 #include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/AiFiniteStateMachine.hpp"
 #include "PrimeDep/Resources/AnimPOIData.hpp"
 #include "PrimeDep/Resources/AnimSource.hpp"
+#include "PrimeDep/Resources/AudioTranslationTable.hpp"
 #include "PrimeDep/Resources/CharLayoutInfo.hpp"
+#include "PrimeDep/Resources/CollidableOBBTreeGroup.hpp"
 #include "PrimeDep/Resources/CollisionResponseData.hpp"
+#include "PrimeDep/Resources/DecalData.hpp"
 #include "PrimeDep/Resources/GuiFrame.hpp"
 #include "PrimeDep/Resources/MapWorld.hpp"
 #include "PrimeDep/Resources/MetroidWorld.hpp"
@@ -13,6 +17,7 @@
 #include "PrimeDep/Resources/Particle.hpp"
 #include "PrimeDep/Resources/ParticleElectric.hpp"
 #include "PrimeDep/Resources/ParticleSwoosh.hpp"
+#include "PrimeDep/Resources/PathFindArea.hpp"
 #include "PrimeDep/Resources/ProjectileWeapon.hpp"
 #include "PrimeDep/Resources/RasterFont.hpp"
 #include "PrimeDep/Resources/ScannableObjectInfo.hpp"
@@ -69,12 +74,12 @@ void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
   axdl::primedep::RegisterFactory32Big<axdl::primedep::RasterFont>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::ScannableObjectInfo>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::AnimPOIData>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::AiFiniteStateMachine>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AiFiniteStateMachine>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioGroup>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::CollidableOBBTreeGroup>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::DecalData>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioTranslationTable>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::PathFindArea>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::CollidableOBBTreeGroup>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::DecalData>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioTranslationTable>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::PathFindArea>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MapWorld>(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidArea(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::MapArea>(factory);
@@ -109,7 +114,10 @@ int main(int argc, char** argv) {
     std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
     return 1;
   }
+  std::cout << "Loading ResourceDB...";
+  std::flush(std::cout);
   axdl::primedep::ResourceNameDatabase::instance().load((executableDirectory() / "ResourceDB.json").generic_string());
+  std::cout << "Done!" << std::endl;
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
   addFactories(factory);
@@ -231,9 +239,7 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories(outPath.parent_path());
       }
       string->writeMetadata(outPath.generic_string(), repPath);
-      if (string->typeCode() == axdl::primedep::AnimPOIData::ResourceType()) {
-        (void)string->writeUncooked(outPath.generic_string());
-      }
+      (void)string->writeUncooked(outPath.generic_string());
       manifest["Assets"].push_back(string->rawPath(repPath));
     }
     ++i;

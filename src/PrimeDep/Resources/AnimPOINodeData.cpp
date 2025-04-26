@@ -61,7 +61,7 @@ bool AnimPOIData::writeUncooked(std::string_view path) const {
   athena::io::FileWriter writer(p.generic_string());
   std::string js = j.dump(4) + "\n";
   writer.writeString(js, js.length());
-  return writer.hasError();
+  return !writer.hasError();
 }
 
 std::shared_ptr<IResource> AnimPOIData::loadCooked(const char* ptr, const std::size_t size,

@@ -30,10 +30,28 @@ std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t 
 }
 
 bool AudioGroup::writeUncooked(const std::string_view path) const {
+  const std::filesystem::path infoPath(GetRawPath(path));
   const std::filesystem::path poolPath(std::filesystem::path(path).replace_extension(".pool"));
   const std::filesystem::path projPath(std::filesystem::path(path).replace_extension(".proj"));
   const std::filesystem::path samplesPath(std::filesystem::path(path).replace_extension(".samp"));
   const std::filesystem::path sdirPath(std::filesystem::path(path).replace_extension(".sdir"));
+
+  {
+    nlohmann::ordered_json info;
+    info["ModuleDir"] = m_moduleDir;
+    info["ModuleName"] = m_moduleName;
+    auto repPath = ResourceNameDatabase::instance().pathForAsset(ObjectTag32Big{FOURCC('AGSC'), m_desc32Big.assetId()});
+    info["PoolFile"] = std::filesystem::path(repPath).replace_extension(".pool").generic_string();
+    info["ProjectFile"] = std::filesystem::path(repPath).replace_extension(".proj").generic_string();
+    info["SamplesFile"] = std::filesystem::path(repPath).replace_extension(".samp").generic_string();
+    info["SampleDirectoryFile"] = std::filesystem::path(repPath).replace_extension(".sdir").generic_string();
+    athena::io::FileWriter writer(infoPath.generic_string());
+    std::string js = info.dump(4) + "\n";
+    writer.writeString(js, js.length());
+    if (writer.hasError()) {
+      return false;
+    }
+  }
 
   {
     auto writer = athena::io::FileWriter(poolPath.generic_string());
@@ -86,19 +104,13 @@ bool AudioGroup::writeCooked(const std::string_view path) const {
   writer.writeUint32Big(m_sampleDirSize);
   writer.writeUBytes(m_sampleDir.get(), m_sampleDirSize);
 
-  writer.fill(static_cast<uint8_t>(0xFF), ROUND_UP_32(writer.length()) - writer.length());
-  return true;
+  return !writer.hasError();
 }
 
 nlohmann::ordered_json AudioGroup::metadata(const std::string_view path) const {
   nlohmann::ordered_json json = ITypedResource::metadata(path);
-  ;
   json["ModuleDir"] = m_moduleDir;
   json["ModuleName"] = m_moduleName;
-  json["PoolFile"] = "$/" + std::filesystem::path(path).replace_extension(".pool").generic_string();
-  json["ProjectFile"] = "$/" + std::filesystem::path(path).replace_extension(".proj").generic_string();
-  json["SamplesFile"] = "$/" + std::filesystem::path(path).replace_extension(".samp").generic_string();
-  json["SampleDirectoryFile"] = "$/" + std::filesystem::path(path).replace_extension(".sdir").generic_string();
   return json;
 }
 

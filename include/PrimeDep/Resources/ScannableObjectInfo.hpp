@@ -3,7 +3,7 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class ScannableObjectInfo : public TypedResource('SCAN', ".scanr", ".scan", DESCRIPTION("Scannable Object Info")) {
+class ScannableObjectInfo : public TypedResource('SCAN', ".rawscan", ".scan", DESCRIPTION("Scannable Object Info")) {
 public:
   ScannableObjectInfo(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
 
