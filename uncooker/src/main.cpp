@@ -10,11 +10,14 @@
 #include <PrimeDep/Resources/MetroidPrime/CollidableOBBTreeGroup.hpp>
 #include <PrimeDep/Resources/MetroidPrime/CollisionResponseData.hpp>
 #include <PrimeDep/Resources/MetroidPrime/DecalData.hpp>
+#include <PrimeDep/Resources/MetroidPrime/DependencyGroup.hpp>
 #include <PrimeDep/Resources/MetroidPrime/GuiFrame.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MapArea.hpp>
+#include <PrimeDep/Resources/MetroidPrime/MapUniverse.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MapWorld.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MetroidArea.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MetroidWorld.hpp>
+#include <PrimeDep/Resources/MetroidPrime/MidiData.hpp>
 #include <PrimeDep/Resources/MetroidPrime/Model.hpp>
 #include <PrimeDep/Resources/MetroidPrime/PakFile.hpp>
 #include <PrimeDep/Resources/MetroidPrime/Particle.hpp>
@@ -23,6 +26,7 @@
 #include <PrimeDep/Resources/MetroidPrime/PathFindArea.hpp>
 #include <PrimeDep/Resources/MetroidPrime/ProjectileWeapon.hpp>
 #include <PrimeDep/Resources/MetroidPrime/RasterFont.hpp>
+#include <PrimeDep/Resources/MetroidPrime/SaveWorld.hpp>
 #include <PrimeDep/Resources/MetroidPrime/ScannableObjectInfo.hpp>
 #include <PrimeDep/Resources/MetroidPrime/SkinRules.hpp>
 #include <PrimeDep/Resources/MetroidPrime/StringTable.hpp>
@@ -85,10 +89,11 @@ void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapWorld>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MetroidArea>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapArea>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapUniverse>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MidiData>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::SaveWorld>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapUniverse>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MidiData>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::SaveWorld>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MetroidWorld>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::DependencyGroup>(factory);
 }
 
 int main(int argc, char** argv) {
@@ -111,7 +116,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 #endif
-      if (argc != 3) {
+  if (argc != 3) {
     std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
     return 1;
   }

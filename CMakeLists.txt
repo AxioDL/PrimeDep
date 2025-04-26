@@ -5,6 +5,5 @@ set(CMAKE_CXX_STANDARD 23)
 
 include(cmake/vendors.cmake)
 
-
 add_subdirectory(lib)
 add_subdirectory(uncooker)
