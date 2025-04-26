@@ -32,27 +32,37 @@ public:
   [[nodiscard]] virtual bool writeUncooked(std::string_view path) const { return false; }
   [[nodiscard]] virtual bool writeCooked(std::string_view path) const { return false; }
 
-  void writeMetadata(const std::string_view path, const std::string_view repPath) const {
-    const std::string file = std::string(path) + ".meta";
-    athena::io::FileWriter writer(file);
+  virtual void writeMetadata(const std::string_view path, const std::string_view repPath) const {
+    auto p = std::string(path);
+    if (!p.ends_with(".meta")) {
+      p += ".meta";
+    }
+    athena::io::FileWriter writer(p);
     auto str = metadata(repPath).dump(4) + "\n";
     writer.writeString(str, str.length());
   }
 
-  virtual FourCC typeCode() const { return FourCC(); }
+  virtual constexpr FourCC typeCode() const { return FourCC(); }
+  virtual constexpr std::string_view description() const = 0;
+  virtual constexpr std::string_view rawExtension() const = 0;
+  virtual constexpr std::string_view cookedExtension() const = 0;
+
+  virtual std::filesystem::path rawPath(std::string_view path) const = 0;
+  virtual std::filesystem::path cookedPath(std::string_view path) const = 0;
+
 protected:
   ResourceDescriptor32Big m_desc32Big;
 };
 
-template <auto N>
-struct TypeDescription {
-  constexpr TypeDescription(const char (&str)[N]) { std::copy_n(str, N, value); }
-
-  constexpr operator std::string_view() const { return std::string_view(value); }
-  char value[N]{};
-};
-
-template <FourCC TypeCode, TypeDescription Desc>
+/**
+ * ITypedResource Defines a uniform interface for creating assets, allowing for the processing of cooked data to
+ * raw versions for use in an editor.
+ * @tparam TypeCode Asset type code used for lookup
+ * @tparam RawExt Extension of the asset's uncooked format
+ * @tparam CookedExt Extension of the asset's cooked format
+ * @tparam Desc Brief description of the resource
+ */
+template <FourCC TypeCode, TemplateString RawExt, TemplateString CookedExt, TemplateString Desc>
 class ITypedResource : public IResource {
 
 public:
@@ -61,6 +71,11 @@ public:
 
   static constexpr FourCC ResourceType() { return TypeCode; }
   static constexpr std::string_view Description() { return Desc; }
+  constexpr std::string_view description() const override { return CookedExtension(); }
+  static constexpr std::string_view RawExtension() { return RawExt; }
+  constexpr std::string_view rawExtension() const override { return RawExtension(); }
+  static constexpr std::string_view CookedExtension() { return CookedExt; }
+  constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override {
     if (ResourceNameDatabase::instance().hasPath(ObjectTag32Big(m_desc32Big.type(), m_desc32Big.assetId()))) {
@@ -74,8 +89,49 @@ public:
         {"AssetID", std::format("{:08X}", m_desc32Big.assetId().id)},
     };
   }
+  static std::filesystem::path GetRawPath(const std::string_view path) {
+    std::filesystem::path p = path;
+    while (p.has_extension()) {
+      p.replace_extension();
+    }
+    p.replace_extension(RawExtension());
+    return p;
+  }
+
+  static std::filesystem::path GetCookedPath(const std::string_view path) {
+    std::filesystem::path p = path;
+    while (p.has_extension()) {
+      p.replace_extension();
+    }
+    p.replace_extension(CookedExtension());
+    return p;
+  }
+
+  std::filesystem::path rawPath(std::string_view path) const override { return GetRawPath(path); }
+  std::filesystem::path cookedPath(const std::string_view path) const override { return GetCookedPath(path); }
+
+  void writeMetadata(const std::string_view path, const std::string_view repPath) const override {
+
+    IResource::writeMetadata(GetRawPath(path).generic_string(), repPath);
+  }
 
 protected:
   FourCC m_type = TypeCode;
 };
+
+// i18n
+#define DESCRIPTION(s) s
+
+/**
+ * TypedResource Defines a uniform interface for creating assets, allowing for the processing of cooked data to
+ * raw versions for use in an editor.
+ * @tparam TypeCode Asset type code used for lookup
+ * @tparam RawExt Extension of the asset's uncooked format
+ * @tparam CookedExt Extension of the asset's cooked format
+ * @tparam Desc Brief description of the resource
+ */
+#define TypedResource(fcc, rawExt, cookedExt, description)                                                             \
+  ITypedResource<FOURCC(fcc), TemplateString<ctStrLen(rawExt)>(rawExt),                                                \
+                 TemplateString<ctStrLen(cookedExt)>(cookedExt), TemplateString<ctStrLen(description)>(description)>
+
 } // namespace axdl::primedep

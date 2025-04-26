@@ -1,5 +1,7 @@
 #include "PrimeDep/Particles/ParticleData.hpp"
 #include "PrimeDep/ResourceUtils.hpp"
+#include "PrimeDep/Resources/Particle.hpp"
+
 #include <nlohmann/json.hpp>
 #include <magic_enum/magic_enum.hpp>
 
@@ -13,7 +15,7 @@ ParticleData::ParticleData(athena::io::IStreamReader& in)
 
 void ParticleData::PutTo(nlohmann::ordered_json& j) const {
   j["Duration"] = x0_duration;
-  axdl::primedep::PutTo(x4_particle, j["Ref"]);
+  axdl::primedep::PutTo<Particle>(x4_particle, j["Ref"]);
   j["BoneName"] = xc_boneName;
   j["Scale"] = x1c_scale;
   j["ParentMode"] = magic_enum::enum_name(x20_parentMode);

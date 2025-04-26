@@ -3,7 +3,7 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class AudioGroup final : public ITypedResource<FOURCC('AGSC'), "MusyX Audio Group"> {
+class AudioGroup final : public TypedResource('AGSC', ".agsr", ".agsc", DESCRIPTION("MusyX Audio Group")) {
 public:
   AudioGroup(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
 
@@ -14,10 +14,12 @@ public:
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
 
-  static bool canInjest(const nlohmann::ordered_json& metadata) {
+  static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) { return nullptr; }
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+    return nullptr;
+  }
 
 private:
   std::string m_moduleDir;

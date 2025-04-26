@@ -2,7 +2,8 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class StringTable final : public ITypedResource<FOURCC('STRG'), "Translatable String Table"> {
+class StringTable final
+: public TypedResource('STRG', ".string_table", ".strg", DESCRIPTION("Translatable String Table")) {
 public:
   static constexpr uint32_t kMagicNum = 0x87654321;
   enum class EVersion {
@@ -25,10 +26,10 @@ public:
   [[nodiscard]] bool writeUncooked(std::string_view path) const override;
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;
-  static bool canInjest(const nlohmann::ordered_json& metadata) {
+  static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
     return nullptr;
   }
 

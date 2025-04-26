@@ -31,11 +31,7 @@ AnimPOIData::AnimPOIData(const char* ptr, const std::size_t size, const Resource
 }
 
 bool AnimPOIData::writeUncooked(std::string_view path) const {
-  std::filesystem::path p(path);
-  while (p.has_extension()) {
-    p.replace_extension();
-  }
-  p.replace_extension(".evnt");
+  std::filesystem::path p = GetRawPath(path);
 
   nlohmann::ordered_json j;
   j["Version"] = m_version;

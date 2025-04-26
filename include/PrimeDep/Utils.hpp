@@ -8,7 +8,7 @@
 
 using namespace std::string_view_literals;
 
-namespace axdl::primedep {
+namespace axdl {
 #undef bswap16
 #undef bswap32
 #undef bswap64
@@ -138,4 +138,25 @@ static std::string convertUTF16ToString(const std::u16string& str) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   return convert.to_bytes(str);
 }
-} // namespace axdl::primedep
+
+template <size_t N>
+constexpr size_t ctStrLen(const char (&str)[N]) {
+  return N - 1; // Subtract 1 to exclude the null terminator
+}
+
+template <size_t N>
+struct TemplateString {
+  char data[N + 1];
+
+  // Constructor
+  template <size_t M>
+  constexpr TemplateString(auto (&str)[M]) : data{} {
+    static_assert(M <= N + 1, "String is too long for buffer");
+    std::copy_n(str, M, data);
+  }
+
+  // Accessor
+  constexpr operator std::string_view() const { return std::string_view(data, N); }
+};
+
+} // namespace axdl

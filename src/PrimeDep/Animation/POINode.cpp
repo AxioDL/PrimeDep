@@ -25,14 +25,15 @@ POINode::POINode(athena::io::IStreamReader& in)
 , x28_unique(in.readBool())
 , x2c_weight(in.readFloatBig())
 , x30_charIdx(in.readInt32Big())
-, x34_flags(in.readInt32Big()) {}
+, x34_flags(in.readInt32Big()) {
+  assert(x4_ == 1 && "x4_ is not 1!");
+}
 
 bool POINode::operator>(const POINode& other) const { return x1c_time > other.x1c_time; }
 
 bool POINode::operator<(const POINode& other) const { return x1c_time < other.x1c_time; }
 
 void POINode::PutTo(nlohmann::ordered_json& j) const {
-  j["Unknown"] = x4_;
   j["Name"] = x8_name;
   j["Type"] = magic_enum::enum_name(x18_type);
   x1c_time.PutTo(j["Time"]);

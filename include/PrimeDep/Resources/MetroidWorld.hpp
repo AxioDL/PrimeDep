@@ -9,7 +9,7 @@
 
 namespace axdl::primedep {
 class StringTable;
-class MetroidWorld final : public ITypedResource<FOURCC('MLVL'), "Metroid World Definition"> {
+class MetroidWorld final : public TypedResource('MLVL', ".world", ".mwld", DESCRIPTION("Metroid World Definition")) {
 public:
   static constexpr uint32_t kWorldMagic = 0xDEAFBABE;
   enum class EVersion {
@@ -100,10 +100,10 @@ public:
 
   std::optional<std::vector<std::shared_ptr<IResource>>> children() const override;
 
-  static bool canInjest(const nlohmann::ordered_json& metadata) {
+  static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
     return nullptr;
   }
 

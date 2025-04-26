@@ -76,10 +76,12 @@ using ResourceFactory64Big = ResourceFactory<ResourceDescriptor64Big>;
 
 template <class T>
 static void RegisterFactory32Big(ResourceFactory32Big& in) {
-  std::cout << std::format("Registering factory {} - {}", T::ResourceType().toString(), T::Description()) << std::endl;
+  std::cout << std::format("Registering factory {} - {}, raw {}, cooked {}", T::ResourceType().toString(),
+                           T::Description(), T::RawExtension(), T::CookedExtension())
+            << std::endl;
   in.registerCookedFactory(T::ResourceType(), T::loadCooked);
-  in.registerInjestValidationFactory(T::ResourceType(), T::canInjest);
-  in.registerInjestFactory(T::ResourceType(), T::injest);
+  in.registerInjestValidationFactory(T::ResourceType(), T::canIngest);
+  in.registerInjestFactory(T::ResourceType(), T::ingest);
 }
 
 } // namespace axdl::primedep

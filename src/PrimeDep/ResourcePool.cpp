@@ -31,11 +31,7 @@ std::shared_ptr<IResource>
 ResourcePool32Big::internalResourceByDescriptor(const ResourceDescriptor32Big& newDesc) const {
   const auto& [data, size] = m_currentSource->loadData(newDesc);
   if (const auto& factory = m_factory.cookedFactory(newDesc.type()); data != nullptr && size != 0 && factory) {
-    auto ret = factory(data, size, newDesc);
-    if (!ret) {
-      delete[] data;
-    }
-    return ret;
+    return factory(data, size, newDesc);
   }
   delete[] data;
   return nullptr;

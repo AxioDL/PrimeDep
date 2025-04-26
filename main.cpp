@@ -6,12 +6,16 @@
 #include "PrimeDep/Resources/AnimSource.hpp"
 #include "PrimeDep/Resources/CharLayoutInfo.hpp"
 #include "PrimeDep/Resources/CollisionResponseData.hpp"
+#include "PrimeDep/Resources/GuiFrame.hpp"
 #include "PrimeDep/Resources/MapWorld.hpp"
 #include "PrimeDep/Resources/MetroidWorld.hpp"
 #include "PrimeDep/Resources/Model.hpp"
 #include "PrimeDep/Resources/Particle.hpp"
 #include "PrimeDep/Resources/ParticleElectric.hpp"
 #include "PrimeDep/Resources/ParticleSwoosh.hpp"
+#include "PrimeDep/Resources/ProjectileWeapon.hpp"
+#include "PrimeDep/Resources/RasterFont.hpp"
+#include "PrimeDep/Resources/ScannableObjectInfo.hpp"
 #include "PrimeDep/Resources/StringTable.hpp"
 #include "PrimeDep/Resources/SkinRules.hpp"
 #include "PrimeDep/Resources/Texture.hpp"
@@ -60,10 +64,10 @@ void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
   axdl::primedep::RegisterFactory32Big<axdl::primedep::ParticleSwoosh>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::Particle>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::ParticleElectric>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::ProjectileWeapon>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::GuiFrame>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::RasterFont>(factory);
-  // axdl::primedep::RegisterFactory32Big<axdl::primedep::ScannableObjectInfo>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::ProjectileWeapon>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::GuiFrame>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::RasterFont>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::ScannableObjectInfo>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::AnimPOIData>(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::AiFiniteStateMachine>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioGroup>(factory);
@@ -72,6 +76,7 @@ void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::AudioTranslationTable>(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::PathFindArea>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MapWorld>(factory);
+  // axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidArea(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::MapArea>(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::MapUniverse>(factory);
   // axdl::primedep::RegisterFactory32Big<axdl::primedep::MidiData>(factory);
@@ -117,6 +122,11 @@ int main(int argc, char** argv) {
   std::filesystem::path inputFolder = argv[1];
   std::filesystem::path outputFolder = argv[2];
 
+  // TODO: Gather this information from the binary
+  nlohmann::ordered_json manifest;
+  manifest["Game"] = "Metroid Prime 1";
+  manifest["GameVersion"] = "v1.088";
+
   std::shared_ptr<axdl::primedep::PakFile32Big> metroid1;
   for (const auto& entry : std::filesystem::directory_iterator(inputFolder)) {
     if (!entry.is_regular_file()) {
@@ -135,6 +145,7 @@ int main(int argc, char** argv) {
     }
     pak->writeMetadata((outputFolder / repPath).generic_string());
     pool->addSource(pak);
+    manifest["Paks"].push_back("$" / repPath.replace_extension(".prj"));
   }
 
 #if 0
@@ -194,7 +205,7 @@ int main(int argc, char** argv) {
 #endif
 #if 1
   auto stringTags = pool->tagsByType(axdl::primedep::kInvalidFourCC);
-  std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
+  // std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
   auto uniqueTags = std::set(stringTags.begin(), stringTags.end());
 
   printf("\n\n");
@@ -223,11 +234,14 @@ int main(int argc, char** argv) {
       if (string->typeCode() == axdl::primedep::AnimPOIData::ResourceType()) {
         (void)string->writeUncooked(outPath.generic_string());
       }
+      manifest["Assets"].push_back(string->rawPath(repPath));
     }
     ++i;
   }
   std::flush(std::cout);
   printf("Complete!\n");
+  athena::io::FileWriter writer((outputFolder / "Game.manifest").generic_string());
+  writer.writeString(manifest.dump(4) + "\n");
 #endif
   return 0;
 }

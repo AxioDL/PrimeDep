@@ -2,7 +2,7 @@
 #include "PrimeDep/IResource.hpp"
 
 namespace axdl::primedep {
-class MapWorld final : public ITypedResource<FOURCC('MAPW'), "AutoMapper Map List"> {
+class MapWorld final : public TypedResource('MAPW', ".mapworld", ".mapw", DESCRIPTION("AutoMapper Map List")) {
 public:
   static constexpr uint32_t kMapWorldMagic = 0xDEADF00D;
   static constexpr uint32_t kMapWorldVersion = 1;
@@ -12,10 +12,10 @@ public:
   bool writeUncooked(std::string_view path) const override;
 
   static std::shared_ptr<IResource> loadCooked(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
-  static bool canInjest(const nlohmann::ordered_json& metadata) {
+  static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> injest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
     return nullptr;
   }
 
