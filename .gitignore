@@ -1,0 +1,12 @@
+*.autosave
+*.user
+.buildcache/
+.directory
+.DS_Store
+.idea/
+.vs/
+build/
+cmake-build-*/
+CMakeUserPresets.json
+docs/*
+out/

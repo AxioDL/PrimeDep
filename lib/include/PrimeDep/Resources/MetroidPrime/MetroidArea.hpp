@@ -1,0 +1,17 @@
+#pragma once
+
+#include "PrimeDep/IResource.hpp"
+namespace axdl::primedep::MetroidPrime {
+class MetroidArea final : public TypedResource('MREA', ".area", ".mrea", DESCRIPTION("Metroid Area")) {
+public:
+  MetroidArea(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+
+  static bool canIngest(const nlohmann::ordered_json& metadata) {
+    return metadata["ResourceType"] == ResourceType().toString();
+  }
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+    return nullptr;
+  }
+};
+} // namespace axdl::primedep::MetroidPrime
