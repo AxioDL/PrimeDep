@@ -112,8 +112,8 @@ std::tuple<const char*, uint32_t> PakFile::loadData(const ResourceDescriptor32Bi
     uint32_t decompressedSize = *reinterpret_cast<uint32_t*>(data);
     athena::utility::BigUint32(decompressedSize);
     const auto decompressedData = new char[decompressedSize];
-    if (athena::io::Compression::decompressZlib(reinterpret_cast<const atUint8*>(data + 4), desc.dataSize() - 4,
-                                                reinterpret_cast<atUint8*>(decompressedData),
+    if (athena::io::Compression::decompressZlib(reinterpret_cast<const uint8_t*>(data + 4), desc.dataSize() - 4,
+                                                reinterpret_cast<uint8_t*>(decompressedData),
                                                 decompressedSize) != decompressedSize) {
       delete[] data;
       delete[] decompressedData;

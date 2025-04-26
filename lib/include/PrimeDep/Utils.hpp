@@ -1,6 +1,5 @@
 #pragma once
 
-#include <endian.h>
 #include <string_view>
 #include <string>
 #include <codecvt>
@@ -150,7 +149,7 @@ struct TemplateString {
 
   // Constructor
   template <size_t M>
-  constexpr TemplateString(auto (&str)[M]) : data{} {
+  constexpr TemplateString(const char (&str)[M]) : data{} {
     static_assert(M <= N + 1, "String is too long for buffer");
     std::copy_n(str, M, data);
   }

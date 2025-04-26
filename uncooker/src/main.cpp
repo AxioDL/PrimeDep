@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
   HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
   // Get the current console mode
   DWORD dwMode = 0;
-  if (!GetConsoleMode(hConsole, &dwMode)) {
+  if (!GetConsoleMode(hStdout, &dwMode)) {
     std::cerr << "Error hStdout console mode: " << GetLastError() << std::endl;
     return 1;
   }
@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
     std::cerr << "Error setting console mode: " << GetLastError() << std::endl;
     return 1;
   }
-  SetConsoleMode(hStdout, ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #endif
       if (argc != 3) {
     std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
@@ -143,7 +142,7 @@ int main(int argc, char** argv) {
     if (!entry.is_regular_file()) {
       continue;
     }
-    std::string extension = entry.path().extension();
+    std::string extension = entry.path().extension().generic_string();
     athena::utility::tolower(extension);
 
     if (extension != ".pak") {
