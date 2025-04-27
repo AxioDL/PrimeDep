@@ -3,7 +3,7 @@
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep::MetroidPrime {
 class DependencyGroup final
-: public TypedResource('DGRP', ".meta", "", DESCRIPTION("Ai Finite State Machine")) {
+: public TypedResource('DGRP', ".meta", "", DESCRIPTION("Asset Dependency Group")) {
 public:
   DependencyGroup(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
