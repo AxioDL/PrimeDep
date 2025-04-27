@@ -5,8 +5,8 @@ namespace axdl::primedep::MetroidPrime {
 // TODO: Figure out how best to handle CSKR, ANIM and CINF files
 class SkinRules final : public TypedResource('CSKR', ".cin.meta", ".cin", DESCRIPTION("Model Skinning Information")) {
 public:
-  SkinRules(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  SkinRules(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

@@ -35,7 +35,7 @@ GraphicsPalette::GraphicsPalette(athena::io::IStreamReader& in) {
   in.readUBytesToBuf(m_entries.get(), entryCount() * sizeof(uint16_t));
 }
 
-Texture::Texture(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc) : ITypedResource(desc) {
+Texture::Texture(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
 
   m_format = static_cast<ETexelFormat>(in.readUint32Big());
@@ -55,8 +55,8 @@ Texture::Texture(const char* ptr, const std::size_t size, const ResourceDescript
   }
 }
 
-std::shared_ptr<IResource> Texture::loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc) {
-  return std::make_shared<Texture>(ptr, size, desc);
+std::shared_ptr<IResource> Texture::loadCooked(const char* ptr, std::size_t size) {
+  return std::make_shared<Texture>(ptr, size);
 }
 
 nlohmann::ordered_json Texture::metadata(const std::string_view path) const {

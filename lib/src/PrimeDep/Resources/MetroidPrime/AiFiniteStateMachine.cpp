@@ -3,12 +3,10 @@
 #include "athena/MemoryReader.hpp"
 
 namespace axdl::primedep::MetroidPrime {
-AiFiniteStateMachine::AiFiniteStateMachine(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc)
-: ITypedResource(desc) {
+AiFiniteStateMachine::AiFiniteStateMachine(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader mr(ptr, size, true);
 }
-std::shared_ptr<IResource> AiFiniteStateMachine::loadCooked(const char* ptr, std::size_t size,
-                                                            const ResourceDescriptor32Big& desc) {
-  return std::make_shared<AiFiniteStateMachine>(ptr, size, desc);
+std::shared_ptr<IResource> AiFiniteStateMachine::loadCooked(const char* ptr, std::size_t size) {
+  return std::make_shared<AiFiniteStateMachine>(ptr, size);
 }
 } // namespace axdl::primedep::MetroidPrime

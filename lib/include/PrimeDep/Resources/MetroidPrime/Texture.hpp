@@ -44,9 +44,9 @@ private:
 
 class Texture final : public TypedResource('TXTR', ".png", ".txtr", DESCRIPTION("Texture Image Resource")) {
 public:
-  Texture(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  Texture(const char* ptr, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   [[nodiscard]] ETexelFormat format() const { return m_format; }
   [[nodiscard]] uint16_t width() const { return m_width; }

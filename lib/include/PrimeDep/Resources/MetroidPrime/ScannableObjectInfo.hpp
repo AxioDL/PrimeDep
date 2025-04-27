@@ -5,10 +5,10 @@
 namespace axdl::primedep::MetroidPrime {
 class ScannableObjectInfo : public TypedResource('SCAN', ".rawscan", ".scan", DESCRIPTION("Scannable Object Info")) {
 public:
-  ScannableObjectInfo(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  ScannableObjectInfo(const char* ptr, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc) {
-    return std::make_shared<ScannableObjectInfo>(ptr, size, desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size) {
+    return std::make_shared<ScannableObjectInfo>(ptr, size);
   }
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {

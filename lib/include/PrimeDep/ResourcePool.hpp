@@ -1,11 +1,14 @@
 #pragma once
 #include "ObjectTag.hpp"
-#include "ResourceFactory.hpp"
-#include "PrimeDep/IResourceSource.hpp"
 #include "PrimeDep/IResource.hpp"
+#include "PrimeDep/IResourceSource.hpp"
+#include "ResourceFactory.hpp"
 
 #include <iostream>
 
+namespace axdl::primedep {
+struct ResourceNameDatabase;
+}
 namespace axdl::primedep {
 template <class ResourceDescriptorType, class ObjectTagType>
 class ResourcePool {
@@ -53,20 +56,27 @@ protected:
   std::map<ResourceDescriptorType, std::shared_ptr<IResource>> m_loadedResources;
 };
 
-class ResourcePool32Big final : public ResourcePool<ResourceDescriptor32Big, ObjectTag32Big> {
+class ResourcePool32Big : public ResourcePool<ResourceDescriptor32Big, ObjectTag32Big> {
 public:
+  ResourcePool32Big() { m_instance = this; }
   [[nodiscard]] ResourceDescriptor32Big resourceDescriptorByName(std::string_view name) override;
   [[nodiscard]] ResourceDescriptor32Big resourceDescriptorById(const ObjectTag32Big& tag) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceById(const ObjectTag32Big& tag) override;
 
-  static ResourcePool32Big* instance() {
-    static ResourcePool32Big instance;
-    return &instance;
-  }
+  static ResourcePool32Big* instance() { return m_instance; }
 
 private:
+  static ResourcePool32Big* m_instance;
   std::shared_ptr<IResource> internalResourceByDescriptor(const ResourceDescriptor32Big& newDesc) const;
 };
 
+class ResourcePool32BigNamer final : public ResourcePool32Big {
+public:
+  explicit ResourcePool32BigNamer(const ResourceNameDatabase& nameDb) : m_nameDb(nameDb) {}
+  std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc) override;
+
+private:
+  const ResourceNameDatabase& m_nameDb;
+};
 } // namespace axdl::primedep

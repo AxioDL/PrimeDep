@@ -2,11 +2,10 @@
 
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep::MetroidPrime {
-class SaveWorld final
-: public TypedResource('SAVW', ".saveworld", ".savw", DESCRIPTION("Metroid World Save Data")) {
+class SaveWorld final : public TypedResource('SAVW', ".saveworld", ".savw", DESCRIPTION("Metroid World Save Data")) {
 public:
-  SaveWorld(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  SaveWorld(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

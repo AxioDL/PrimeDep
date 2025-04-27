@@ -2,6 +2,7 @@
 #include <PrimeDep/ResourceNameDatabase.hpp>
 #include <PrimeDep/ResourcePool.hpp>
 #include <PrimeDep/Resources/MetroidPrime/AiFiniteStateMachine.hpp>
+#include <PrimeDep/Resources/MetroidPrime/AnimCharacterSet.hpp>
 #include <PrimeDep/Resources/MetroidPrime/AnimPOIData.hpp>
 #include <PrimeDep/Resources/MetroidPrime/AnimSource.hpp>
 #include <PrimeDep/Resources/MetroidPrime/AudioGroup.hpp>
@@ -71,6 +72,7 @@ void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::SkinRules>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AnimSource>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::CharLayoutInfo>(factory);
+  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AnimCharacterSet>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::CollisionResponseData>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::ParticleSwoosh>(factory);
   axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::Particle>(factory);
@@ -128,10 +130,10 @@ int main(int argc, char** argv) {
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
   addFactories(factory);
-  
+
   // Spin up the pool
-  auto* pool = axdl::primedep::ResourcePool32Big::instance();
-  pool->setFactory(factory);
+  axdl::primedep::ResourcePool32BigNamer pool(axdl::primedep::ResourceNameDatabase::instance());
+  pool.setFactory(factory);
 
   // Gather paks
   std::filesystem::path inputFolder = argv[1];
@@ -158,9 +160,9 @@ int main(int argc, char** argv) {
     if (!exists(outputFolder)) {
       create_directories(outputFolder);
     }
+    pool.addSource(pak);
     pak->writeMetadata((outputFolder / repPath).generic_string());
-    pool->addSource(pak);
-    manifest["Paks"].push_back("$" / repPath.replace_extension(".prj"));
+    manifest["Packages"].push_back("$" / repPath.replace_extension(".prj"));
   }
 
 #if 0
@@ -219,7 +221,7 @@ int main(int argc, char** argv) {
   }
 #endif
 #if 1
-  auto stringTags = pool->tagsByType(axdl::primedep::kInvalidFourCC);
+  auto stringTags = pool.tagsByType(axdl::primedep::kInvalidFourCC);
   // std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
   auto uniqueTags = std::set(stringTags.begin(), stringTags.end());
 
@@ -239,15 +241,14 @@ int main(int argc, char** argv) {
     std::cout << "\033[0;KProcessing " << repPath << "...\n";
     std::flush(std::cout);
 
-    auto string = pool->resourceById(tag);
-    if (string) {
+    if (auto string = pool.resourceById(tag)) {
       const auto outPath = (outputFolder / fileOut);
       if (!std::filesystem::exists(outPath)) {
         std::filesystem::create_directories(outPath.parent_path());
       }
       string->writeMetadata(outPath.generic_string(), repPath);
       (void)string->writeUncooked(outPath.generic_string());
-      manifest["Assets"].push_back(string->rawPath(repPath));
+      manifest["Assets"].push_back(string->rawPath(string->repPath()));
     }
     ++i;
   }

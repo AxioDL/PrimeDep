@@ -3,8 +3,7 @@
 #include "athena/MemoryReader.hpp"
 
 namespace axdl::primedep::MetroidPrime {
-AnimPOIData::AnimPOIData(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc)
-: ITypedResource(desc) {
+AnimPOIData::AnimPOIData(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
 
   m_version = in.readUint32Big();
@@ -64,10 +63,9 @@ bool AnimPOIData::writeUncooked(std::string_view path) const {
   return !writer.hasError();
 }
 
-std::shared_ptr<IResource> AnimPOIData::loadCooked(const char* ptr, const std::size_t size,
-                                                   const ResourceDescriptor32Big& desc) {
+std::shared_ptr<IResource> AnimPOIData::loadCooked(const char* ptr, const std::size_t size) {
 
-  return std::make_shared<AnimPOIData>(ptr, size, desc);
+  return std::make_shared<AnimPOIData>(ptr, size);
 }
 
 } // namespace axdl::primedep::MetroidPrime

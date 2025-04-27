@@ -5,9 +5,9 @@
 namespace axdl::primedep::MetroidPrime {
 class AudioGroup final : public TypedResource('AGSC', ".agsr", ".agsc", DESCRIPTION("MusyX Audio Group")) {
 public:
-  AudioGroup(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
+  AudioGroup(const char* data, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* data, std::size_t size);
 
   [[nodiscard]] bool writeUncooked(std::string_view path) const override;
   [[nodiscard]] bool writeCooked(std::string_view path) const override;

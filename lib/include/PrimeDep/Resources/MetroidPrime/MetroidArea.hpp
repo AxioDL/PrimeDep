@@ -4,8 +4,8 @@
 namespace axdl::primedep::MetroidPrime {
 class MetroidArea final : public TypedResource('MREA', ".area", ".mrea", DESCRIPTION("Metroid Area")) {
 public:
-  MetroidArea(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  MetroidArea(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

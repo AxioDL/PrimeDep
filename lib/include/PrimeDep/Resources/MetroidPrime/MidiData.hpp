@@ -2,11 +2,10 @@
 
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep::MetroidPrime {
-class MidiData final
-: public TypedResource('CSNG', ".song", ".csng", DESCRIPTION("MusyX Song Data")) {
+class MidiData final : public TypedResource('CSNG', ".song", ".csng", DESCRIPTION("MusyX Song Data")) {
 public:
-  MidiData(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  MidiData(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

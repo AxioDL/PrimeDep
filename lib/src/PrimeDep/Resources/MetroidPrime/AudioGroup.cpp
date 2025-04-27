@@ -6,7 +6,7 @@
 #include <source_location>
 
 namespace axdl::primedep::MetroidPrime {
-AudioGroup::AudioGroup(const char* data, std::size_t size, const ResourceDescriptor32Big& desc) : ITypedResource(desc) {
+AudioGroup::AudioGroup(const char* data, const std::size_t size) {
   athena::io::MemoryReader in(data, size, true);
   m_moduleDir = in.readString();
   m_moduleName = in.readString();
@@ -24,9 +24,8 @@ AudioGroup::AudioGroup(const char* data, std::size_t size, const ResourceDescrip
   in.readUBytesToBuf(m_sampleDir.get(), m_sampleDirSize);
 }
 
-std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t size,
-                                                  const ResourceDescriptor32Big& desc) {
-  return std::make_shared<AudioGroup>(data, size, desc);
+std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t size) {
+  return std::make_shared<AudioGroup>(data, size);
 }
 
 bool AudioGroup::writeUncooked(const std::string_view path) const {
@@ -40,11 +39,10 @@ bool AudioGroup::writeUncooked(const std::string_view path) const {
     nlohmann::ordered_json info;
     info["ModuleDir"] = m_moduleDir;
     info["ModuleName"] = m_moduleName;
-    auto repPath = ResourceNameDatabase::instance().pathForAsset(ObjectTag32Big{FOURCC('AGSC'), m_desc32Big.assetId()});
-    info["PoolFile"] = std::filesystem::path(repPath).replace_extension(".pool").generic_string();
-    info["ProjectFile"] = std::filesystem::path(repPath).replace_extension(".proj").generic_string();
-    info["SamplesFile"] = std::filesystem::path(repPath).replace_extension(".samp").generic_string();
-    info["SampleDirectoryFile"] = std::filesystem::path(repPath).replace_extension(".sdir").generic_string();
+    info["PoolFile"] = std::filesystem::path(repPath()).replace_extension(".pool").generic_string();
+    info["ProjectFile"] = std::filesystem::path(repPath()).replace_extension(".proj").generic_string();
+    info["SamplesFile"] = std::filesystem::path(repPath()).replace_extension(".samp").generic_string();
+    info["SampleDirectoryFile"] = std::filesystem::path(repPath()).replace_extension(".sdir").generic_string();
     athena::io::FileWriter writer(infoPath.generic_string());
     std::string js = info.dump(4) + "\n";
     writer.writeString(js, js.length());
@@ -114,4 +112,4 @@ nlohmann::ordered_json AudioGroup::metadata(const std::string_view path) const {
   return json;
 }
 
-} // namespace axdl::primedep
+} // namespace axdl::primedep::MetroidPrime

@@ -1,14 +1,15 @@
 #include "PrimeDep/Resources/MetroidPrime/PakFile.hpp"
 #include "PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
+#include "PrimeDep/ResourcePool.hpp"
 
 #include <athena/Compression.hpp>
-#include <athena/FileWriter.hpp>
 #include <athena/FileReader.hpp>
+#include <athena/FileWriter.hpp>
 
 #include <fstream>
 
-namespace axdl::primedep ::MetroidPrime{
+namespace axdl::primedep ::MetroidPrime {
 bool PakFile::loadHeader() {
   athena::io::FileReader in(m_path);
   m_magic = in.readUint32Big();
@@ -136,10 +137,15 @@ nlohmann::ordered_json PakFile::metadata() const {
     nlohmann::ordered_json& descriptor = namedResources.emplace_back();
     descriptor["Name"] = namedRes.name();
     const auto tag = ObjectTag32Big{namedRes.type(), namedRes.assetId()};
-    descriptor["File"] = ResourceNameDatabase::instance().pathForAsset(tag);
+    const auto res = ResourcePool32Big::instance()->resourceById(tag);
+    if (res) {
+      descriptor["File"] = res->cookedPath(res->repPath());
+    } else {
+      tag.PutTo(descriptor["Ref"]);
+    }
   }
 
   return ret;
 }
 
-} // namespace axdl::primedep
+} // namespace axdl::primedep::MetroidPrime

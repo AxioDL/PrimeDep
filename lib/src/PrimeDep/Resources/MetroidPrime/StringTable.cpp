@@ -1,19 +1,18 @@
 #include "PrimeDep/Resources/MetroidPrime/StringTable.hpp"
 
-#include "magic_enum/magic_enum.hpp"
 #include "PrimeDep/Utils.hpp"
+#include "magic_enum/magic_enum.hpp"
 
 #include <athena/MemoryReader.hpp>
 
-namespace axdl::primedep ::MetroidPrime{
+namespace axdl::primedep ::MetroidPrime {
 namespace {
 constexpr std::array languages{
     FOURCC('ENGL'), FOURCC('FREN'), FOURCC('GERM'), FOURCC('SPAN'), FOURCC('ITAL'), FOURCC('DUTC'), FOURCC('JAPN'),
 };
 } // Anonymous namespace
 
-StringTable::StringTable(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc)
-: ITypedResource(desc) {
+StringTable::StringTable(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
   uint32_t magic = in.readUint32Big();
   assert(magic == kMagicNum && "Unexpected magic number");
@@ -70,9 +69,8 @@ std::u16string StringTable::string(const uint32_t idx, const FourCC& lang) const
   return pool.m_strings.get() + pool.m_stringOffsets[idx];
 }
 
-std::shared_ptr<IResource> StringTable::loadCooked(const char* ptr, std::size_t size,
-                                                   const ResourceDescriptor32Big& desc) {
-  return std::make_shared<StringTable>(ptr, size, desc);
+std::shared_ptr<IResource> StringTable::loadCooked(const char* ptr, const std::size_t size) {
+  return std::make_shared<StringTable>(ptr, size);
 }
 
 bool StringTable::writeUncooked(const std::string_view path) const {
@@ -80,7 +78,7 @@ bool StringTable::writeUncooked(const std::string_view path) const {
   while (p.has_extension()) {
     p.replace_extension();
   }
-  p.replace_extension(".strg");
+  p.replace_extension(RawExtension());
 
   nlohmann::ordered_json json;
   json["Version"] = magic_enum::enum_name(m_version);
@@ -98,4 +96,4 @@ bool StringTable::writeUncooked(const std::string_view path) const {
   writer.writeString(js, js.length());
   return !writer.hasError();
 }
-} // namespace axdl::primedep
+} // namespace axdl::primedep::MetroidPrime

@@ -5,8 +5,8 @@ namespace axdl::primedep ::MetroidPrime {
 class CollisionResponseData final
 : public TypedResource('CRSC', ".crsm", ".crsm.crsc", DESCRIPTION("Collision Response Data")) {
 public:
-  CollisionResponseData(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  CollisionResponseData(const char* ptr, std::size_t size);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

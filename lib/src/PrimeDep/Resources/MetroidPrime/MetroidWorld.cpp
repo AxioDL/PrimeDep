@@ -50,8 +50,7 @@ MetroidWorld::Area::Area(athena::io::IStreamReader& in)
 MetroidWorld::AreaLayer::AreaLayer(athena::io::IStreamReader& in)
 : layerCount(in.readUint32Big()), layerBits(in.readUint64Big()) {}
 
-MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc)
-: ITypedResource(desc) {
+MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
   m_magic = in.readUint32Big();
   if (m_magic != kWorldMagic) {
@@ -126,9 +125,8 @@ std::optional<std::vector<std::shared_ptr<IResource>>> MetroidWorld::children() 
   return children;
 }
 
-std::shared_ptr<IResource> MetroidWorld::loadCooked(const char* ptr, std::size_t size,
-                                                    const ResourceDescriptor32Big& desc) {
-  return std::make_shared<MetroidWorld>(ptr, size, desc);
+std::shared_ptr<IResource> MetroidWorld::loadCooked(const char* ptr, std::size_t size) {
+  return std::make_shared<MetroidWorld>(ptr, size);
 }
 
 } // namespace axdl::primedep::MetroidPrime

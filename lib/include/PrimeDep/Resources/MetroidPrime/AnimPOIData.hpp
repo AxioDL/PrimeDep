@@ -8,11 +8,11 @@
 namespace axdl::primedep::MetroidPrime {
 class AnimPOIData final : public TypedResource('EVNT', ".evnt.json", ".evnt", DESCRIPTION("Animation POI Data")) {
 public:
-  AnimPOIData(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  AnimPOIData(const char* ptr, std::size_t size);
 
   bool writeUncooked(std::string_view path) const override;
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

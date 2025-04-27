@@ -6,11 +6,10 @@ namespace axdl::primedep ::MetroidPrime {
 class ProjectileWeapon
 : public TypedResource('WPSC', ".wpsm", ".wpsm.wpsc", DESCRIPTION("Projectile Weapon Definition")) {
 public:
-  ProjectileWeapon(const char* data, std::size_t size, const ResourceDescriptor32Big& desc);
+  ProjectileWeapon(const char* data, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* data, const std::size_t size,
-                                               const ResourceDescriptor32Big& desc) {
-    return std::make_shared<ProjectileWeapon>(data, size, desc);
+  static std::shared_ptr<IResource> loadCooked(const char* data, const std::size_t size) {
+    return std::make_shared<ProjectileWeapon>(data, size);
   }
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {

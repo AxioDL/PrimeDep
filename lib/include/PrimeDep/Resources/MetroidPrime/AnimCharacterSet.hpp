@@ -2,10 +2,10 @@
 
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep::MetroidPrime {
-class AiFiniteStateMachine final
-: public TypedResource('AFSM', ".statemachine", ".afsm", DESCRIPTION("Ai Finite State Machine")) {
+class AnimCharacterSet final
+: public TypedResource('ANCS', ".animcharset", ".acs", DESCRIPTION("Animation Character Set")) {
 public:
-  AiFiniteStateMachine(const char* ptr, std::size_t size);
+  AnimCharacterSet(const char* ptr, std::size_t size);
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {

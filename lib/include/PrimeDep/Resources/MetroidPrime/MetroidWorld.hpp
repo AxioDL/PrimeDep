@@ -61,9 +61,9 @@ public:
     explicit AreaLayer(athena::io::IStreamReader& in);
   };
 
-  MetroidWorld(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  MetroidWorld(const char* ptr, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   std::optional<std::vector<ObjectTag32Big>> childTags() const override {
     std::vector<ObjectTag32Big> childTags;

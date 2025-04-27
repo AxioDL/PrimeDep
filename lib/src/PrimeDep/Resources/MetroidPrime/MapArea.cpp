@@ -27,7 +27,7 @@ MapArea::MapAreaSurface::MapAreaSurface(athena::io::IStreamReader& in)
 , m_surfaceOffset(in.readUint32Big())
 , m_lineOffset(in.readUint32Big()) {}
 
-MapArea::MapArea(const char* ptr, const std::size_t size, const ResourceDescriptor32Big& desc) : ITypedResource(desc) {
+MapArea::MapArea(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
   if (const auto magic = in.readUint32Big(); magic != kMagicNumber) {
     return;
@@ -68,7 +68,7 @@ MapArea::MapArea(const char* ptr, const std::size_t size, const ResourceDescript
 }
 
 bool MapArea::writeUncooked(std::string_view path) const {
-  auto p = GetRawPath(path);
+  auto p = rawPath(path);
   auto modelP = p;
   modelP.replace_extension(".gltf");
 
@@ -90,8 +90,8 @@ bool MapArea::writeUncooked(std::string_view path) const {
   return !writer.hasError();
 }
 
-std::shared_ptr<IResource> MapArea::loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc) {
-  return std::make_shared<MapArea>(ptr, size, desc);
+std::shared_ptr<IResource> MapArea::loadCooked(const char* ptr, std::size_t size) {
+  return std::make_shared<MapArea>(ptr, size);
 }
 
 } // namespace axdl::primedep::MetroidPrime

@@ -1,5 +1,7 @@
 #include "PrimeDep/ResourcePool.hpp"
 
+#include "PrimeDep/ResourceNameDatabase.hpp"
+
 namespace axdl::primedep {
 ResourceDescriptor32Big ResourcePool32Big::resourceDescriptorByName(std::string_view name) {
   if (m_currentSource && m_currentSource->hasNamedResource(name)) {
@@ -31,7 +33,7 @@ std::shared_ptr<IResource>
 ResourcePool32Big::internalResourceByDescriptor(const ResourceDescriptor32Big& newDesc) const {
   const auto& [data, size] = m_currentSource->loadData(newDesc);
   if (const auto& factory = m_factory.cookedFactory(newDesc.type()); data != nullptr && size != 0 && factory) {
-    return factory(data, size, newDesc);
+    return factory(data, size);
   }
   delete[] data;
   return nullptr;
@@ -44,7 +46,7 @@ std::shared_ptr<IResource> ResourcePool32Big::resourceByDescriptor(const Resourc
 
   if (m_currentSource) {
     // We always want to make sure we have a valid descriptor for the target pak file
-    const auto& newDesc = m_currentSource->descriptorById({desc.type(), desc.assetId()});
+    const auto& newDesc = m_currentSource->descriptorById(ObjectTag32Big(desc.type(), desc.assetId()));
     if (const auto& ret = internalResourceByDescriptor(newDesc); ret) {
       m_loadedResources[desc] = ret;
       return ret;
@@ -87,5 +89,18 @@ std::shared_ptr<IResource> ResourcePool32Big::resourceById(const ObjectTag32Big&
   }
 
   return nullptr;
+}
+
+ResourcePool32Big* ResourcePool32Big::m_instance = nullptr;
+
+std::shared_ptr<IResource> ResourcePool32BigNamer::resourceByDescriptor(const ResourceDescriptor32Big& desc) {
+  auto ret = ResourcePool32Big::resourceByDescriptor(desc);
+  if (ret) {
+    const auto tag = ObjectTag32Big(desc.type(), desc.assetId());
+    ret->setRepPath(m_nameDb.pathForAsset(tag), m_nameDb.hasPath(tag));
+    ret->setAssetId(desc.assetId().toString());
+  }
+
+  return ret;
 }
 } // namespace axdl::primedep

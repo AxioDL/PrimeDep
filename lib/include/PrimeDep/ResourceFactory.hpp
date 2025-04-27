@@ -6,8 +6,8 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <utility>
 #include <nlohmann/json_fwd.hpp>
+#include <utility>
 
 namespace axdl::primedep {
 class IResource;
@@ -17,17 +17,16 @@ public:
   /**
    * Registered factories are given a buffer object that they own, they are responsible for properly cleaning it up
    */
-  using CookedFactoryFunc =
-      std::function<std::shared_ptr<IResource>(const char* ptr, std::size_t size, const ResourceDescriptor& desc)>;
+  using CookedFactoryFunc = std::function<std::shared_ptr<IResource>(const char* ptr, std::size_t size)>;
   using IngestValidationFunc = std::function<bool(const nlohmann::ordered_json& medata)>;
   using IngestFactoryFunc =
       std::function<std::shared_ptr<IResource>(const nlohmann::ordered_json& metadata, std::string_view repPath)>;
 
-  void registerCookedFactory(const FourCC& type, CookedFactoryFunc func) {
+  void registerCookedFactory(const FourCC& type, const CookedFactoryFunc& func) {
     if (m_cookedFactories.contains(type)) {
       return;
     }
-    m_cookedFactories[type] = std::move(func);
+    m_cookedFactories[type] = func;
   }
 
   [[nodiscard]] CookedFactoryFunc cookedFactory(const FourCC& type) const {
@@ -37,7 +36,7 @@ public:
     return nullptr;
   }
 
-  void registerIngestValidationFactory(const FourCC& type, IngestValidationFunc func) {
+  void registerIngestValidationFactory(const FourCC& type, const IngestValidationFunc& func) {
     if (m_ingestValidationFactories.contains(type)) {
       return;
     }
@@ -51,7 +50,7 @@ public:
     return nullptr;
   }
 
-  void registerIngestFactory(const FourCC& type, IngestFactoryFunc func) {
+  void registerIngestFactory(const FourCC& type, const IngestFactoryFunc& func) {
     if (m_ingestFactories.contains(type)) {
       return;
     }

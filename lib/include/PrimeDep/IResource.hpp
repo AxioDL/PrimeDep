@@ -1,22 +1,19 @@
 #pragma once
 
-#include "ObjectTag.hpp"
-#include "ResourceDescriptor.hpp"
-#include "ResourceNameDatabase.hpp"
+#include "PrimeDep/FourCC.hpp"
+#include "PrimeDep/ObjectTag.hpp"
 
+#include <athena/FileWriter.hpp>
 #include <format>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <vector>
-
-#include "PrimeDep/FourCC.hpp"
-#include <athena/FileWriter.hpp>
-#include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
 class IResource {
 public:
-  explicit IResource(const ResourceDescriptor32Big& desc) : m_desc32Big(desc) {}
+  IResource() = default;
 
   virtual ~IResource() = default;
   [[nodiscard]] virtual uint32_t childCount() const { return 0; }
@@ -50,8 +47,19 @@ public:
   virtual std::filesystem::path rawPath(std::string_view path) const = 0;
   virtual std::filesystem::path cookedPath(std::string_view path) const = 0;
 
+  const std::string& repPath() const { return m_repPath; }
+  void setRepPath(const std::string_view repPath, const bool known = false) {
+    m_repPath = repPath;
+    m_nameKnown = known;
+  }
+
+  const std::string& assetId() const { return m_assetID; }
+  void setAssetId(const std::string_view assetId) { m_assetID = assetId; }
+
 protected:
-  ResourceDescriptor32Big m_desc32Big;
+  std::string m_repPath;
+  bool m_nameKnown = false;
+  std::string m_assetID;
 };
 
 /**
@@ -66,7 +74,6 @@ template <FourCC TypeCode, TemplateString RawExt, TemplateString CookedExt, Temp
 class ITypedResource : public IResource {
 
 public:
-  explicit ITypedResource(const ResourceDescriptor32Big& desc) : IResource(desc) {}
   [[nodiscard]] constexpr FourCC typeCode() const override { return m_type; }
 
   static constexpr FourCC ResourceType() { return TypeCode; }
@@ -79,17 +86,17 @@ public:
 
   [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
     const auto rp = rawPath(path).generic_string();
-    if (ResourceNameDatabase::instance().hasPath(ObjectTag32Big(m_desc32Big.type(), m_desc32Big.assetId()))) {
+    if (m_nameKnown) {
       return {
           {"ResourceType", typeCode().toString()},
-          {"RawPath", rp},
+          {"RawPath", rawPath(m_repPath).generic_string()},
       };
     }
 
     return {
         {"ResourceType", typeCode().toString()},
         {"RawPath", rp},
-        {"AssetID", std::format("{:08X}", m_desc32Big.assetId().id)},
+        {"AssetID", m_assetID},
     };
   }
   static std::filesystem::path GetRawPath(const std::string_view path) {
@@ -114,7 +121,6 @@ public:
   std::filesystem::path cookedPath(const std::string_view path) const override { return GetCookedPath(path); }
 
   void writeMetadata(const std::string_view path, const std::string_view repPath) const override {
-
     IResource::writeMetadata(GetRawPath(path).generic_string(), repPath);
   }
 

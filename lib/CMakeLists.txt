@@ -13,6 +13,7 @@ add_library(
   src/PrimeDep/ResourceNameDatabase.cpp
   src/PrimeDep/ResourcePool.cpp
   src/PrimeDep/Resources/MetroidPrime/AiFiniteStateMachine.cpp
+  src/PrimeDep/Resources/MetroidPrime/AnimCharacterSet.cpp
   src/PrimeDep/Resources/MetroidPrime/AnimPOINodeData.cpp
   src/PrimeDep/Resources/MetroidPrime/AnimSource.cpp
   src/PrimeDep/Resources/MetroidPrime/AudioGroup.cpp
@@ -43,13 +44,14 @@ add_library(
   src/PrimeDep/Resources/MetroidPrime/StringTable.cpp
   src/PrimeDep/Resources/MetroidPrime/Texture.cpp
   src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp
-  include/PrimeDep/WorldCommon/MetroidPrime/EditorId.hpp)
+  src/PrimeDep/ObjectTag.cpp
+)
 
 target_include_directories(PrimeDep PUBLIC include
   ${tinygltf_SOURCE_DIR}
 )
-target_link_libraries(PrimeDep PUBLIC 
-  athena-core 
+target_link_libraries(PrimeDep PUBLIC
+  athena-core
   nlohmann_json::nlohmann_json
   magic_enum
   tinygltf

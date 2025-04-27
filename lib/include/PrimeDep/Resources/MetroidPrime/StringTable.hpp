@@ -18,11 +18,11 @@ public:
     uint32_t m_bufLen;
   };
 
-  StringTable(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  StringTable(const char* ptr, std::size_t size);
 
   std::u16string string(uint32_t idx, const FourCC& lang = FOURCC('ENGL')) const;
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc);
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
   [[nodiscard]] bool writeUncooked(std::string_view path) const override;
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;

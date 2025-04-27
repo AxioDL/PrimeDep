@@ -1,8 +1,8 @@
 #include "PrimeDep/Resources/MetroidPrime/GuiFrame.hpp"
 
-namespace axdl::primedep ::MetroidPrime{
-GuiFrame::GuiFrame(const char* ptr, std::size_t size, const ResourceDescriptor32Big& desc) : ITypedResource(desc) {
-  delete[] ptr;
-}
+#include <athena/MemoryReader.hpp>
 
-} // namespace axdl::primedep
+namespace axdl::primedep ::MetroidPrime {
+GuiFrame::GuiFrame(const char* ptr, const std::size_t size) { athena::io::MemoryReader in(ptr, size, true); }
+
+} // namespace axdl::primedep::MetroidPrime
