@@ -67,7 +67,7 @@ public:
 
   std::optional<std::vector<ObjectTag32Big>> childTags() const override {
     std::vector<ObjectTag32Big> childTags;
-    /* TODO: Acquire child tags */
+    /* TODO: Acquire child tags, don't just rely on stored values */
     for (const auto& area : m_areas) {
       for (const auto& dep : area.lazyLoadDependencies) {
         childTags.push_back(dep);
@@ -86,14 +86,14 @@ public:
         childTags.push_back(ObjectTag32Big(FourCC("MREA"sv), area.areaId));
       }
     }
+    if (m_skyboxId) {
+      childTags.push_back(ObjectTag32Big(FourCC("CMDL"sv), m_skyboxId));
+    }
     if (m_worldNameId) {
       childTags.push_back(ObjectTag32Big(FourCC("STRG"sv), m_worldNameId));
     }
     if (m_saveWorldId) {
       childTags.push_back(ObjectTag32Big(FourCC("SAVW"sv), m_saveWorldId));
-    }
-    if (m_skyboxId) {
-      childTags.push_back(ObjectTag32Big(FourCC("CMDL"sv), m_skyboxId));
     }
     return childTags;
   }

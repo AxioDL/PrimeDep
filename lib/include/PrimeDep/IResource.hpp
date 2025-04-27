@@ -4,14 +4,14 @@
 #include "ResourceDescriptor.hpp"
 #include "ResourceNameDatabase.hpp"
 
+#include <format>
+#include <memory>
 #include <optional>
 #include <vector>
-#include <memory>
-#include <format>
 
 #include "PrimeDep/FourCC.hpp"
-#include <nlohmann/json.hpp>
 #include <athena/FileWriter.hpp>
+#include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
 class IResource {
@@ -77,15 +77,18 @@ public:
   static constexpr std::string_view CookedExtension() { return CookedExt; }
   constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
 
-  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override {
+  [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
+    const auto rp = rawPath(path).generic_string();
     if (ResourceNameDatabase::instance().hasPath(ObjectTag32Big(m_desc32Big.type(), m_desc32Big.assetId()))) {
       return {
           {"ResourceType", typeCode().toString()},
+          {"RawPath", rp},
       };
     }
 
     return {
         {"ResourceType", typeCode().toString()},
+        {"RawPath", rp},
         {"AssetID", std::format("{:08X}", m_desc32Big.assetId().id)},
     };
   }

@@ -1,5 +1,6 @@
 #pragma once
 #include "PrimeDep/Math/Vector3f.hpp"
+#include "nlohmann/json.hpp"
 
 #include <cfloat>
 
@@ -14,7 +15,7 @@ public:
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 
-  template<bool BigEndian = true>
+  template <bool BigEndian = true>
   static AABox Load(athena::io::IStreamReader& in) {
     AABox ret;
     if constexpr (BigEndian) {
@@ -23,6 +24,11 @@ public:
       ret.loadLittle(in);
     }
     return ret;
+  }
+
+  void PutTo(nlohmann::ordered_json& j) const {
+    m_min.PutTo(j["Min"]);
+    m_max.PutTo(j["Max"]);
   }
 
 private:

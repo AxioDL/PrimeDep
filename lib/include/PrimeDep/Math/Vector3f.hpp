@@ -1,4 +1,5 @@
 #pragma once
+#include "nlohmann/json.hpp"
 
 namespace athena::io {
 class IStreamReader;
@@ -21,6 +22,12 @@ public:
       ret.loadLittle(in);
     }
     return ret;
+  }
+
+  void PutTo(nlohmann::ordered_json& j) const {
+    j["X"] = m_x;
+    j["Y"] = m_y;
+    j["Z"] = m_z;
   }
 
 private:

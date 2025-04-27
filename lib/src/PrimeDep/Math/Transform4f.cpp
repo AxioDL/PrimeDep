@@ -1,6 +1,9 @@
 #include "PrimeDep/Math/Transform4f.hpp"
 
+#include "PrimeDep/Math/Vector3f.hpp"
 #include "athena/IStreamReader.hpp"
+
+#include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
 void Transform4f::loadBig(athena::io::IStreamReader& in) {
@@ -31,6 +34,17 @@ void Transform4f::loadLittle(athena::io::IStreamReader& in) {
   m21 = in.readFloatLittle();
   m22 = in.readFloatLittle();
   m23 = in.readFloatLittle();
+}
+
+void Transform4f::PutTo(nlohmann::ordered_json& j) const {
+  Vector3f tmp(m00, m01, m02);
+  tmp.PutTo(j["M0"]);
+  tmp = Vector3f(m10, m11, m12);
+  tmp.PutTo(j["M1"]);
+  tmp = Vector3f(m20, m21, m22);
+  tmp.PutTo(j["M2"]);
+  tmp = Vector3f(m03, m13, m23);
+  tmp.PutTo(j["Pos"]);
 }
 
 } // namespace axdl::primedep

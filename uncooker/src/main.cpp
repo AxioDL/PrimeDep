@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
   addFactories(factory);
-
+  
   // Spin up the pool
   auto* pool = axdl::primedep::ResourcePool32Big::instance();
   pool->setFactory(factory);

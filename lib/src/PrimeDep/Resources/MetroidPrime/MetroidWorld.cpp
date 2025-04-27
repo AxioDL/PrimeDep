@@ -1,10 +1,10 @@
 #include "PrimeDep/Resources/MetroidPrime/MetroidWorld.hpp"
 
-#include "athena/MemoryReader.hpp"
 #include "PrimeDep/ResourcePool.hpp"
 #include "PrimeDep/Resources/MetroidPrime/StringTable.hpp"
+#include "athena/MemoryReader.hpp"
 
-namespace axdl::primedep ::MetroidPrime{
+namespace axdl::primedep ::MetroidPrime {
 MetroidWorld::Relay::Relay(athena::io::IStreamReader& in)
 : relayId(in.readUint32Big()), targetId(in.readUint32Big()), message(in.readUint16Big()), active(in.readBool()) {}
 
@@ -63,7 +63,6 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size, const Resour
     printf("Unsupported world version '%i' expected '%i'\n", m_version, EVersion::MetroidPrime1);
     return;
   }
-  /* TODO: Load assets */
   m_worldNameId = AssetId32Big(in);
   m_worldName = std::dynamic_pointer_cast<StringTable>(
       ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("STRG"sv), m_worldNameId)));
@@ -83,7 +82,8 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size, const Resour
     m_areas.emplace_back(in);
   }
   m_mapWorldId = AssetId32Big(in);
-  // TODO: SCLY Loading, this is still technically supported by the engine, though no retail world has it populated
+  // TODO: Script Layer Loading, this is still technically supported by the engine, though no retail world has it
+  // populated
   in.readBool();
   in.readUint32Big();
   uint32_t audioGroupCount = in.readUint32Big();
@@ -131,4 +131,4 @@ std::shared_ptr<IResource> MetroidWorld::loadCooked(const char* ptr, std::size_t
   return std::make_shared<MetroidWorld>(ptr, size, desc);
 }
 
-} // namespace axdl::primedep
+} // namespace axdl::primedep::MetroidPrime
