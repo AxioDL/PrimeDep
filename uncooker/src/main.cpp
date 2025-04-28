@@ -247,6 +247,7 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories(outPath.parent_path());
       }
       string->writeMetadata(outPath.generic_string(), repPath);
+      (void)string->writeCooked(outPath.generic_string());
       (void)string->writeUncooked(outPath.generic_string());
       manifest["Assets"].push_back(string->rawPath(string->repPath()));
     }
