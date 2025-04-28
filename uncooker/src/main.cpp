@@ -221,9 +221,9 @@ int main(int argc, char** argv) {
   }
 #endif
 #if 1
-  auto stringTags = pool.tagsByType(axdl::primedep::kInvalidFourCC);
+  auto assets = pool.tagsByType(axdl::primedep::kInvalidFourCC);
   // std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
-  auto uniqueTags = std::set(stringTags.begin(), stringTags.end());
+  auto uniqueTags = std::set(assets.begin(), assets.end());
 
   printf("\n\n");
   for (int i = 0; const auto& tag : uniqueTags) {
