@@ -6,9 +6,11 @@ add_library(
   src/PrimeDep/Animation/ParticlePOINode.cpp
   src/PrimeDep/Animation/POINode.cpp
   src/PrimeDep/Animation/SoundPOINode.cpp
+  src/PrimeDep/CRC32.cpp
   src/PrimeDep/Math/AABox.cpp
   src/PrimeDep/Math/Transform4f.cpp
   src/PrimeDep/Math/Vector3f.cpp
+  src/PrimeDep/ObjectTag.cpp
   src/PrimeDep/Particles/ParticleData.cpp
   src/PrimeDep/ResourceNameDatabase.cpp
   src/PrimeDep/ResourcePool.cpp
@@ -43,26 +45,18 @@ add_library(
   src/PrimeDep/Resources/MetroidPrime/SkinRules.cpp
   src/PrimeDep/Resources/MetroidPrime/StringTable.cpp
   src/PrimeDep/Resources/MetroidPrime/Texture.cpp
-  src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp
-  src/PrimeDep/ObjectTag.cpp
-)
+  src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp)
 
-target_include_directories(PrimeDep PUBLIC include
-  ${tinygltf_SOURCE_DIR}
-)
-target_link_libraries(PrimeDep PUBLIC
-  athena-core
-  nlohmann_json::nlohmann_json
-  magic_enum
-  tinygltf
-)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
+target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json
+                                      magic_enum tinygltf)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar
-    -Wno-ignored-attributes)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+                                          -Wno-ignored-attributes)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar
-    -Wno-ignored-attributes)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+                                          -Wno-ignored-attributes)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_definitions(PrimeDep PRIVATE _CRT_SECURE_NO_DEPRECATE=1
-    _CRT_SECURE_NO_WARNINGS=1)
-endif ()
+                                              _CRT_SECURE_NO_WARNINGS=1)
+endif()

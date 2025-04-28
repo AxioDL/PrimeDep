@@ -1,8 +1,9 @@
 #pragma once
-#include "nlohmann/json_fwd.hpp"
 #include "PrimeDep/ObjectTag.hpp"
+#include "nlohmann/json_fwd.hpp"
 
 namespace axdl::primedep {
+// Taken from metaforce
 class ParticleData {
 public:
   enum class EParentedMode {

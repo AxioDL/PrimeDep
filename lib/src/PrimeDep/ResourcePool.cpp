@@ -97,8 +97,9 @@ std::shared_ptr<IResource> ResourcePool32BigNamer::resourceByDescriptor(const Re
   auto ret = ResourcePool32Big::resourceByDescriptor(desc);
   if (ret) {
     const auto tag = ObjectTag32Big(desc.type(), desc.assetId());
-    ret->setRepPath(m_nameDb.pathForAsset(tag), m_nameDb.hasPath(tag));
+    // Set the asset ID first just in case the original path is unknown
     ret->setAssetId(desc.assetId().toString());
+    ret->setRepPath(m_nameDb.pathForAsset(tag), m_nameDb.hasPath(tag));
   }
 
   return ret;

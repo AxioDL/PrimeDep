@@ -6,6 +6,7 @@ class DependencyGroup final : public TypedResource('DGRP', ".dgrp", "", DESCRIPT
 public:
   DependencyGroup(const char* ptr, std::size_t size);
 
+  bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
 
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);

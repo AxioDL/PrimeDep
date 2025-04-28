@@ -1,45 +1,55 @@
 #pragma once
 #include "PrimeDep/AssetId.hpp"
 #include "PrimeDep/FourCC.hpp"
-#include "athena/FileReader.hpp"
+#include "athena/IStreamWriter.hpp"
 #include "nlohmann/json.hpp"
 
 namespace axdl::primedep {
 struct IObjectTag {
   virtual ~IObjectTag() = default;
+  virtual void PutTo(athena::io::IStreamWriter& out, bool reversed = false) const = 0;
   virtual void PutTo(nlohmann::ordered_json& j) const = 0;
 };
 
-template <typename T, bool BigEndian>
+template <typename T>
 struct ObjectTag : public IObjectTag {
   FourCC type;
-  AssetId<T, BigEndian> id;
 
   ObjectTag() = default;
-  ObjectTag(const FourCC& type, const AssetId<T, BigEndian>& id) : type(type), id(id) {}
+  ObjectTag(const FourCC& type) : type(type) {}
+  ~ObjectTag() = default;
 
-  bool operator<(const ObjectTag& other) const { return id < other.id; }
-  explicit operator bool() const { return type != kInvalidFourCC && id != AssetId<T, BigEndian>(); }
+  virtual T id() const = 0;
 };
 
-struct ObjectTag32Big final : ObjectTag<uint32_t, true> {
+struct ObjectTag32Big final : ObjectTag<AssetId32Big> {
   ObjectTag32Big() = default;
+  void PutTo(athena::io::IStreamWriter& out, bool reversed = false) const override;
   void PutTo(nlohmann::ordered_json& j) const override;
-  ObjectTag32Big(const FourCC& type, const AssetId32Big& id) : ObjectTag(type, id) {}
+  ObjectTag32Big(const FourCC& type, const AssetId32Big& id) : ObjectTag(type), m_id(id) {}
 
   template <bool Reverse = false>
   static ObjectTag32Big Load(athena::io::IStreamReader& in) {
     ObjectTag32Big ret;
     if constexpr (!Reverse) {
       ret.type = FourCC(in);
-      ret.id = AssetId32Big(in);
+      ret.m_id = AssetId32Big(in);
     } else {
-      ret.id = AssetId32Big(in);
+      ret.m_id = AssetId32Big(in);
       ret.type = FourCC(in);
     }
 
     return ret;
   }
+
+  static ObjectTag32Big Load(const nlohmann::ordered_json& j);
+
+  AssetId32Big id() const override { return m_id; }
+  bool operator<(const ObjectTag32Big& other) const { return m_id < other.m_id; }
+  explicit operator bool() const { return type != kInvalidFourCC && m_id != AssetId32Big(); }
+
+private:
+  AssetId32Big m_id;
 };
 
 } // namespace axdl::primedep

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CRC32.hpp"
 #include "PrimeDep/FourCC.hpp"
 #include "PrimeDep/ObjectTag.hpp"
 
@@ -50,15 +51,30 @@ public:
   [[nodiscard]] const std::string& repPath() const { return m_repPath; }
   void setRepPath(const std::string_view repPath, const bool known = false) {
     m_repPath = repPath;
-    m_nameKnown = known;
+    m_pathKnown = known;
+    if (!m_repPath.empty() && known) {
+      m_assetID.clear();
+      (void)assetId32Big();
+    }
   }
 
-  [[nodiscard]] const std::string& assetId() const { return m_assetID; }
+  [[nodiscard]] const std::string& assetIdString() const { return m_assetID; }
   void setAssetId(const std::string_view assetId) { m_assetID = assetId; }
+
+  AssetId32Big assetId32Big() const {
+    if (m_assetID.empty() && !m_repPath.empty() && m_pathKnown) {
+      auto path = cookedPath(m_repPath).generic_string();
+      athena::utility::tolower(path);
+      const_cast<IResource*>(this)->m_assetID = AssetId32Big(CRC32::Calculate(path.c_str(), path.length())).toString();
+    }
+    return AssetId32Big(m_assetID);
+  }
+
+  bool pathKnown() const { return m_pathKnown; }
 
 protected:
   std::string m_repPath;
-  bool m_nameKnown = false;
+  bool m_pathKnown = false;
   std::string m_assetID;
 };
 
@@ -86,7 +102,7 @@ public:
 
   [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
     const auto rp = rawPath(path).generic_string();
-    if (m_nameKnown) {
+    if (m_pathKnown) {
       return {
           {"ResourceType", typeCode().toString()},
           {"RawPath", rawPath(m_repPath).generic_string()},

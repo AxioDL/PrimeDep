@@ -55,7 +55,7 @@ std::shared_ptr<PakFile> PakFile::load(const std::string_view path) {
 
 bool PakFile::hasResource(const ObjectTag32Big& tag) {
   return std::ranges::find_if(m_resourceDescriptors, [&tag](const auto& descriptor) {
-           return descriptor.assetId() == tag.id && descriptor.type() == tag.type;
+           return descriptor.assetId() == tag.id() && descriptor.type() == tag.type;
          }) != m_resourceDescriptors.end();
 }
 
@@ -63,7 +63,7 @@ bool PakFile::hasNamedResource(std::string_view name) {
   return std::ranges::find_if(m_namedResources, [&name](const auto& descriptor) {
            return descriptor.name() == name;
          }) != m_namedResources.end();
-};
+}
 
 ResourceDescriptor32Big PakFile::descriptorByName(std::string_view name) {
   const auto& nameDesc =
@@ -83,7 +83,7 @@ ResourceDescriptor32Big PakFile::descriptorByName(std::string_view name) {
 
 ResourceDescriptor32Big PakFile::descriptorById(const ObjectTag32Big& tag) {
   const auto& desc = std::ranges::find_if(m_resourceDescriptors, [&tag](const auto& descriptor) {
-    return descriptor.assetId() == tag.id && descriptor.type() == tag.type;
+    return descriptor.assetId() == tag.id() && descriptor.type() == tag.type;
   });
   if (desc == m_resourceDescriptors.end()) {
     return {};
@@ -137,8 +137,7 @@ nlohmann::ordered_json PakFile::metadata() const {
     nlohmann::ordered_json& descriptor = namedResources.emplace_back();
     descriptor["Name"] = namedRes.name();
     const auto tag = ObjectTag32Big{namedRes.type(), namedRes.assetId()};
-    const auto res = ResourcePool32Big::instance()->resourceById(tag);
-    if (res) {
+    if (const auto res = ResourcePool32Big::instance()->resourceById(tag)) {
       descriptor["File"] = res->cookedPath(res->repPath());
     } else {
       tag.PutTo(descriptor["Ref"]);

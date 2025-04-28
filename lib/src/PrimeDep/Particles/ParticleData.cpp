@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
+// Taken from metaforce
 ParticleData::ParticleData(athena::io::IStreamReader& in)
 : x0_duration(in.readUint32Big())
 , x4_particle(ObjectTag32Big::Load<false>(in))

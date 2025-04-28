@@ -6,13 +6,13 @@
 
 namespace axdl::primedep {
 std::string ResourceNameDatabase::pathForAsset(const ObjectTag32Big& tag) const {
-  if (!assets.contains(tag.id)) {
+  if (!assets.contains(tag.id())) {
     std::string extension = tag.type.toString();
     athena::utility::tolower(extension);
-    return std::format("$/Uncategorized/{}/{:08X}.{}", tag.type.toString(), tag.id.id, extension);
+    return std::format("$/Uncategorized/{}/{}.{}", tag.type.toString(), tag.id().toString(), extension);
   }
 
-  return assets.at(tag.id);
+  return assets.at(tag.id());
 }
 
 void ResourceNameDatabase::load(const std::string_view filename) {

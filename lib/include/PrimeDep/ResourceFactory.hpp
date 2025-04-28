@@ -71,7 +71,6 @@ private:
 };
 
 using ResourceFactory32Big = ResourceFactory<ResourceDescriptor32Big>;
-using ResourceFactory64Big = ResourceFactory<ResourceDescriptor64Big>;
 
 template <class T>
 static void RegisterFactory32Big(ResourceFactory32Big& in) {

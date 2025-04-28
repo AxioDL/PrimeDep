@@ -14,12 +14,19 @@ DependencyGroup::DependencyGroup(const char* ptr, const std::size_t size) {
   }
 }
 
-bool DependencyGroup::writeUncooked(std::string_view path) const {
-  auto p = std::filesystem::path(path);
-  while (p.has_extension()) {
-    p.replace_extension();
+bool DependencyGroup::writeCooked(const std::string_view path) const {
+  const auto p = cookedPath(path).generic_string();
+  athena::io::FileWriter out(p);
+  out.writeUint32Big(m_dependencies.size());
+  for (const auto& dependency : m_dependencies) {
+    dependency.PutTo(out);
   }
-  p.replace_extension(RawExtension());
+
+  return !out.hasError();
+}
+
+bool DependencyGroup::writeUncooked(const std::string_view path) const {
+  const auto p = rawPath(path);
 
   nlohmann::ordered_json j;
 

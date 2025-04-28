@@ -1,54 +1,48 @@
 #pragma once
-#include <cstdint>
 #include <athena/IStreamReader.hpp>
 #include <athena/IStreamWriter.hpp>
+#include <cstdint>
 
 namespace axdl::primedep {
-template <typename T = uint32_t, bool BigEndian = true>
-struct AssetId {
-  explicit AssetId(const T id = T(-1)) : id(id) {}
-  explicit AssetId(athena::io::IStreamReader& in) {
-    if constexpr (std::is_same<T, uint32_t>()) {
-      id = BigEndian ? in.readUint32Big() : in.readUint32Little();
-    } else if constexpr (std::is_same<T, uint64_t>()) {
-      id = BigEndian ? in.readUint64Big() : in.readUint64Little();
-    }
-  }
+template <typename T, T Default>
+class AssetId {
+public:
+  AssetId() = default;
+  explicit AssetId(const T id) : id(id) {}
+  virtual ~AssetId() = default;
 
-  explicit AssetId(athena::io::IStreamWriter& out) {
-    if constexpr (std::is_same<T, uint32_t>()) {
-      if constexpr (BigEndian) {
-        out.writeUint32Big(id);
-      } else {
-        out.writeUint32Little(id);
-      }
-    } else if constexpr (std::is_same<T, uint64_t>()) {
-      if constexpr (BigEndian) {
-        out.writeUint64Big(id);
-      } else {
-        out.writeUint64Little(id);
-      }
-    }
-  }
+  virtual void PutTo(athena::io::IStreamWriter& out) const = 0;
 
-  T id{T(-1)};
-  bool operator==(const AssetId& other) const { return id == other.id; };
-  bool operator<(const AssetId& other) const { return id < other.id; }
-  explicit operator bool() const { return id != T(-1); }
+  T id = Default;
 
-  operator T() const { return id; }
+  bool operator==(const AssetId& rhs) const { return id == rhs.id; }
+  bool operator!=(const AssetId& rhs) const { return id != rhs.id; }
+  bool operator<(const AssetId& rhs) const { return id < rhs.id; }
+  bool operator>(const AssetId& rhs) const { return id > rhs.id; }
+  bool operator<=(const AssetId& rhs) const { return id <= rhs.id; }
+  bool operator>=(const AssetId& rhs) const { return id >= rhs.id; }
 
-  std::string toString() const {
-    if constexpr (std::is_same<T, uint32_t>()) {
-      return std::format("{:08X}", id);
-    } else if constexpr (std::is_same<T, uint64_t>()) {
-      return std::format("{:016X}", id);
-    }
-    return std::format("{:X}", id);
-  }
+  explicit operator T() const { return id; }
+  explicit operator bool() const { return id != Default; }
+
+  virtual std::string toString() const = 0;
 };
 
-using AssetId32Big = AssetId<>;
-static const AssetId32Big kInvalidAssetId32Big;
+class AssetId32Big final : public AssetId<uint32_t, static_cast<uint32_t>(-1)> {
+public:
+  explicit AssetId32Big(const uint32_t id = static_cast<uint32_t>(-1)) : AssetId(id) {}
+  explicit AssetId32Big(athena::io::IStreamReader& in) : AssetId32Big(in.readUint32Big()) {}
+  explicit AssetId32Big(const std::string& str) {
+    auto idStr = str;
+    if (idStr.starts_with("0x") || idStr.starts_with("0X")) {
+      idStr = idStr.substr(2);
+    }
+    id = strtol(idStr.c_str(), nullptr, 16);
+  }
+  void PutTo(athena::io::IStreamWriter& out) const override { out.writeUint32Big(id); }
+  std::string toString() const override { return std::format("{:08X}", id); }
+};
+
+static const AssetId32Big kInvalidAssetId32Big = AssetId32Big();
 
 } // namespace axdl::primedep
