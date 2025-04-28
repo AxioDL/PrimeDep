@@ -39,21 +39,21 @@ public:
     writer.writeString(str, str.length());
   }
 
-  virtual constexpr FourCC typeCode() const { return FourCC(); }
-  virtual constexpr std::string_view description() const = 0;
-  virtual constexpr std::string_view rawExtension() const = 0;
-  virtual constexpr std::string_view cookedExtension() const = 0;
+  [[nodiscard]] virtual constexpr FourCC typeCode() const { return FourCC(); }
+  [[nodiscard]] virtual constexpr std::string_view description() const = 0;
+  [[nodiscard]] virtual constexpr std::string_view rawExtension() const = 0;
+  [[nodiscard]] virtual constexpr std::string_view cookedExtension() const = 0;
 
-  virtual std::filesystem::path rawPath(std::string_view path) const = 0;
-  virtual std::filesystem::path cookedPath(std::string_view path) const = 0;
+  [[nodiscard]] virtual std::filesystem::path rawPath(std::string_view path) const = 0;
+  [[nodiscard]] virtual std::filesystem::path cookedPath(std::string_view path) const = 0;
 
-  const std::string& repPath() const { return m_repPath; }
+  [[nodiscard]] const std::string& repPath() const { return m_repPath; }
   void setRepPath(const std::string_view repPath, const bool known = false) {
     m_repPath = repPath;
     m_nameKnown = known;
   }
 
-  const std::string& assetId() const { return m_assetID; }
+  [[nodiscard]] const std::string& assetId() const { return m_assetID; }
   void setAssetId(const std::string_view assetId) { m_assetID = assetId; }
 
 protected:
@@ -78,11 +78,11 @@ public:
 
   static constexpr FourCC ResourceType() { return TypeCode; }
   static constexpr std::string_view Description() { return Desc; }
-  constexpr std::string_view description() const override { return CookedExtension(); }
+  [[nodiscard]] constexpr std::string_view description() const override { return CookedExtension(); }
   static constexpr std::string_view RawExtension() { return RawExt; }
-  constexpr std::string_view rawExtension() const override { return RawExtension(); }
+  [[nodiscard]] constexpr std::string_view rawExtension() const override { return RawExtension(); }
   static constexpr std::string_view CookedExtension() { return CookedExt; }
-  constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
+  [[nodiscard]] constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
 
   [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
     const auto rp = rawPath(path).generic_string();
@@ -117,8 +117,10 @@ public:
     return p;
   }
 
-  std::filesystem::path rawPath(std::string_view path) const override { return GetRawPath(path); }
-  std::filesystem::path cookedPath(const std::string_view path) const override { return GetCookedPath(path); }
+  [[nodiscard]] std::filesystem::path rawPath(std::string_view path) const override { return GetRawPath(path); }
+  [[nodiscard]] std::filesystem::path cookedPath(const std::string_view path) const override {
+    return GetCookedPath(path);
+  }
 
   void writeMetadata(const std::string_view path, const std::string_view repPath) const override {
     IResource::writeMetadata(GetRawPath(path).generic_string(), repPath);
