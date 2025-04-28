@@ -1,10 +1,11 @@
 #pragma once
 
 #include "PrimeDep/Types.hpp"
-#include <string_view>
-#include <string>
+#include <algorithm>
 #include <codecvt>
 #include <locale>
+#include <string>
+#include <string_view>
 
 using namespace std::string_view_literals;
 

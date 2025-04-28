@@ -1,6 +1,6 @@
 #pragma once
-#include "athena/IStreamReader.hpp"
 #include "PrimeDep/Utils.hpp"
+#include "athena/IStreamReader.hpp"
 
 namespace axdl::primedep {
 class FourCC {
@@ -24,7 +24,9 @@ public:
   constexpr FourCC& operator=(const FourCC&) noexcept = default;
   constexpr FourCC& operator=(FourCC&&) noexcept = default;
 
-  [[nodiscard]] std::string toString() const noexcept { return std::format("{}{}{}{}", fcc[0], fcc[1], fcc[2], fcc[3]); }
+  [[nodiscard]] std::string toString() const noexcept {
+    return std::format("{}{}{}{}", fcc[0], fcc[1], fcc[2], fcc[3]);
+  }
 
   bool operator==(const FourCC& rhs) const noexcept { return num == rhs.num; }
   bool operator!=(const FourCC& rhs) const noexcept { return num != rhs.num; }
@@ -37,12 +39,11 @@ public:
 
   union {
     char fcc[4];
-    uint32_t num = 0;
+    uint32_t num = 0x58585858;
   };
 };
 
 static constexpr FourCC kInvalidFourCC = {};
-
 
 } // namespace axdl::primedep
 
