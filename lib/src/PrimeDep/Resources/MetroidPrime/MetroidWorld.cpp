@@ -19,12 +19,16 @@ MetroidWorld::Dock::Dock(athena::io::IStreamReader& in) {
 
   const uint32_t dockPlaneVertCount = in.readUint32Big();
   for (int i = 0; i < std::min<uint32_t>(dockPlaneVertCount, 4); ++i) {
-    planeVertices[i] = Vector3f::Load<true>(in);
+    planeVertices[i] = Vector3f(in);
   }
 }
 
 MetroidWorld::Area::Area(athena::io::IStreamReader& in)
-: areaNameId(in), transform(Transform4f::Load(in)), bounds(AABox::Load(in)), areaId(in), saveId(in) {
+: areaNameId(in, FOURCC('STRG'))
+, transform(Transform4f(in))
+, bounds(AABox(in))
+, areaId(in, FOURCC('MREA'))
+, saveId(in.readUint32Big()) {
   uint32_t attachedAreaCount = in.readUint32Big();
   while (attachedAreaCount--) {
     attachedAreas.push_back(in.readUint16Big());
@@ -62,12 +66,12 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size) {
     printf("Unsupported world version '%i' expected '%i'\n", m_version, EVersion::MetroidPrime1);
     return;
   }
-  m_worldNameId = AssetId32Big(in);
+  m_worldNameId = AssetId32Big(in, FOURCC('STRG'));
   m_worldName = std::dynamic_pointer_cast<StringTable>(
       ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("STRG"sv), m_worldNameId)));
-  m_saveWorldId = AssetId32Big(in);
+  m_saveWorldId = AssetId32Big(in, FOURCC('SAVW'));
   m_saveWorld = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("SAVW"sv), m_saveWorldId));
-  m_skyboxId = AssetId32Big(in);
+  m_skyboxId = AssetId32Big(in, FOURCC('CMDL'));
   m_skybox = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FourCC("CMDL"sv), m_skyboxId));
 
   uint32_t relayCount = in.readUint32Big();
@@ -80,7 +84,8 @@ MetroidWorld::MetroidWorld(const char* ptr, const std::size_t size) {
   while (areaCount--) {
     m_areas.emplace_back(in);
   }
-  m_mapWorldId = AssetId32Big(in);
+  m_mapWorldId = AssetId32Big(in, FOURCC('MAPW'));
+
   // TODO: Script Layer Loading, this is still technically supported by the engine, though no retail world has it
   // populated
   in.readBool();

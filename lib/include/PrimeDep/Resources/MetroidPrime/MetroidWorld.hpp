@@ -45,7 +45,7 @@ public:
     Transform4f transform;
     AABox bounds;
     AssetId32Big areaId;
-    AssetId32Big saveId;
+    uint32_t saveId;
     std::vector<uint16_t> attachedAreas;
     std::vector<ObjectTag32Big> lazyLoadDependencies;
     std::vector<ObjectTag32Big> dependencies;

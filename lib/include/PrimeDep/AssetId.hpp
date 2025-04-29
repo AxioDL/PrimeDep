@@ -1,7 +1,11 @@
 #pragma once
+
+#include "PrimeDep/FourCC.hpp"
+
 #include <athena/IStreamReader.hpp>
 #include <athena/IStreamWriter.hpp>
 #include <cstdint>
+#include <nlohmann/json_fwd.hpp>
 
 namespace axdl::primedep {
 template <typename T, T Default>
@@ -12,6 +16,7 @@ public:
   virtual ~AssetId() = default;
 
   virtual void PutTo(athena::io::IStreamWriter& out) const = 0;
+  virtual void PutTo(nlohmann::ordered_json& out) const = 0;
 
   T id = Default;
 
@@ -26,21 +31,37 @@ public:
   explicit operator bool() const { return id != Default; }
 
   virtual std::string toString() const = 0;
+  std::string_view repPath() const { return m_repPath; }
+  bool pathKnown() const { return m_known; }
+
+protected:
+  std::string m_repPath;
+  bool m_known{false};
 };
 
 class AssetId32Big final : public AssetId<uint32_t, static_cast<uint32_t>(-1)> {
 public:
-  explicit AssetId32Big(const uint32_t id = static_cast<uint32_t>(-1)) : AssetId(id) {}
-  explicit AssetId32Big(athena::io::IStreamReader& in) : AssetId32Big(in.readUint32Big()) {}
-  explicit AssetId32Big(const std::string& str) {
+  AssetId32Big() = default;
+  explicit AssetId32Big(const uint32_t id) : AssetId(id) {}
+  explicit AssetId32Big(const uint32_t id, const FourCC& fcc) : AssetId(id) { resolveRepPath(fcc); }
+  explicit AssetId32Big(athena::io::IStreamReader& in, const FourCC& fcc) : AssetId32Big(in.readUint32Big(), fcc) {}
+  explicit AssetId32Big(const nlohmann::ordered_json& in);
+  static AssetId32Big FromString(const std::string& str) {
+    AssetId32Big ret;
     auto idStr = str;
     if (idStr.starts_with("0x") || idStr.starts_with("0X")) {
       idStr = idStr.substr(2);
     }
-    id = strtol(idStr.c_str(), nullptr, 16);
+    ret.id = strtol(idStr.c_str(), nullptr, 16);
+    return ret;
   }
-  void PutTo(athena::io::IStreamWriter& out) const override { out.writeUint32Big(id); }
+
+  void PutTo(athena::io::IStreamWriter& out) const override;
+  void PutTo(nlohmann::ordered_json& out) const override;
   std::string toString() const override { return std::format("{:08X}", id); }
+
+private:
+  void resolveRepPath(const FourCC& fcc);
 };
 
 static const AssetId32Big kInvalidAssetId32Big = AssetId32Big();

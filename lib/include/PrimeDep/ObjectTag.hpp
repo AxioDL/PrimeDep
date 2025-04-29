@@ -34,10 +34,11 @@ struct ObjectTag32Big final : ObjectTag<AssetId32Big> {
     ObjectTag32Big ret;
     if constexpr (!Reverse) {
       ret.type = FourCC(in);
-      ret.m_id = AssetId32Big(in);
+      ret.m_id = AssetId32Big(in, ret.type);
     } else {
-      ret.m_id = AssetId32Big(in);
+      uint32_t id = in.readUint32Big();
       ret.type = FourCC(in);
+      ret.m_id = AssetId32Big(id, ret.type);
     }
 
     return ret;

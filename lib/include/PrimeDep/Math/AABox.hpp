@@ -12,19 +12,16 @@ namespace axdl::primedep {
 class AABox {
 public:
   AABox() = default;
+  explicit AABox(athena::io::IStreamReader& in, const bool bigendian = true) {
+    if (bigendian) {
+      loadBig(in);
+    } else {
+      loadLittle(in);
+    }
+  }
+
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
-
-  template <bool BigEndian = true>
-  static AABox Load(athena::io::IStreamReader& in) {
-    AABox ret;
-    if constexpr (BigEndian) {
-      ret.loadBig(in);
-    } else {
-      ret.loadLittle(in);
-    }
-    return ret;
-  }
 
   void PutTo(nlohmann::ordered_json& j) const {
     m_min.PutTo(j["Min"]);

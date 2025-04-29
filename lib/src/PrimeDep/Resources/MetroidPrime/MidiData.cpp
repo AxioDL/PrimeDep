@@ -9,7 +9,7 @@ MidiData::MidiData(const char* ptr, const std::size_t size) {
   auto v = in.readUint32Big();
   m_setupId = in.readUint32Big();
   m_groupId = in.readUint32Big();
-  const AssetId32Big soundGroup(in);
+  const AssetId32Big soundGroup(in, FOURCC('AGSC'));
   m_soundGroup = ObjectTag32Big(FOURCC('AGSC'), soundGroup);
   m_dataLength = in.readUint32Big();
   m_data = std::make_unique<uint8_t[]>(m_dataLength);

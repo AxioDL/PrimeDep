@@ -14,7 +14,7 @@ MapWorld::MapWorld(const char* ptr, const std::size_t size) {
 
   auto mapAreaCount = in.readUint32Big();
   while (mapAreaCount--) {
-    m_mapAreas.emplace_back(in);
+    m_mapAreas.emplace_back(in, FOURCC('MAPA'));
   }
 }
 

@@ -67,7 +67,7 @@ public:
       athena::utility::tolower(path);
       const_cast<IResource*>(this)->m_assetID = AssetId32Big(CRC32::Calculate(path.c_str(), path.length())).toString();
     }
-    return AssetId32Big(m_assetID);
+    return AssetId32Big::FromString(m_assetID);
   }
 
   bool pathKnown() const { return m_pathKnown; }

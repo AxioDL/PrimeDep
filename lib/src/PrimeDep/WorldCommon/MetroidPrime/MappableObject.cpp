@@ -10,7 +10,7 @@ MappableObject::MappableObject(athena::io::IStreamReader& in)
 , m_visMode(static_cast<EVisMode>(in.readUint32Big()))
 , m_editorId(in.readUint32Big())
 , m_unused(in.readUint32Big())
-, m_transform(Transform4f::Load<true>(in)) {
+, m_transform(Transform4f(in)) {
   // Seek past padding
   in.seek(sizeof(uint32_t) * 4);
 }

@@ -22,8 +22,8 @@ MapArea::MapAreaSurface::Border::Border(athena::io::IStreamReader& in) {
 }
 
 MapArea::MapAreaSurface::MapAreaSurface(athena::io::IStreamReader& in)
-: m_normal(Vector3f::Load<true>(in))
-, m_centroid(Vector3f::Load<true>(in))
+: m_normal(Vector3f(in))
+, m_centroid(Vector3f(in))
 , m_surfaceOffset(in.readUint32Big())
 , m_lineOffset(in.readUint32Big()) {}
 
@@ -36,7 +36,7 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
   m_version = in.readUint32Big();
   in.readUint32Big();
   m_visMode = static_cast<EVisMode>(in.readUint32Big());
-  m_bounds = AABox::Load<true>(in);
+  m_bounds = AABox(in);
   auto mappableObjectCount = in.readUint32Big();
   auto vertexCount = in.readUint32Big();
   const auto surfaceCount = in.readUint32Big();
@@ -47,7 +47,7 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
   }
 
   while (vertexCount--) {
-    m_vertices.emplace_back(Vector3f::Load<true>(in));
+    m_vertices.emplace_back(Vector3f(in));
   }
 
   for (int i = 0; i < surfaceCount; i++) {

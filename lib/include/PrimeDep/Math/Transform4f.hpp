@@ -3,33 +3,23 @@
 
 namespace athena::io {
 class IStreamReader;
-}
+class IStreamWriter;
+} // namespace athena::io
 
 namespace axdl::primedep {
 class Transform4f {
 public:
+  Transform4f(athena::io::IStreamReader& in, const bool bigendian = true) {
+    if (bigendian) {
+      loadBig(in);
+    } else {
+      loadLittle(in);
+    }
+  }
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 
-  /**
-   * Loads an @see Transform4f from the current location in the specified buffer.
-   * Byte swapping where necessary.
-   * @tparam BigEndian Whether to load float values in as big endian or little, true for big, false for little
-   * @param in Buffer to read from
-   * @return Transform4f at the current position in the buffer
-   */
-  template <bool BigEndian = true>
-  static Transform4f Load(athena::io::IStreamReader& in) noexcept {
-    Transform4f ret;
-    if constexpr (BigEndian) {
-      ret.loadBig(in);
-    } else {
-      ret.loadLittle(in);
-    }
-
-    return ret;
-  }
-
+  void PutTo(athena::io::IStreamWriter& out, bool bigendian = true) const;
   void PutTo(nlohmann::ordered_json& j) const;
 
 private:

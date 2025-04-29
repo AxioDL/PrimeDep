@@ -1,34 +1,22 @@
 #pragma once
-#include "nlohmann/json.hpp"
+#include <nlohmann/json_fwd.hpp>
 
 namespace athena::io {
 class IStreamReader;
-}
+class IStreamWriter;
+} // namespace athena::io
 
 namespace axdl::primedep {
 class Vector3f {
 public:
   Vector3f() = default;
   Vector3f(const float x, const float y, const float z) : m_x(x), m_y(y), m_z(z) {}
+  explicit Vector3f(athena::io::IStreamReader& in, bool bigendian = true);
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 
-  template <bool BigEndian = true>
-  static Vector3f Load(athena::io::IStreamReader& in) {
-    Vector3f ret;
-    if constexpr (BigEndian) {
-      ret.loadBig(in);
-    } else {
-      ret.loadLittle(in);
-    }
-    return ret;
-  }
-
-  void PutTo(nlohmann::ordered_json& j) const {
-    j["X"] = m_x;
-    j["Y"] = m_y;
-    j["Z"] = m_z;
-  }
+  void PutTo(athena::io::IStreamWriter& out, bool bigendian = true) const;
+  void PutTo(nlohmann::ordered_json& j) const;
 
 private:
   float m_x{};

@@ -11,7 +11,7 @@ public:
     // isCompressed is an enum internally, but we can just use a bool
     m_isCompressed = BigEndian ? in.readUint32Big() : in.readUint32Little();
     m_type = FourCC(in);
-    m_assetId = AssetIdType(in);
+    m_assetId = AssetIdType(in, m_type);
     m_dataSize = BigEndian ? in.readUint32Big() : in.readUint32Little();
     m_dataOffset = BigEndian ? in.readUint32Big() : in.readUint32Little();
   }

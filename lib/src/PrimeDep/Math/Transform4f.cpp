@@ -2,6 +2,7 @@
 
 #include "PrimeDep/Math/Vector3f.hpp"
 #include "athena/IStreamReader.hpp"
+#include "athena/IStreamWriter.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -34,6 +35,36 @@ void Transform4f::loadLittle(athena::io::IStreamReader& in) {
   m21 = in.readFloatLittle();
   m22 = in.readFloatLittle();
   m23 = in.readFloatLittle();
+}
+
+void Transform4f::PutTo(athena::io::IStreamWriter& out, bool bigendian) const {
+  if (bigendian) {
+    out.writeFloatBig(m00);
+    out.writeFloatBig(m01);
+    out.writeFloatBig(m02);
+    out.writeFloatBig(m03);
+    out.writeFloatBig(m10);
+    out.writeFloatBig(m11);
+    out.writeFloatBig(m12);
+    out.writeFloatBig(m13);
+    out.writeFloatBig(m20);
+    out.writeFloatBig(m21);
+    out.writeFloatBig(m22);
+    out.writeFloatBig(m23);
+  } else {
+    out.writeFloatLittle(m00);
+    out.writeFloatLittle(m01);
+    out.writeFloatLittle(m02);
+    out.writeFloatLittle(m03);
+    out.writeFloatLittle(m10);
+    out.writeFloatLittle(m11);
+    out.writeFloatLittle(m12);
+    out.writeFloatLittle(m13);
+    out.writeFloatLittle(m20);
+    out.writeFloatLittle(m21);
+    out.writeFloatLittle(m22);
+    out.writeFloatLittle(m23);
+  }
 }
 
 void Transform4f::PutTo(nlohmann::ordered_json& j) const {
