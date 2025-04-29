@@ -1,7 +1,10 @@
 #include "PrimeDep/Resources/MetroidPrime/AudioGroup.hpp"
 
-#include "athena/FileWriter.hpp"
-#include "athena/MemoryReader.hpp"
+#include "PrimeDep/ResourcePool.hpp"
+
+#include <athena/FileReader.hpp>
+#include <athena/FileWriter.hpp>
+#include <athena/MemoryReader.hpp>
 
 #include <source_location>
 
@@ -24,8 +27,46 @@ AudioGroup::AudioGroup(const char* data, const std::size_t size) {
   in.readUBytesToBuf(m_sampleDir.get(), m_sampleDirSize);
 }
 
-std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t size) {
-  return std::make_shared<AudioGroup>(data, size);
+AudioGroup::AudioGroup(const nlohmann::ordered_json& in) {
+  const auto p = std::filesystem::path(repPath());
+  m_moduleDir = in.value("ModuleDir", "Audio/");
+  m_moduleName = in.value("ModuleName", p.filename().generic_string());
+
+  const auto poolFile = ResourcePool32Big::instance()->filePathFromRepPath(in.value("PoolFile", ""));
+  const auto projFile = ResourcePool32Big::instance()->filePathFromRepPath(in.value("ProjectFile", ""));
+  const auto samplesFile = ResourcePool32Big::instance()->filePathFromRepPath(in.value("SamplesFile", ""));
+  const auto sampleDirFile = ResourcePool32Big::instance()->filePathFromRepPath(in.value("SampleDirectoryFile", ""));
+  if (!exists(poolFile) || !exists(projFile) || !exists(samplesFile) || !exists(sampleDirFile)) {
+    return;
+  }
+
+  {
+    athena::io::FileReader reader(poolFile.generic_string());
+    m_poolSize = reader.length();
+    m_pool = std::make_unique<uint8_t[]>(m_poolSize);
+    reader.readUBytesToBuf(m_pool.get(), m_poolSize);
+  }
+
+  {
+    athena::io::FileReader reader(projFile.generic_string());
+    m_projectSize = reader.length();
+    m_project = std::make_unique<uint8_t[]>(m_poolSize);
+    reader.readUBytesToBuf(m_project.get(), m_projectSize);
+  }
+
+  {
+    athena::io::FileReader reader(samplesFile.generic_string());
+    m_samplesSize = reader.length();
+    m_samples = std::make_unique<uint8_t[]>(m_samplesSize);
+    reader.readUBytesToBuf(m_samples.get(), m_samplesSize);
+  }
+
+  {
+    athena::io::FileReader reader(sampleDirFile.generic_string());
+    m_sampleDirSize = reader.length();
+    m_sampleDir = std::make_unique<uint8_t[]>(m_sampleDirSize);
+    reader.readUBytesToBuf(m_sampleDir.get(), m_sampleDirSize);
+  }
 }
 
 bool AudioGroup::writeUncooked(const std::string_view path) const {
@@ -110,6 +151,17 @@ nlohmann::ordered_json AudioGroup::metadata(const std::string_view path) const {
   json["ModuleDir"] = m_moduleDir;
   json["ModuleName"] = m_moduleName;
   return json;
+}
+
+std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t size) {
+  return std::make_shared<AudioGroup>(data, size);
+}
+
+std::shared_ptr<IResource> AudioGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+                                              const std::string_view path) {
+  athena::io::FileReader in(path);
+  auto js = nlohmann::ordered_json::parse(in.readString());
+  return std::make_shared<AudioGroup>(js);
 }
 
 } // namespace axdl::primedep::MetroidPrime

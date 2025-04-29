@@ -6,6 +6,7 @@ namespace axdl::primedep::MetroidPrime {
 class AudioGroup final : public TypedResource('AGSC', ".agsr", ".agsc", DESCRIPTION("MusyX Audio Group")) {
 public:
   AudioGroup(const char* data, std::size_t size);
+  explicit AudioGroup(const nlohmann::ordered_json& in);
 
   static std::shared_ptr<IResource> loadCooked(const char* data, std::size_t size);
 
@@ -17,9 +18,7 @@ public:
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
-    return nullptr;
-  }
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
   std::string m_moduleDir;
