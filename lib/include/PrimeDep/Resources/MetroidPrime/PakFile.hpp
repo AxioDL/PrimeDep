@@ -11,7 +11,7 @@
 
 #include <map>
 
-namespace axdl::primedep ::MetroidPrime {
+namespace axdl::primedep::MetroidPrime {
 class PakFile final : public IResourceSource<ResourceDescriptor32Big, ObjectTag32Big> {
 public:
   explicit PakFile(const std::string_view path) : m_path(path) {}

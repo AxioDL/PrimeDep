@@ -1,3 +1,4 @@
+
 #include <PrimeDep/ResourceFactory.hpp>
 #include <PrimeDep/ResourceNameDatabase.hpp>
 #include <PrimeDep/ResourcePool.hpp>
@@ -122,6 +123,10 @@ int main(int argc, char** argv) {
     std::cout << "Usage " << argv[0] << " inputFolder outputFolder" << std::endl;
     return 1;
   }
+  // Gather paks
+  std::filesystem::path inputFolder = argv[1];
+  std::filesystem::path outputFolder = argv[2];
+
   std::cout << "Loading ResourceDB...";
   std::flush(std::cout);
   axdl::primedep::ResourceNameDatabase::instance().load(
@@ -130,14 +135,10 @@ int main(int argc, char** argv) {
   // Initialize factory
   axdl::primedep::ResourceFactory32Big factory;
   addFactories(factory);
-
-  // Spin up the pool
-  axdl::primedep::ResourcePool32BigNamer pool(axdl::primedep::ResourceNameDatabase::instance());
+  axdl::primedep::ResourcePool32BigNamer pool(outputFolder, axdl::primedep::ResourceNameDatabase::instance());
   pool.setFactory(factory);
 
-  // Gather paks
-  std::filesystem::path inputFolder = argv[1];
-  std::filesystem::path outputFolder = argv[2];
+#if 1
 
   // TODO: Gather this information from the binary
   nlohmann::ordered_json manifest;
@@ -161,77 +162,19 @@ int main(int argc, char** argv) {
       create_directories(outputFolder);
     }
     pool.addSource(pak);
-    pak->writeMetadata((outputFolder / repPath).generic_string());
-    manifest["Packages"].push_back("$" / repPath.replace_extension(".prj"));
+    auto path = (outputFolder / repPath);
+    pak->writeMetadata(path.generic_string());
+    manifest["Packages"].push_back(pool.repPathFromFilePath(path.replace_extension(".prj")));
   }
 
-#if 0
-  if (!metroid1) {
-    return 0;
-  }
-
-  for (const auto& desc : metroid1->resourceDescriptors()) {
-    std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", desc.dataSize(), desc.assetId().id,
-                             axdl::primedep::ResourceNameDatabase::instance().pathForAsset(
-                                 axdl::primedep::ObjectTag32Big(desc.type(), desc.assetId())),
-                             desc.isCompressed() ? "c" : "n")
-              << std::endl;
-  }
-#endif
-#if 0
-  std::cout << "Gathering worlds..." << std::endl;
-  auto worldTags = pool->tagsByType(axdl::primedep::FourCC("MLVL"sv));
-  std::ranges::sort(worldTags.begin(), worldTags.end(), std::less<>());
-
-  for (const auto& tag : worldTags) {
-    const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(tag);
-    auto fileOut = std::filesystem::path(repPath);
-    if (fileOut.generic_string().starts_with("$/")) {
-      fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
-    }
-
-    std::cout << "Found " << repPath << std::endl;
-    auto world = pool->resourceById(tag);
-    if (world) {
-      const auto outPath = (outputFolder / fileOut);
-      if (!std::filesystem::exists(outPath)) {
-        std::filesystem::create_directories(outPath.parent_path());
-      }
-      world->writeMetadata(outPath.generic_string(), repPath);
-      world->writeUncooked(outPath.generic_string());
-      // std::cout << world->metadata(repPath).dump(4) << std::endl;
-      //  auto childTags = world->childTags();
-      //  if (childTags) {
-      //    for (const auto& t : *childTags) {
-      //      const auto d = pool->resourceDescriptorById(t);
-      //      const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(t);
-      //      auto fileOut = std::filesystem::path(repPath);
-      //      if (fileOut.generic_string().starts_with("$/")) {
-      //        fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
-      //      }
-      //      const auto outPath = (outputFolder / fileOut);
-      //
-      //
-      //      std::cout << std::format("\t{:8}\t0x{:08X}\t{} [{}]", d.dataSize(), t.id.id, outPath.generic_string(),
-      //                               d.isCompressed() ? "c" : "n")
-      //                << std::endl;
-      //    }
-      //  }
-    }
-  }
-#endif
-#if 1
   auto assets = pool.tagsByType(axdl::primedep::kInvalidFourCC);
-  // std::ranges::sort(stringTags.begin(), stringTags.end(), std::less<>());
+  std::ranges::sort(assets.begin(), assets.end(), std::less<>());
   auto uniqueTags = std::set(assets.begin(), assets.end());
 
   printf("\n\n");
   for (int i = 0; const auto& tag : uniqueTags) {
     const auto repPath = axdl::primedep::ResourceNameDatabase::instance().pathForAsset(tag);
-    auto fileOut = std::filesystem::path(repPath);
-    if (fileOut.generic_string().starts_with("$/")) {
-      fileOut = fileOut.generic_string().substr(2, fileOut.generic_string().length() - 2);
-    }
+    auto fileOut = pool.filePathFromRepPath(repPath);
 
     std::cout << "\033[2;A";
     std::cout << "\033[0;KProgress: " << (i + 1) << " of " << uniqueTags.size()
@@ -242,21 +185,21 @@ int main(int argc, char** argv) {
     std::flush(std::cout);
 
     if (auto string = pool.resourceById(tag)) {
-      const auto outPath = (outputFolder / fileOut);
-      if (!std::filesystem::exists(outPath)) {
-        std::filesystem::create_directories(outPath.parent_path());
+      if (!exists(fileOut)) {
+        create_directories(fileOut.parent_path());
       }
-      string->writeMetadata(outPath.generic_string(), repPath);
-      (void)string->writeCooked(outPath.generic_string());
-      (void)string->writeUncooked(outPath.generic_string());
+      string->writeMetadata(fileOut.generic_string(), repPath);
+      if (!string->writeUncooked(fileOut.generic_string())) {
+        std::cout << "Unable to uncook " << repPath << std::endl;
+      }
       manifest["Assets"].push_back(string->rawPath(string->repPath()));
     }
     ++i;
   }
   std::flush(std::cout);
   printf("Complete!\n");
-  athena::io::FileWriter writer((outputFolder / "Game.manifest").generic_string());
+  athena::io::FileWriter writer(pool.filePathFromRepPath("$/Game.manifest").generic_string());
   writer.writeString(manifest.dump(4) + "\n");
-#endif
   return 0;
+#endif
 }

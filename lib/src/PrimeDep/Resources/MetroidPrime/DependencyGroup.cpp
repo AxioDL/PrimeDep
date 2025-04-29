@@ -1,5 +1,6 @@
 #include "PrimeDep/Resources/MetroidPrime/DependencyGroup.hpp"
 
+#include "../../../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
 #include "PrimeDep/ResourcePool.hpp"
 #include "PrimeDep/ResourceUtils.hpp"
 #include "athena/MemoryReader.hpp"
@@ -11,6 +12,16 @@ DependencyGroup::DependencyGroup(const char* ptr, const std::size_t size) {
 
   while (depCount--) {
     m_dependencies.emplace_back(ObjectTag32Big::Load<false>(in));
+  }
+}
+
+DependencyGroup::DependencyGroup(const nlohmann::ordered_json& j) {
+  if (!j.contains("Dependencies")) {
+    return;
+  }
+
+  for (const auto& deps = j["Dependencies"]; const auto& dep : deps) {
+    m_dependencies.emplace_back(ObjectTag32Big::Load(dep));
   }
 }
 
@@ -45,5 +56,12 @@ bool DependencyGroup::writeUncooked(const std::string_view path) const {
 
 std::shared_ptr<IResource> DependencyGroup::loadCooked(const char* ptr, std::size_t size) {
   return std::make_shared<DependencyGroup>(ptr, size);
+}
+
+std::shared_ptr<IResource> DependencyGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+                                                   const std::string_view path) {
+  athena::io::FileReader in(path);
+  auto js = nlohmann::ordered_json::parse(in.readString());
+  return std::make_shared<DependencyGroup>(js);
 }
 } // namespace axdl::primedep::MetroidPrime

@@ -1,5 +1,6 @@
 #include "PrimeDep/Resources/MetroidPrime/AiFiniteStateMachine.hpp"
 
+#include "../../../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
 #include "athena/MemoryReader.hpp"
 
 namespace axdl::primedep::MetroidPrime {
@@ -8,6 +9,11 @@ AiFiniteStateMachine::Trigger::Trigger(athena::io::IStreamReader& in)
 void AiFiniteStateMachine::Trigger::PutTo(athena::io::IStreamWriter& out) const {
   out.writeString(m_name);
   out.writeFloatBig(m_parameter);
+}
+
+AiFiniteStateMachine::Trigger::Trigger(const nlohmann::ordered_json& in) {
+  m_name = in.value("Name", "");
+  m_parameter = in.value("Parameter", 0.f);
 }
 
 void AiFiniteStateMachine::Trigger::PutTo(nlohmann::ordered_json& out) const {
@@ -23,6 +29,15 @@ AiFiniteStateMachine::Transition::Transition(athena::io::IStreamReader& in) {
     if (first) {
       m_targetState = in.readUint32Big();
       first = false;
+    }
+  }
+}
+
+AiFiniteStateMachine::Transition::Transition(const nlohmann::ordered_json& in) {
+  m_targetState = in.value("TargetState", -1);
+  if (in.contains("Triggers")) {
+    for (const auto& trigger : in["Triggers"]) {
+      m_triggers.emplace_back(trigger);
     }
   }
 }
@@ -51,6 +66,15 @@ AiFiniteStateMachine::State::State(athena::io::IStreamReader& in) {
   auto transitionCount = in.readUint32Big();
   while (transitionCount--) {
     m_transitions.emplace_back(in);
+  }
+}
+
+AiFiniteStateMachine::State::State(const nlohmann::ordered_json& in) {
+  m_name = in.value("Name", "");
+  if (in.contains("Transitions")) {
+    for (const auto& transition : in["Transitions"]) {
+      m_transitions.emplace_back(transition);
+    }
   }
 }
 
@@ -84,6 +108,17 @@ AiFiniteStateMachine::AiFiniteStateMachine(const char* ptr, const std::size_t si
   for (int i = 0; i < stateCount; i++) {
     auto& state = m_states.emplace_back(in);
     state.setName(names[i]);
+  }
+}
+
+AiFiniteStateMachine::AiFiniteStateMachine(const nlohmann::ordered_json& in) {
+  if (!in.contains("States")) {
+    return;
+  }
+
+  const auto& states = in["States"];
+  for (const auto& state : states) {
+    m_states.emplace_back(state);
   }
 }
 
@@ -128,4 +163,12 @@ bool AiFiniteStateMachine::writeUncooked(const std::string_view path) const {
 std::shared_ptr<IResource> AiFiniteStateMachine::loadCooked(const char* ptr, std::size_t size) {
   return std::make_shared<AiFiniteStateMachine>(ptr, size);
 }
+
+std::shared_ptr<IResource> AiFiniteStateMachine::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+                                                        const std::string_view path) {
+  athena::io::FileReader in(path);
+  auto js = nlohmann::ordered_json::parse(in.readString());
+  return std::make_shared<AiFiniteStateMachine>(js);
+}
+
 } // namespace axdl::primedep::MetroidPrime

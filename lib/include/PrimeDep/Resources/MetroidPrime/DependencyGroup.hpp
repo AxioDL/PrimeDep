@@ -5,6 +5,7 @@ namespace axdl::primedep::MetroidPrime {
 class DependencyGroup final : public TypedResource('DGRP', ".dgrp", "", DESCRIPTION("Asset Dependency Group")) {
 public:
   DependencyGroup(const char* ptr, std::size_t size);
+  explicit DependencyGroup(const nlohmann::ordered_json& j);
 
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
@@ -14,9 +15,7 @@ public:
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
-    return nullptr;
-  }
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
   std::vector<ObjectTag32Big> m_dependencies;

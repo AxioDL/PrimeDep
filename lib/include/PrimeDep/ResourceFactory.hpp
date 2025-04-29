@@ -20,7 +20,7 @@ public:
   using CookedFactoryFunc = std::function<std::shared_ptr<IResource>(const char* ptr, std::size_t size)>;
   using IngestValidationFunc = std::function<bool(const nlohmann::ordered_json& medata)>;
   using IngestFactoryFunc =
-      std::function<std::shared_ptr<IResource>(const nlohmann::ordered_json& metadata, std::string_view repPath)>;
+      std::function<std::shared_ptr<IResource>(const nlohmann::ordered_json& metadata, std::string_view path)>;
 
   void registerCookedFactory(const FourCC& type, const CookedFactoryFunc& func) {
     if (m_cookedFactories.contains(type)) {

@@ -105,13 +105,11 @@ public:
     if (m_pathKnown) {
       return {
           {"ResourceType", typeCode().toString()},
-          {"RawPath", rawPath(m_repPath).generic_string()},
       };
     }
 
     return {
         {"ResourceType", typeCode().toString()},
-        {"RawPath", rp},
         {"AssetID", m_assetID},
     };
   }
@@ -133,7 +131,7 @@ public:
     return p;
   }
 
-  [[nodiscard]] std::filesystem::path rawPath(std::string_view path) const override { return GetRawPath(path); }
+  [[nodiscard]] std::filesystem::path rawPath(const std::string_view path) const override { return GetRawPath(path); }
   [[nodiscard]] std::filesystem::path cookedPath(const std::string_view path) const override {
     return GetCookedPath(path);
   }

@@ -16,7 +16,7 @@ void ObjectTag32Big::PutTo(nlohmann::ordered_json& j) const {
   const auto res = ResourcePool32Big::instance()->resourceById(*this);
   j["Type"] = type.toString();
   if (res) {
-    j["File"] = res->rawPath(res->repPath());
+    j["File"] = res->cookedPath(res->repPath());
   }
 
   if (!res || !res->pathKnown()) {
@@ -25,23 +25,24 @@ void ObjectTag32Big::PutTo(nlohmann::ordered_json& j) const {
 }
 
 ObjectTag32Big ObjectTag32Big::Load(const nlohmann::ordered_json& j) {
-  ObjectTag32Big res;
-  res.type = FourCC(j.value("Type", kInvalidFourCC.toString()));
+  ObjectTag32Big ret;
+  ret.type = FourCC(j.value("Type", kInvalidFourCC.toString()));
   // If we have an asset id just ignore the filename even if we have one
-  if (j.contains("File") && !j.contains("AssetID")) {
+  if (j.contains("File")) {
     std::string file = j.value("File", "");
     athena::utility::tolower(file);
-    res.m_id = AssetId32Big(CRC32::Calculate(file.c_str(), file.length()));
+    ret.m_id = AssetId32Big(CRC32::Calculate(file.c_str(), file.length()));
+    ret.m_repPath = file;
   }
 
   if (j.contains("AssetID")) {
-    res.m_id = AssetId32Big(j.value("AssetID", kInvalidAssetId32Big.toString()));
+    ret.m_id = AssetId32Big(j.value("AssetID", kInvalidAssetId32Big.toString()));
   }
 
-  if (res.type == kInvalidFourCC) {
+  if (ret.type == kInvalidFourCC) {
     return {};
   }
-  return res;
+  return ret;
 }
 
 } // namespace axdl::primedep

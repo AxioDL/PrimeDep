@@ -9,6 +9,7 @@ struct IObjectTag {
   virtual ~IObjectTag() = default;
   virtual void PutTo(athena::io::IStreamWriter& out, bool reversed = false) const = 0;
   virtual void PutTo(nlohmann::ordered_json& j) const = 0;
+  virtual std::string_view repPath() const = 0;
 };
 
 template <typename T>
@@ -48,8 +49,11 @@ struct ObjectTag32Big final : ObjectTag<AssetId32Big> {
   bool operator<(const ObjectTag32Big& other) const { return m_id < other.m_id; }
   explicit operator bool() const { return type != kInvalidFourCC && m_id != AssetId32Big(); }
 
+  std::string_view repPath() const override { return m_repPath; }
+
 private:
   AssetId32Big m_id;
+  std::string m_repPath;
 };
 
 } // namespace axdl::primedep

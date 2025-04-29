@@ -8,6 +8,7 @@ public:
   class Trigger {
   public:
     explicit Trigger(athena::io::IStreamReader& in);
+    explicit Trigger(const nlohmann::ordered_json& in);
 
     [[nodiscard]] const std::string& name() const { return m_name; }
     void setName(const std::string& name) { m_name = name; }
@@ -26,6 +27,7 @@ public:
   class Transition {
   public:
     explicit Transition(athena::io::IStreamReader& in);
+    explicit Transition(const nlohmann::ordered_json& in);
 
     [[nodiscard]] const std::vector<Trigger>& triggers() const { return m_triggers; }
     void setTransitions(const std::vector<Trigger>& triggers) { m_triggers = triggers; }
@@ -44,6 +46,7 @@ public:
   class State {
   public:
     explicit State(athena::io::IStreamReader& in);
+    explicit State(const nlohmann::ordered_json& in);
 
     [[nodiscard]] const std::string& name() const { return m_name; }
     void setName(const std::string& name) { m_name = name; }
@@ -60,6 +63,7 @@ public:
   };
 
   AiFiniteStateMachine(const char* ptr, std::size_t size);
+  AiFiniteStateMachine(const nlohmann::ordered_json& in);
 
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
@@ -69,9 +73,7 @@ public:
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
-    return nullptr;
-  }
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
   std::vector<State> m_states;

@@ -59,7 +59,7 @@ public:
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view repPath) {
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
     return nullptr;
   }
 

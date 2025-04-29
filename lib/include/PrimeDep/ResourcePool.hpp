@@ -13,6 +13,7 @@ namespace axdl::primedep {
 template <class ResourceDescriptorType, class ObjectTagType>
 class ResourcePool {
 public:
+  explicit ResourcePool(const std::filesystem::path& rootPath) : m_rootPath(rootPath) {}
   virtual ~ResourcePool() = default;
 
   [[nodiscard]] virtual ResourceDescriptorType resourceDescriptorByName(std::string_view name) = 0;
@@ -24,7 +25,10 @@ public:
 
   [[nodiscard]] virtual std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptorType& desc) = 0;
 
-  [[nodiscard]] virtual std::shared_ptr<IResource> resourceById(const ObjectTagType& tag) = 0;
+  [[nodiscard]] virtual std::shared_ptr<IResource> resourceById(const ObjectTagType& tag) { return nullptr; };
+  [[nodiscard]] virtual std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath) {
+    return nullptr;
+  };
 
   void addSource(const std::shared_ptr<IResourceSource<ResourceDescriptorType, ObjectTagType>>& source) {
     if (std::ranges::find_if(m_sources, [&source](const auto& sc) { return sc->path() == source->path(); }) !=
@@ -49,8 +53,21 @@ public:
     return tags;
   }
 
+  [[nodiscard]] std::string repPathFromFilePath(const std::filesystem::path& path) const {
+    return "$/" + std::filesystem::relative(path, m_rootPath).generic_string();
+  }
+
+  [[nodiscard]] std::filesystem::path filePathFromRepPath(const std::string_view repPath) const {
+    auto path = repPath;
+    if (path.starts_with("$/")) {
+      path = path.substr(2);
+    }
+    return (m_rootPath / path).generic_string();
+  }
+
 protected:
   ResourceFactory<ResourceDescriptorType> m_factory;
+  std::filesystem::path m_rootPath;
   std::shared_ptr<IResourceSource<ResourceDescriptorType, ObjectTagType>> m_currentSource;
   std::vector<std::shared_ptr<IResourceSource<ResourceDescriptorType, ObjectTagType>>> m_sources;
   std::map<ResourceDescriptorType, std::shared_ptr<IResource>> m_loadedResources;
@@ -58,12 +75,12 @@ protected:
 
 class ResourcePool32Big : public ResourcePool<ResourceDescriptor32Big, ObjectTag32Big> {
 public:
-  ResourcePool32Big() { m_instance = this; }
+  explicit ResourcePool32Big(const std::filesystem::path& rootPath) : ResourcePool(rootPath) { m_instance = this; }
   [[nodiscard]] ResourceDescriptor32Big resourceDescriptorByName(std::string_view name) override;
   [[nodiscard]] ResourceDescriptor32Big resourceDescriptorById(const ObjectTag32Big& tag) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceById(const ObjectTag32Big& tag) override;
-
+  [[nodiscard]] virtual std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath);
   static ResourcePool32Big* instance() { return m_instance; }
 
 private:
@@ -73,7 +90,8 @@ private:
 
 class ResourcePool32BigNamer final : public ResourcePool32Big {
 public:
-  explicit ResourcePool32BigNamer(const ResourceNameDatabase& nameDb) : m_nameDb(nameDb) {}
+  explicit ResourcePool32BigNamer(const std::filesystem::path& rootPath, const ResourceNameDatabase& nameDb)
+  : ResourcePool32Big(rootPath), m_nameDb(nameDb) {}
   std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc) override;
 
 private:

@@ -1,6 +1,8 @@
 #include "PrimeDep/ResourcePool.hpp"
 
+#include "../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
+#include "json.hpp"
 
 namespace axdl::primedep {
 ResourceDescriptor32Big ResourcePool32Big::resourceDescriptorByName(std::string_view name) {
@@ -89,6 +91,53 @@ std::shared_ptr<IResource> ResourcePool32Big::resourceById(const ObjectTag32Big&
   }
 
   return nullptr;
+}
+
+std::shared_ptr<IResource> ResourcePool32Big::ingestResourceByRepPath(std::string_view repPath) {
+  if (auto it =
+          std::ranges::find_if(m_loadedResources, [&](const auto& res) { return res.second->repPath() == repPath; });
+      it != m_loadedResources.end()) {
+    return it->second;
+  }
+  auto metaPath = filePathFromRepPath(repPath);
+  metaPath.replace_extension(metaPath.extension().generic_string() + ".meta");
+  auto path = filePathFromRepPath(repPath);
+  if (!exists(metaPath)) {
+    return nullptr;
+  }
+
+  nlohmann::ordered_json meta;
+  {
+    athena::io::FileReader in(metaPath.generic_string());
+    std::string content = in.readString();
+    meta = nlohmann::ordered_json::parse(content);
+  }
+
+  const auto type = FourCC(meta.value("ResourceType", kInvalidFourCC.toString()));
+  if (type == kInvalidFourCC) {
+    return nullptr;
+  }
+
+  AssetId32Big assetId;
+  if (meta.contains("AssetID")) {
+    assetId = AssetId32Big(meta.value("AssetID", kInvalidAssetId32Big.toString()));
+  }
+
+  if (const auto func = m_factory.ingestValidationFactory(type); !func || !func(meta)) {
+    return nullptr;
+  }
+
+  auto ret = m_factory.ingestFactory(type)(meta, path.generic_string());
+  if (ret) {
+    ret->setAssetId(assetId.toString());
+    ret->setRepPath(repPath, assetId == kInvalidAssetId32Big);
+
+    ResourceDescriptor32Big desc;
+    desc.setAssetId(assetId);
+    desc.setType(type);
+    m_loadedResources[desc] = ret;
+  }
+  return ret;
 }
 
 ResourcePool32Big* ResourcePool32Big::m_instance = nullptr;
