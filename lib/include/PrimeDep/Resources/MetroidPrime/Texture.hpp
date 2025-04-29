@@ -33,6 +33,8 @@ class GraphicsPalette final {
 public:
   explicit GraphicsPalette(athena::io::IStreamReader& in);
 
+  void PutTo(athena::io::IStreamWriter& out) const;
+  void PutTo(nlohmann::ordered_json& out) const;
   uint32_t entryCount() const { return m_width * m_height; }
 
 private:
@@ -46,16 +48,18 @@ class Texture final : public TypedResource('TXTR', ".png", ".txtr", DESCRIPTION(
 public:
   Texture(const char* ptr, std::size_t size);
 
-  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
-
   [[nodiscard]] ETexelFormat format() const { return m_format; }
   [[nodiscard]] uint16_t width() const { return m_width; }
   [[nodiscard]] uint16_t height() const { return m_height; }
 
   [[nodiscard]] uint32_t numMips() const { return m_numMips; }
 
-  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view repPath) const override;
+  bool writeCooked(std::string_view path) const override;
+  bool writeUncooked(std::string_view path) const override;
 
+  [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
+
+  static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
