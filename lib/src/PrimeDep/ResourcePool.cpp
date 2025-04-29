@@ -93,14 +93,14 @@ std::shared_ptr<IResource> ResourcePool32Big::resourceById(const ObjectTag32Big&
   return nullptr;
 }
 
-std::shared_ptr<IResource> ResourcePool32Big::ingestResourceByRepPath(std::string_view repPath) {
+std::shared_ptr<IResource> ResourcePool32Big::ingestResourceByRepPath(std::string_view repPath, const FourCC& fcc) {
   if (auto it =
           std::ranges::find_if(m_loadedResources, [&](const auto& res) { return res.second->repPath() == repPath; });
       it != m_loadedResources.end()) {
     return it->second;
   }
   auto metaPath = filePathFromRepPath(repPath);
-  metaPath.replace_extension(metaPath.extension().generic_string() + ".meta");
+  metaPath.replace_extension(m_factory.rawExtension(fcc) + ".meta");
   auto path = filePathFromRepPath(repPath);
   if (!exists(metaPath)) {
     return nullptr;
@@ -120,7 +120,7 @@ std::shared_ptr<IResource> ResourcePool32Big::ingestResourceByRepPath(std::strin
 
   AssetId32Big assetId;
   if (meta.contains("AssetID")) {
-    assetId = AssetId32Big(meta.value("AssetID", kInvalidAssetId32Big.toString()));
+    assetId = AssetId32Big(meta.value("AssetID", kInvalidAssetId32Big.id), type);
   }
 
   if (const auto func = m_factory.ingestValidationFactory(type); !func || !func(meta)) {

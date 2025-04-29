@@ -10,6 +10,7 @@
 #include <fstream>
 
 namespace axdl::primedep ::MetroidPrime {
+
 bool PakFile::loadHeader() {
   athena::io::FileReader in(m_path);
   m_magic = in.readUint32Big();
@@ -138,6 +139,7 @@ nlohmann::ordered_json PakFile::metadata() const {
     descriptor["Name"] = namedRes.name();
     const auto tag = ObjectTag32Big{namedRes.type(), namedRes.assetId()};
     if (const auto res = ResourcePool32Big::instance()->resourceById(tag)) {
+      descriptor["Type"] = res->typeCode().toString();
       descriptor["File"] = res->cookedPath(res->repPath());
     } else {
       tag.PutTo(descriptor["Ref"]);

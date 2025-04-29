@@ -1,9 +1,9 @@
 #include "PrimeDep/Resources/MetroidPrime/DependencyGroup.hpp"
 
-#include "../../../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
 #include "PrimeDep/ResourcePool.hpp"
-#include "PrimeDep/ResourceUtils.hpp"
-#include "athena/MemoryReader.hpp"
+
+#include <athena/FileReader.hpp>
+#include <athena/MemoryReader.hpp>
 
 namespace axdl::primedep::MetroidPrime {
 DependencyGroup::DependencyGroup(const char* ptr, const std::size_t size) {
@@ -62,6 +62,9 @@ std::shared_ptr<IResource> DependencyGroup::ingest(const nlohmann::ordered_json&
                                                    const std::string_view path) {
   athena::io::FileReader in(path);
   auto js = nlohmann::ordered_json::parse(in.readString());
+  if (!js.contains("Dependencies")) {
+    return nullptr;
+  }
   return std::make_shared<DependencyGroup>(js);
 }
 } // namespace axdl::primedep::MetroidPrime

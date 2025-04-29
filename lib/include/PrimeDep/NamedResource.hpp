@@ -5,7 +5,7 @@ namespace axdl::primedep {
 template <class AssetIdType, bool BigEndian>
 class NamedResource {
 public:
-  NamedResource(const std::string_view name, const uint32_t type, const AssetIdType& assetId)
+  NamedResource(const std::string_view name, const FourCC& type, const AssetIdType& assetId)
   : m_name(name), m_type(type), m_assetId(assetId) {}
   explicit NamedResource(athena::io::IStreamReader& in) {
     m_type = FourCC(in);

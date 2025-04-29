@@ -19,13 +19,13 @@ void ObjectTag32Big::PutTo(nlohmann::ordered_json& j) const {
 
   const auto res = ResourcePool32Big::instance()->resourceById(*this);
   j["Type"] = type.toString();
-  id().PutTo(j["Ref"]);
+  id().PutTo(j["Ref"], type);
 }
 
 ObjectTag32Big ObjectTag32Big::Load(const nlohmann::ordered_json& j) {
   ObjectTag32Big ret;
   ret.type = FourCC(j.value("Type", kInvalidFourCC.toString()));
-  ret.m_id = AssetId32Big(j["Ref"]);
+  ret.m_id = AssetId32Big(j["Ref"], ret.type);
 
   return ret;
 }

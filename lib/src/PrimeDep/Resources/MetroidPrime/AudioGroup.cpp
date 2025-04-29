@@ -163,7 +163,8 @@ bool AudioGroup::canIngest(const nlohmann::ordered_json& metadata) {
 
 std::shared_ptr<IResource> AudioGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
                                               const std::string_view path) {
-  athena::io::FileReader in(path);
+  const auto p = GetRawPath(path);
+  athena::io::FileReader in(p.generic_string());
   auto js = nlohmann::ordered_json::parse(in.readString());
   return std::make_shared<AudioGroup>(js);
 }

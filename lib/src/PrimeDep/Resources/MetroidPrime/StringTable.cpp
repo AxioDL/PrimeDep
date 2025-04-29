@@ -166,4 +166,11 @@ bool StringTable::writeUncooked(const std::string_view path) const {
 std::shared_ptr<IResource> StringTable::loadCooked(const char* ptr, const std::size_t size) {
   return std::make_shared<StringTable>(ptr, size);
 }
+bool StringTable::canIngest(const nlohmann::ordered_json& metadata) {
+  return metadata["ResourceType"] == ResourceType().toString();
+}
+std::shared_ptr<IResource> StringTable::ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
+  return nullptr;
+}
+
 } // namespace axdl::primedep::MetroidPrime

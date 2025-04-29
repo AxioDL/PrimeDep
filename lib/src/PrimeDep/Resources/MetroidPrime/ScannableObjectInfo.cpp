@@ -14,7 +14,7 @@ ScannableObjectInfo::Bucket::Bucket(athena::io::IStreamReader& in, uint32_t vers
 , fadeDuration(version < 3 ? 0.f : in.readFloatBig()) {}
 
 ScannableObjectInfo::Bucket::Bucket(const nlohmann::json& in)
-: texture(in)
+: texture(in, FOURCC('TXTR'))
 , appearanceRange(in.value("AppearanceRange", 0.f))
 , imagePos(magic_enum::enum_cast<EImagePane>(in.value("ImagePosition", "Invalid")).value_or(EImagePane::Invalid))
 , size(in)
@@ -35,7 +35,7 @@ void ScannableObjectInfo::Bucket::PutTo(athena::io::IStreamWriter& out, const ui
 }
 
 void ScannableObjectInfo::Bucket::PutTo(nlohmann::ordered_json& out, const uint32_t version) const {
-  texture.PutTo(out["Texture"]);
+  texture.PutTo(out["Texture"], FOURCC('TXTR'));
   out["AppearanceRange"] = appearanceRange;
   out["ImagePosition"] = magic_enum::enum_name(imagePos);
   out["FadeDuration"] = fadeDuration;
@@ -104,8 +104,8 @@ bool ScannableObjectInfo::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
   nlohmann::ordered_json j;
   j["Version"] = m_version;
-  m_frame.PutTo(j["Frame"]);
-  m_stringTable.PutTo(j["StringTable"]);
+  m_frame.PutTo(j["Frame"], FOURCC('FRME'));
+  m_stringTable.PutTo(j["StringTable"], FOURCC('STRG'));
   if (m_version < 4) {
     j["ScanSpeedValue"] = m_scanSpeed;
   } else {

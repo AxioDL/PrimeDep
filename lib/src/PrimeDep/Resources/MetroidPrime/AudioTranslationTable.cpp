@@ -1,6 +1,7 @@
 #include "PrimeDep/Resources/MetroidPrime/AudioTranslationTable.hpp"
 
-#include "athena/MemoryReader.hpp"
+#include <athena/FileReader.hpp>
+#include <athena/MemoryReader.hpp>
 
 namespace axdl::primedep::MetroidPrime {
 AudioTranslationTable::AudioTranslationTable(const char* ptr, const std::size_t size) {
@@ -9,6 +10,13 @@ AudioTranslationTable::AudioTranslationTable(const char* ptr, const std::size_t 
 
   while (sfxCount--) {
     m_sfxIds.push_back(in.readUint16Big());
+  }
+}
+
+AudioTranslationTable::AudioTranslationTable(const nlohmann::ordered_json& in) {
+  const auto& ids = in["SoundEffectIDs"];
+  for (const auto& id : ids) {
+    m_sfxIds.emplace_back(id);
   }
 }
 
@@ -41,4 +49,20 @@ bool AudioTranslationTable::writeUncooked(const std::string_view path) const {
 std::shared_ptr<IResource> AudioTranslationTable::loadCooked(const char* ptr, std::size_t size) {
   return std::make_shared<AudioTranslationTable>(ptr, size);
 }
+
+bool AudioTranslationTable::canIngest(const nlohmann::ordered_json& metadata) {
+  return metadata["ResourceType"] == ResourceType().toString();
+}
+std::shared_ptr<IResource> AudioTranslationTable::ingest(const nlohmann::ordered_json& metadata,
+                                                         std::string_view path) {
+  const auto p = GetRawPath(path);
+  athena::io::FileReader in(p.generic_string());
+  auto js = nlohmann::ordered_json::parse(in.readString());
+  if (!js.contains("SoundEffectIDs")) {
+    return nullptr;
+  }
+
+  return std::make_shared<AudioTranslationTable>(js);
+}
+
 } // namespace axdl::primedep::MetroidPrime

@@ -64,10 +64,32 @@ public:
     return nullptr;
   }
 
+  void registerExtensions(const FourCC& type, std::string_view cooked, std::string_view raw) {
+    if (m_resourceExtensions.contains(type)) {
+      return;
+    }
+    m_resourceExtensions[type] = std::make_pair(cooked, raw);
+  }
+
+  std::string cookedExtension(const FourCC& type) const {
+    if (m_resourceExtensions.contains(type)) {
+      return m_resourceExtensions.at(type).first;
+    }
+    return {};
+  }
+
+  std::string rawExtension(const FourCC& type) const {
+    if (m_resourceExtensions.contains(type)) {
+      return m_resourceExtensions.at(type).second;
+    }
+    return {};
+  }
+
 private:
   std::map<FourCC, CookedFactoryFunc> m_cookedFactories;
   std::map<FourCC, IngestValidationFunc> m_ingestValidationFactories;
   std::map<FourCC, IngestFactoryFunc> m_ingestFactories;
+  std::map<FourCC, std::pair<std::string, std::string>> m_resourceExtensions; // Type -> [cooked,raw]
 };
 
 using ResourceFactory32Big = ResourceFactory<ResourceDescriptor32Big>;
@@ -80,6 +102,7 @@ static void RegisterFactory32Big(ResourceFactory32Big& in) {
   in.registerCookedFactory(T::ResourceType(), T::loadCooked);
   in.registerIngestValidationFactory(T::ResourceType(), T::canIngest);
   in.registerIngestFactory(T::ResourceType(), T::ingest);
+  in.registerExtensions(T::ResourceType(), T::CookedExtension(), T::RawExtension());
 }
 
 } // namespace axdl::primedep

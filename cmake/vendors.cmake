@@ -23,10 +23,17 @@ FetchContent_Declare(
   GIT_TAG v2.9.5
 )
 
+FetchContent_Declare(
+  argparse
+  GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+  GIT_TAG v3.2
+)
+
 set(JSON_ImplicitConversions OFF)
 FetchContent_MakeAvailable(
   athena
   nlohmann
   magic_enum
   tinygltf
+  argparse
 )

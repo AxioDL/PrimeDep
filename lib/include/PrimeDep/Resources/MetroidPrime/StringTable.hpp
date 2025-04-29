@@ -25,12 +25,8 @@ public:
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;
-  static bool canIngest(const nlohmann::ordered_json& metadata) {
-    return metadata["ResourceType"] == ResourceType().toString();
-  }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
-    return nullptr;
-  }
+  static bool canIngest(const nlohmann::ordered_json& metadata);
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
   EVersion m_version;

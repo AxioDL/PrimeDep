@@ -37,6 +37,10 @@ public:
 
   [[nodiscard]] std::size_t namedResourceCount() const { return m_namedResources.size(); }
   [[nodiscard]] const std::vector<NamedResource32Big>& namedResources() const { return m_namedResources; }
+
+  void addNamedResource(const std::string_view name, const FourCC& type, const AssetId32Big& id) {
+    m_namedResources.push_back(NamedResource32Big(name, type, id));
+  }
   [[nodiscard]] std::size_t resourceDescriptorCount() const { return m_resourceDescriptors.size(); }
   [[nodiscard]] const std::vector<ResourceDescriptor32Big>& resourceDescriptors() const {
     return m_resourceDescriptors;

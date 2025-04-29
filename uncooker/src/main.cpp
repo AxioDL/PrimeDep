@@ -138,6 +138,14 @@ int main(int argc, char** argv) {
   axdl::primedep::ResourcePool32BigNamer pool(outputFolder, axdl::primedep::ResourceNameDatabase::instance());
   pool.setFactory(factory);
 
+  // const auto world =
+  //     pool.ingestResourceByRepPath("$/Worlds/Crater/!Crater_Master/cooked/!Crater_Master.mapw", FOURCC('MAPW'));
+  // if (world) {
+  //   (void)world->writeCooked(
+  //       pool.filePathFromRepPath("$/Worlds/Crater/!Crater_Master/cooked/!Crater_Master.mapw").generic_string());
+  // }
+  // return 0;
+
 #if 1
 
   // TODO: Gather this information from the binary
@@ -189,7 +197,6 @@ int main(int argc, char** argv) {
         create_directories(fileOut.parent_path());
       }
       string->writeMetadata(fileOut.generic_string(), repPath);
-      (void)string->writeCooked(fileOut.generic_string());
       if (!string->writeUncooked(fileOut.generic_string())) {
         std::cout << "Unable to uncook " << repPath << std::endl;
       }

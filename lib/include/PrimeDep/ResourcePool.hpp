@@ -26,7 +26,8 @@ public:
   [[nodiscard]] virtual std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptorType& desc) = 0;
 
   [[nodiscard]] virtual std::shared_ptr<IResource> resourceById(const ObjectTagType& tag) { return nullptr; };
-  [[nodiscard]] virtual std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath) {
+  [[nodiscard]] virtual std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath,
+                                                                           const FourCC& fcc) {
     return nullptr;
   };
 
@@ -65,6 +66,18 @@ public:
     return (m_rootPath / path).generic_string();
   }
 
+  [[nodiscard]] std::string cookedRepPathFromRawRepPath(const std::string_view repPath, const FourCC& type) const {
+    auto path = filePathFromRepPath(repPath);
+    path.replace_extension(m_factory.cookedExtension(type));
+    return repPathFromFilePath(path);
+  }
+
+  [[nodiscard]] std::string rawRepPathFromCookedRepPath(const std::string_view repPath, const FourCC& type) const {
+    auto path = filePathFromRepPath(repPath);
+    path.replace_extension(m_factory.rawExtension(type));
+    return repPathFromFilePath(path);
+  }
+
 protected:
   ResourceFactory<ResourceDescriptorType> m_factory;
   std::filesystem::path m_rootPath;
@@ -80,7 +93,8 @@ public:
   [[nodiscard]] ResourceDescriptor32Big resourceDescriptorById(const ObjectTag32Big& tag) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceByDescriptor(const ResourceDescriptor32Big& desc) override;
   [[nodiscard]] std::shared_ptr<IResource> resourceById(const ObjectTag32Big& tag) override;
-  [[nodiscard]] virtual std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath);
+  [[nodiscard]] std::shared_ptr<IResource> ingestResourceByRepPath(std::string_view repPath,
+                                                                   const FourCC& fcc) override;
   static ResourcePool32Big* instance() { return m_instance; }
 
 private:

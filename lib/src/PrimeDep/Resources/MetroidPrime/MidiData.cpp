@@ -1,7 +1,8 @@
 #include "PrimeDep/Resources/MetroidPrime/MidiData.hpp"
 
-#include "athena/MemoryReader.hpp"
-#include "athena/MemoryWriter.hpp"
+#include <athena/FileReader.hpp>
+#include <athena/MemoryReader.hpp>
+#include <athena/MemoryWriter.hpp>
 
 namespace axdl::primedep::MetroidPrime {
 MidiData::MidiData(const char* ptr, const std::size_t size) {
@@ -14,6 +15,15 @@ MidiData::MidiData(const char* ptr, const std::size_t size) {
   m_dataLength = in.readUint32Big();
   m_data = std::make_unique<uint8_t[]>(m_dataLength);
   in.readUBytesToBuf(m_data.get(), m_dataLength);
+}
+
+MidiData::MidiData(const nlohmann::ordered_json& in, const std::string_view path)
+: m_setupId(in["SetupID"]), m_groupId(in["GroupID"]), m_soundGroup(ObjectTag32Big::Load(in["Ref"])) {
+  const auto p = GetRawPath(path);
+  athena::io::FileReader reader(p.generic_string());
+  m_dataLength = reader.length();
+  m_data = std::make_unique<uint8_t[]>(m_dataLength);
+  reader.readBytesToBuf(m_data.get(), m_dataLength);
 }
 
 bool MidiData::writeCooked(std::string_view path) const {
@@ -36,14 +46,28 @@ bool MidiData::writeUncooked(const std::string_view path) const {
   return !writer.hasError();
 }
 
-std::shared_ptr<IResource> MidiData::loadCooked(const char* ptr, const std::size_t size) {
-  return std::make_shared<MidiData>(ptr, size);
-}
 nlohmann::ordered_json MidiData::metadata(std::string_view repPath) const {
   auto out = ITypedResource::metadata(repPath);
   out["SetupID"] = m_setupId;
   out["GroupID"] = m_groupId;
   m_soundGroup.PutTo(out["Ref"]);
   return out;
+}
+
+std::shared_ptr<IResource> MidiData::loadCooked(const char* ptr, const std::size_t size) {
+  return std::make_shared<MidiData>(ptr, size);
+}
+
+bool MidiData::canIngest(const nlohmann::ordered_json& metadata) {
+  if (!metadata.contains("SetupID") || !metadata.contains("GroupID") || !metadata.contains("Ref")) {
+    return false;
+  }
+
+  return metadata["ResourceType"] == ResourceType().toString();
+}
+
+std::shared_ptr<IResource> MidiData::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+                                            const std::string_view path) {
+  return std::make_shared<MidiData>(metadata, path);
 }
 } // namespace axdl::primedep::MetroidPrime

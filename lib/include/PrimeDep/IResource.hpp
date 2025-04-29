@@ -108,11 +108,12 @@ public:
       };
     }
 
-    return {
-        {"ResourceType", typeCode().toString()},
-        {"AssetID", m_assetID},
-    };
+    nlohmann::ordered_json metadata;
+    metadata["ResourceType"] = typeCode().toString();
+    metadata["AssetID"] = assetId32Big().id;
+    return metadata;
   }
+
   static std::filesystem::path GetRawPath(const std::string_view path) {
     std::filesystem::path p = path;
     while (p.has_extension()) {

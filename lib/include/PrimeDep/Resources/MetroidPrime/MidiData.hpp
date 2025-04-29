@@ -5,18 +5,15 @@ namespace axdl::primedep::MetroidPrime {
 class MidiData final : public TypedResource('CSNG', ".song", ".csng", DESCRIPTION("MusyX Song Data")) {
 public:
   MidiData(const char* ptr, std::size_t size);
+  MidiData(const nlohmann::ordered_json& in, std::string_view path);
 
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
 
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
-  static bool canIngest(const nlohmann::ordered_json& metadata) {
-    return metadata["ResourceType"] == ResourceType().toString();
-  }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
-    return nullptr;
-  }
+  static bool canIngest(const nlohmann::ordered_json& metadata);
+  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;
 
