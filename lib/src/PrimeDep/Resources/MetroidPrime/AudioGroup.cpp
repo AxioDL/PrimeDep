@@ -157,6 +157,17 @@ std::shared_ptr<IResource> AudioGroup::loadCooked(const char* data, std::size_t 
   return std::make_shared<AudioGroup>(data, size);
 }
 
+bool AudioGroup::canIngest(const nlohmann::ordered_json& metadata) {
+  const bool typesMatch = metadata["ResourceType"] == ResourceType().toString();
+  const auto poolFile = ResourcePool32Big::instance()->filePathFromRepPath(metadata.value("PoolFile", ""));
+  const auto projFile = ResourcePool32Big::instance()->filePathFromRepPath(metadata.value("ProjectFile", ""));
+  const auto samplesFile = ResourcePool32Big::instance()->filePathFromRepPath(metadata.value("SamplesFile", ""));
+  const auto sampleDirFile =
+      ResourcePool32Big::instance()->filePathFromRepPath(metadata.value("SampleDirectoryFile", ""));
+
+  return typesMatch && exists(poolFile) && exists(projFile) && exists(samplesFile) && exists(sampleDirFile);
+}
+
 std::shared_ptr<IResource> AudioGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
                                               const std::string_view path) {
   athena::io::FileReader in(path);

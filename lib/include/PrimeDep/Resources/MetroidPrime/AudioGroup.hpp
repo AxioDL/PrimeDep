@@ -15,9 +15,7 @@ public:
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
 
-  static bool canIngest(const nlohmann::ordered_json& metadata) {
-    return metadata["ResourceType"] == ResourceType().toString();
-  }
+  static bool canIngest(const nlohmann::ordered_json& metadata);
   static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
