@@ -13,17 +13,16 @@ public:
   };
 
   struct StringPool {
-    std::vector<uint32_t> m_stringOffsets;
-    std::unique_ptr<char16_t[]> m_strings;
-    uint32_t m_bufLen;
+    std::vector<std::string> m_strings;
   };
 
   StringTable(const char* ptr, std::size_t size);
 
-  std::u16string string(uint32_t idx, const FourCC& lang = FOURCC('ENGL')) const;
+  std::string string(uint32_t idx, const FourCC& lang = FOURCC('ENGL')) const;
+  [[nodiscard]] bool writeCooked(std::string_view path) const override;
+  [[nodiscard]] bool writeUncooked(std::string_view path) const override;
 
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
-  [[nodiscard]] bool writeUncooked(std::string_view path) const override;
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;
   static bool canIngest(const nlohmann::ordered_json& metadata) {
@@ -34,7 +33,6 @@ public:
   }
 
 private:
-  uint32_t m_magic;
   EVersion m_version;
   std::map<FourCC, StringPool> m_languages;
 };

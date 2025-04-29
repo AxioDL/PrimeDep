@@ -1,0 +1,8 @@
+Model Cooking:
+Texture slots 1-7 are ST: F32 in all formats
+Color0 is RGBA8 in all formats
+Position is F32 in all formats
+
+Format0 NORMAL: F32,         TEX0, F32
+Format1 NORMAL: U16(frac14), TEX0, " "
+Format2 NORMAL: U16(frac14), TEX0, U16(frac15)
