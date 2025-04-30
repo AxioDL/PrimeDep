@@ -245,10 +245,10 @@ struct TextureDecoderIA8 {
   static void decode_texel(Target* target, const Source* in, const uint32_t x) {
     const auto texel = SBig(in[x]);
     const uint8_t intensity = texel & 0xff;
-    target[x].a = (texel >> 8) & 0xff;
-    target[x].g = intensity;
     target[x].r = intensity;
+    target[x].g = intensity;
     target[x].b = intensity;
+    target[x].a = (texel >> 8) & 0xff;
   }
 };
 
