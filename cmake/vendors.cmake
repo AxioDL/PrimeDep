@@ -37,3 +37,5 @@ FetchContent_MakeAvailable(
   tinygltf
   argparse
 )
+
+find_package(PNG REQUIRED)

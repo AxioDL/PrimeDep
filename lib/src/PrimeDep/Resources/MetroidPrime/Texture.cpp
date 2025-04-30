@@ -1,9 +1,41 @@
 #include "PrimeDep/Resources/MetroidPrime/Texture.hpp"
+#include "PrimeDep/texture_decode.hpp"
 
 #include <athena/MemoryReader.hpp>
 #include <magic_enum/magic_enum.hpp>
 
+#include <png.h>
+
 namespace axdl::primedep ::MetroidPrime {
+
+constexpr uint32_t RetroFormatToGXFormat(const ETexelFormat fmt) {
+  switch (fmt) {
+  case ETexelFormat::C4:
+    return GX_TF_C4;
+  case ETexelFormat::C8:
+    return GX_TF_C8;
+  case ETexelFormat::C14X2:
+    return GX_TF_C14X2;
+  case ETexelFormat::I4:
+    return GX_TF_I4;
+  case ETexelFormat::I8:
+    return GX_TF_I8;
+  case ETexelFormat::IA4:
+    return GX_TF_IA4;
+  case ETexelFormat::IA8:
+    return GX_TF_IA8;
+  case ETexelFormat::RGB565:
+    return GX_TF_RGB565;
+  case ETexelFormat::RGB5A3:
+    return GX_TF_RGB5A3;
+  case ETexelFormat::RGBA8:
+    return GX_TF_RGBA8;
+  case ETexelFormat::CMPR:
+    return GX_TF_CMPR;
+  default:
+    return -1;
+  }
+}
 
 constexpr uint32_t TexelFormatBitsPerPixel(const ETexelFormat fmt) {
   switch (fmt) {
@@ -25,57 +57,6 @@ constexpr uint32_t TexelFormatBitsPerPixel(const ETexelFormat fmt) {
   default:
     return 0;
   }
-}
-
-uint32_t GXGetTexBufferSize(uint16_t width, uint16_t height, ETexelFormat fmt, bool mips, uint8_t maxLod) {
-  int32_t shiftX = 0;
-  int32_t shiftY = 0;
-  switch (fmt) {
-  case ETexelFormat::I4:
-  case ETexelFormat::C4:
-  case ETexelFormat::CMPR:
-    shiftX = 3;
-    shiftY = 3;
-    break;
-  case ETexelFormat::I8:
-  case ETexelFormat::IA4:
-  case ETexelFormat::C8:
-    shiftX = 3;
-    shiftY = 2;
-    break;
-  case ETexelFormat::IA8:
-  case ETexelFormat::C14X2:
-  case ETexelFormat::RGB565:
-  case ETexelFormat::RGB5A3:
-    shiftX = 2;
-    shiftY = 2;
-    break;
-  default:
-    break;
-  }
-  const uint32_t bitSize = fmt == ETexelFormat::RGBA8 ? 64 : 32;
-  uint32_t bufLen = 0;
-  if (mips) {
-    while (maxLod != 0) {
-      const uint32_t tileX = ((width + (1 << shiftX) - 1) >> shiftX);
-      const uint32_t tileY = ((height + (1 << shiftY) - 1) >> shiftY);
-      bufLen += bitSize * tileX * tileY;
-
-      if (width == 1 && height == 1) {
-        return bufLen;
-      }
-
-      width = (width < 2) ? 1 : width / 2;
-      height = (height < 2) ? 1 : height / 2;
-      --maxLod;
-    };
-  } else {
-    const uint32_t tileX = ((width + (1 << shiftX) - 1) >> shiftX);
-    const uint32_t tileY = ((height + (1 << shiftY) - 1) >> shiftY);
-    bufLen = bitSize * tileX * tileY;
-  }
-
-  return bufLen;
 }
 
 GraphicsPalette::GraphicsPalette(athena::io::IStreamReader& in) {
@@ -111,7 +92,7 @@ Texture::Texture(const char* ptr, const std::size_t size) {
     m_palette = GraphicsPalette(in);
   }
 
-  const auto readLen = GXGetTexBufferSize(m_width, m_height, m_format, m_numMips > 0, m_numMips);
+  const auto readLen = GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format), m_numMips > 0, m_numMips);
   m_data = std::make_unique<uint8_t[]>(readLen);
   if (const auto actualSize = in.readUBytesToBuf(m_data.get(), readLen); actualSize != readLen) {
     printf("Failed to read texture data\n");
@@ -128,13 +109,73 @@ bool Texture::writeCooked(const std::string_view path) const {
   if (m_palette) {
     m_palette->PutTo(out);
   }
-  const auto writeLen = GXGetTexBufferSize(m_width, m_height, m_format, m_numMips > 0, m_numMips);
+  const auto writeLen =
+      GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format), m_numMips > 0, m_numMips);
   out.writeUBytes(m_data.get(), writeLen);
 
   return !out.hasError();
 }
 
-bool Texture::writeUncooked(std::string_view path) const { return false; }
+bool Texture::writeUncooked(const std::string_view path) const {
+  if (m_format == ETexelFormat::C4 || m_format == ETexelFormat::C8 || m_format == ETexelFormat::C14X2) {
+    return false;
+  }
+
+  const auto p = rawPath(path);
+  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+  if (!png) {
+    return false;
+  }
+
+  FILE* fp = fopen(p.generic_string().c_str(), "wb");
+
+  png_infop info = png_create_info_struct(png);
+  png_init_io(png, fp);
+
+  if (m_format == ETexelFormat::I4 || m_format == ETexelFormat::I8) {
+    png_set_IHDR(png, info, m_width, m_height, 8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
+  } else {
+    png_set_IHDR(png, info, m_width, m_height, 8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+  }
+
+  png_write_info(png, info);
+  png_set_compression_level(png, 0);
+
+  auto tex =
+      convert_texture(RetroFormatToGXFormat(m_format), m_width, m_height, m_numMips,
+                      ArrayRef(m_data.get(), GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format),
+                                                                m_numMips > 0, m_numMips)));
+
+  std::vector<png_bytep> rowPointers(m_height);
+  int stride = m_width;
+  if (m_format != ETexelFormat::I4 && m_format != ETexelFormat::I8) {
+    stride *= 4;
+  }
+
+  for (int y = 0; y < m_height; y++) {
+    rowPointers[m_height - 1 - y] = (png_bytep)(tex.data() + y * stride);
+  }
+
+  png_write_rows(png, rowPointers.data(), m_height);
+
+  png_write_end(png, nullptr);
+  png_write_flush(png);
+  png_destroy_write_struct(&png, &info);
+  fflush(fp);
+  fclose(fp);
+
+  static bool wroteTest = false;
+  if (!wroteTest && path.contains("defaultshadow")) {
+    FILE* fp = fopen("test.data", "wb");
+    fwrite(tex.data(), tex.size(), 1, fp);
+    fclose(fp);
+    wroteTest = true;
+  }
+
+  return true;
+}
 
 nlohmann::ordered_json Texture::metadata(const std::string_view path) const {
   nlohmann::ordered_json json = ITypedResource::metadata(path);

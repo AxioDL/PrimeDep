@@ -3,6 +3,7 @@
 #include "PrimeDep/IResource.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <athena/IStreamReader.hpp>
+#include <libpng16/png.h>
 
 namespace axdl::primedep ::MetroidPrime {
 enum class EPaletteFormat {
