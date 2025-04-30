@@ -66,7 +66,7 @@ bool MidiData::canIngest(const nlohmann::ordered_json& metadata) {
   return metadata["ResourceType"] == ResourceType().toString();
 }
 
-std::shared_ptr<IResource> MidiData::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+std::shared_ptr<IResource> MidiData::ingest([[maybe_unused]] const nlohmann::ordered_json& metadata,
                                             const std::string_view path) {
   return std::make_shared<MidiData>(metadata, path);
 }

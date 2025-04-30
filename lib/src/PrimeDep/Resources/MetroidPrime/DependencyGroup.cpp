@@ -58,7 +58,7 @@ std::shared_ptr<IResource> DependencyGroup::loadCooked(const char* ptr, std::siz
   return std::make_shared<DependencyGroup>(ptr, size);
 }
 
-std::shared_ptr<IResource> DependencyGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+std::shared_ptr<IResource> DependencyGroup::ingest([[maybe_unused]] const nlohmann::ordered_json& metadata,
                                                    const std::string_view path) {
   athena::io::FileReader in(path);
   auto js = nlohmann::ordered_json::parse(in.readString());

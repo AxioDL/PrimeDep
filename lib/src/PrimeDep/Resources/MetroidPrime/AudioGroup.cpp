@@ -70,7 +70,7 @@ AudioGroup::AudioGroup(const nlohmann::ordered_json& in) {
 }
 
 bool AudioGroup::writeUncooked(const std::string_view path) const {
-  const std::filesystem::path infoPath(GetRawPath(path));
+  const std::filesystem::path infoPath(rawPath(path));
   const std::filesystem::path poolPath(std::filesystem::path(path).replace_extension(".pool"));
   const std::filesystem::path projPath(std::filesystem::path(path).replace_extension(".proj"));
   const std::filesystem::path samplesPath(std::filesystem::path(path).replace_extension(".samp"));
@@ -125,13 +125,9 @@ bool AudioGroup::writeUncooked(const std::string_view path) const {
 }
 
 bool AudioGroup::writeCooked(const std::string_view path) const {
-  std::filesystem::path cookedPath(path);
-  while (cookedPath.has_extension()) {
-    cookedPath = cookedPath.replace_extension();
-  }
-  cookedPath.replace_extension(".agsc");
+  const auto p = cookedPath(path);
 
-  athena::io::FileWriter writer(cookedPath.generic_string());
+  athena::io::FileWriter writer(p.generic_string());
   writer.writeString(m_moduleDir);
   writer.writeString(m_moduleName);
   writer.writeUint32Big(m_poolSize);
@@ -161,7 +157,7 @@ bool AudioGroup::canIngest(const nlohmann::ordered_json& metadata) {
   return metadata["ResourceType"] == ResourceType().toString();
 }
 
-std::shared_ptr<IResource> AudioGroup::ingest(const nlohmann::ordered_json& [[maybe_unused]] metadata,
+std::shared_ptr<IResource> AudioGroup::ingest([[maybe_unused]] const nlohmann::ordered_json& metadata,
                                               const std::string_view path) {
   const auto p = GetRawPath(path);
   athena::io::FileReader in(p.generic_string());
