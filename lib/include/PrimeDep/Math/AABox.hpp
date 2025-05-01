@@ -28,6 +28,9 @@ public:
     m_max.PutTo(j["Max"]);
   }
 
+  const Vector3f& min() const { return m_min; }
+  const Vector3f& max() const { return m_max; }
+
 private:
   Vector3f m_min{FLT_MAX, FLT_MAX, FLT_MAX};
   Vector3f m_max{FLT_MIN, FLT_MIN, FLT_MIN};

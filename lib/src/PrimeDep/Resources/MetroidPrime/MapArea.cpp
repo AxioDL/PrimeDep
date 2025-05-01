@@ -1,8 +1,10 @@
 #include "PrimeDep/Resources/MetroidPrime/MapArea.hpp"
 
 #include "athena/MemoryReader.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "magic_enum/magic_enum.hpp"
 
+#include <glm/glm.hpp>
 #include <tiny_gltf.h>
 
 namespace axdl::primedep::MetroidPrime {
@@ -66,6 +68,8 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
     in.seek(tmpPos, athena::SeekOrigin::Begin);
   }
 }
+glm::mat4 zUpToYUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
+glm::mat4 yUpToZUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
 
 bool MapArea::writeUncooked(std::string_view path) const {
   auto p = rawPath(path);
@@ -81,6 +85,142 @@ bool MapArea::writeUncooked(std::string_view path) const {
   for (const auto& object : m_mappableObjects) {
     object.PutTo(objects.emplace_back());
   }
+
+  std::vector<Vector3f> vertices;
+  glm::mat4 conversionMatrix = zUpToYUpMatrix();
+
+  for (const auto& vertex : m_vertices) {
+    glm::vec4 vec{vertex.x(), vertex.y(), vertex.z(), 1.f};
+    vec = conversionMatrix * vec;
+    vertices.emplace_back(vec.x, vec.y, vec.z);
+  }
+  tinygltf::Model model;
+  auto& vertexBuffer = model.buffers.emplace_back();
+  vertexBuffer.data.resize(m_vertices.size() * sizeof(Vector3f));
+  memcpy(vertexBuffer.data.data(), vertices.data(), vertices.size() * sizeof(Vector3f));
+  auto& vertexBufferView = model.bufferViews.emplace_back();
+  vertexBufferView.buffer = 0;
+  vertexBufferView.byteOffset = 0;
+  vertexBufferView.byteLength = vertices.size() * sizeof(Vector3f);
+  vertexBufferView.byteStride = sizeof(Vector3f);
+  vertexBufferView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+  auto& vertexAccessor = model.accessors.emplace_back();
+  vertexAccessor.bufferView = 0;
+  vertexAccessor.byteOffset = 0;
+  vertexAccessor.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+  vertexAccessor.type = TINYGLTF_TYPE_VEC3;
+  vertexAccessor.count = vertices.size();
+
+  vertexAccessor.minValues = {m_bounds.min().x(), m_bounds.min().y(), m_bounds.min().z()};
+  vertexAccessor.maxValues = {m_bounds.max().x(), m_bounds.max().y(), m_bounds.max().z()};
+
+  auto& scene = model.scenes.emplace_back();
+  auto& hullMesh = model.meshes.emplace_back();
+  hullMesh.name = "Hull";
+  auto& hullNode = model.nodes.emplace_back();
+  hullNode.mesh = 0;
+  hullNode.name = hullMesh.name;
+
+  for (const auto& surface : m_surfaces) {
+    for (const auto& primitive : surface.primitives()) {
+      assert(primitive.m_type != EPrimitiveType::Quads && primitive.m_type != EPrimitiveType::Points);
+
+      if (primitive.m_type != EPrimitiveType::Triangles && primitive.m_type != EPrimitiveType::TriangleStrip &&
+          primitive.m_type != EPrimitiveType::TriangleFan && primitive.m_type != EPrimitiveType::Lines &&
+          primitive.m_type != EPrimitiveType::LineStrip) {
+        continue;
+      }
+
+      auto& prim = hullMesh.primitives.emplace_back();
+      auto& indices = model.buffers.emplace_back();
+
+      auto& indicesView = model.bufferViews.emplace_back();
+      auto& indicesAccessor = model.accessors.emplace_back();
+
+      indicesView.buffer = model.buffers.size() - 1;
+      indicesView.byteOffset = 0;
+      indicesView.byteStride = 1;
+      indicesView.byteLength = primitive.m_indices.size();
+      indicesView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+
+      indicesAccessor.bufferView = model.bufferViews.size() - 1;
+      indicesAccessor.byteOffset = 0;
+      indicesAccessor.count = primitive.m_indices.size();
+      indicesAccessor.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE;
+      indicesAccessor.type = TINYGLTF_TYPE_SCALAR;
+
+      prim.indices = model.accessors.size() - 1;
+      prim.attributes["POSITION"] = 0;
+
+      switch (primitive.m_type) {
+      case EPrimitiveType::TriangleFan:
+      case EPrimitiveType::TriangleStrip:
+      case EPrimitiveType::Triangles: {
+        if (primitive.m_type == EPrimitiveType::TriangleStrip) {
+          prim.mode = TINYGLTF_MODE_TRIANGLE_STRIP;
+        } else if (primitive.m_type == EPrimitiveType::TriangleFan) {
+          prim.mode = TINYGLTF_MODE_TRIANGLE_FAN;
+        } else if (primitive.m_type == EPrimitiveType::Triangles) {
+          prim.mode = TINYGLTF_MODE_TRIANGLES;
+        } else if (primitive.m_type == EPrimitiveType::LineStrip) {
+          prim.mode = TINYGLTF_MODE_LINE_STRIP;
+        } else if (primitive.m_type == EPrimitiveType::Lines) {
+          prim.mode = TINYGLTF_MODE_LINE;
+        }
+        for (const auto id : primitive.m_indices) {
+          indices.data.push_back(id);
+        }
+        break;
+      default:
+        break;
+      }
+      }
+    }
+  }
+
+  auto& borderMesh = model.meshes.emplace_back();
+  borderMesh.name = "Border";
+  auto& borderNode = model.nodes.emplace_back();
+  borderNode.mesh = 1;
+  borderNode.name = borderMesh.name;
+
+  for (const auto& surface : m_surfaces) {
+    for (const auto& border : surface.m_borders) {
+      auto& prim = borderMesh.primitives.emplace_back();
+      auto& indices = model.buffers.emplace_back();
+
+      auto& indicesView = model.bufferViews.emplace_back();
+      auto& indicesAccessor = model.accessors.emplace_back();
+
+      indicesView.buffer = model.buffers.size() - 1;
+      indicesView.byteOffset = 0;
+      indicesView.byteStride = 1;
+      indicesView.byteLength = border.m_indices.size();
+      indicesView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+
+      indicesAccessor.bufferView = model.bufferViews.size() - 1;
+      indicesAccessor.byteOffset = 0;
+      indicesAccessor.count = border.m_indices.size();
+      indicesAccessor.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE;
+      indicesAccessor.type = TINYGLTF_TYPE_SCALAR;
+
+      prim.indices = model.accessors.size() - 1;
+      prim.attributes["POSITION"] = 0;
+      prim.mode = TINYGLTF_MODE_LINE_STRIP;
+      for (const auto id : border.m_indices) {
+        indices.data.push_back(id);
+      }
+    }
+  }
+
+  scene.nodes.push_back(0);
+  scene.nodes.push_back(1);
+  scene.name = modelP.filename().replace_extension().generic_string();
+  model.asset.generator = "Khronos glTF Blender I/O";
+
+  tinygltf::TinyGLTF gltf;
+  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, false);
 
   // TODO: Export model data
   athena::io::FileWriter writer(p.generic_string());

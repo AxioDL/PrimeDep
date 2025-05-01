@@ -29,6 +29,12 @@ FetchContent_Declare(
   GIT_TAG v3.2
 )
 
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG 1.0.1
+)
+
 set(JSON_ImplicitConversions OFF)
 FetchContent_MakeAvailable(
   athena
@@ -36,6 +42,7 @@ FetchContent_MakeAvailable(
   magic_enum
   tinygltf
   argparse
+  glm
 )
 
 find_package(PNG REQUIRED)

@@ -52,7 +52,8 @@ add_library(
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json
-  magic_enum tinygltf PNG::PNG)
+  magic_enum tinygltf PNG::PNG glm::glm)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar
     -Wno-ignored-attributes)

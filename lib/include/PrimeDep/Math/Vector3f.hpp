@@ -18,6 +18,10 @@ public:
   void PutTo(athena::io::IStreamWriter& out, bool bigendian = true) const;
   void PutTo(nlohmann::ordered_json& j) const;
 
+  const float x() const { return m_x; }
+  const float y() const { return m_y; }
+  const float z() const { return m_z; }
+
 private:
   float m_x{};
   float m_y{};
