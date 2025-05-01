@@ -7,6 +7,38 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
+Transform4f::Transform4f(const nlohmann::ordered_json& in) {
+  Vector3f M0 = {1.f, 0.f, 0.f};
+  Vector3f M1 = {0.f, 1.f, 0.f};
+  Vector3f M2 = {0.f, 0.f, 1.f};
+  Vector3f Pos;
+  if (in.contains("M0")) {
+    M0 = Vector3f(in["M0"]);
+  }
+  if (in.contains("M1")) {
+    M1 = Vector3f(in["M1"]);
+  }
+  if (in.contains("M2")) {
+    M2 = Vector3f(in["M2"]);
+  }
+  if (in.contains("Pos")) {
+    Pos = Vector3f(in["Pos"]);
+  }
+
+  m00 = M0.x();
+  m01 = M0.y();
+  m02 = M0.z();
+  m03 = Pos.x();
+  m10 = M1.x();
+  m11 = M1.y();
+  m12 = M1.z();
+  m13 = Pos.y();
+  m20 = M2.x();
+  m21 = M2.y();
+  m22 = M2.z();
+  m23 = Pos.z();
+}
+
 void Transform4f::loadBig(athena::io::IStreamReader& in) {
   m00 = in.readFloatBig();
   m01 = in.readFloatBig();

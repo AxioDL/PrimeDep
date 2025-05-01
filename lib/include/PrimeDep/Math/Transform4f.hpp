@@ -9,6 +9,7 @@ class IStreamWriter;
 namespace axdl::primedep {
 class Transform4f {
 public:
+  Transform4f() = default;
   Transform4f(athena::io::IStreamReader& in, const bool bigendian = true) {
     if (bigendian) {
       loadBig(in);
@@ -16,6 +17,8 @@ public:
       loadLittle(in);
     }
   }
+
+  Transform4f(const nlohmann::ordered_json& in);
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 

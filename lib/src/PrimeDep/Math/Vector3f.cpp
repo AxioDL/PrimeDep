@@ -13,6 +13,9 @@ Vector3f::Vector3f(athena::io::IStreamReader& in, const bool bigendian) {
   }
 }
 
+Vector3f::Vector3f(const nlohmann::ordered_json& in)
+: m_x(in.value("X", 0.f)), m_y(in.value("Y", 0.f)), m_z(in.value("Z", 0.f)) {}
+
 void Vector3f::loadBig(athena::io::IStreamReader& in) {
   m_x = in.readFloatBig();
   m_y = in.readFloatBig();

@@ -74,7 +74,7 @@ glm::mat4 yUpToZUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(90
 bool MapArea::writeUncooked(std::string_view path) const {
   auto p = rawPath(path);
   auto modelP = p;
-  modelP.replace_extension(".gltf");
+  modelP.replace_extension(".glb");
 
   nlohmann::ordered_json j;
   j["Version"] = m_version;
@@ -221,7 +221,7 @@ bool MapArea::writeUncooked(std::string_view path) const {
   model.asset.copyright = "AxioDL Team 2025";
 
   tinygltf::TinyGLTF gltf;
-  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, false);
+  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, true);
 
   // TODO: Export model data
   athena::io::FileWriter writer(p.generic_string());

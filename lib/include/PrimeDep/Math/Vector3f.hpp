@@ -12,6 +12,7 @@ public:
   Vector3f() = default;
   Vector3f(const float x, const float y, const float z) : m_x(x), m_y(y), m_z(z) {}
   explicit Vector3f(athena::io::IStreamReader& in, bool bigendian = true);
+  explicit Vector3f(const nlohmann::ordered_json& in);
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 
