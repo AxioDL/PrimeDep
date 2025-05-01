@@ -217,7 +217,8 @@ bool MapArea::writeUncooked(std::string_view path) const {
   scene.nodes.push_back(0);
   scene.nodes.push_back(1);
   scene.name = modelP.filename().replace_extension().generic_string();
-  model.asset.generator = "Khronos glTF Blender I/O";
+  model.asset.generator = "AxioDL PrimeDep MapArea uncooker";
+  model.asset.copyright = "AxioDL Team 2025";
 
   tinygltf::TinyGLTF gltf;
   gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, false);
