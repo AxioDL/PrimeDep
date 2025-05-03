@@ -68,8 +68,10 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
     in.seek(tmpPos, athena::SeekOrigin::Begin);
   }
 }
-glm::mat4 zUpToYUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
-glm::mat4 yUpToZUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
+static glm::mat4 zUpToYUpMatrix() {
+  return glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+}
+static glm::mat4 yUpToZUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
 
 bool MapArea::writeUncooked(std::string_view path) const {
   auto p = rawPath(path);

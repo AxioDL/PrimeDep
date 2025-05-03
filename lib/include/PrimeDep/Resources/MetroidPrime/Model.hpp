@@ -2,7 +2,7 @@
 
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep ::MetroidPrime {
-class Model final : public TypedResource('CMDL', ".gltf", ".cmdl", DESCRIPTION("Render Model Data")) {
+class Model final : public TypedResource('CMDL', ".glb", ".cmdl", DESCRIPTION("Render Model Data")) {
 public:
   Model(const char* ptr, std::size_t size);
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);

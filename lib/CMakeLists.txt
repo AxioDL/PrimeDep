@@ -1,5 +1,6 @@
 add_library(
   PrimeDep STATIC
+  src/converter.c
   src/PrimeDep/Animation/BoolPOINode.cpp
   src/PrimeDep/Animation/CharAnimTime.cpp
   src/PrimeDep/Animation/Int32POINode.cpp

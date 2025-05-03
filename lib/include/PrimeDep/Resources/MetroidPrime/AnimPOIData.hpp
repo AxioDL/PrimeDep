@@ -6,7 +6,7 @@
 #include "PrimeDep/Animation/SoundPOINode.hpp"
 #include "PrimeDep/IResource.hpp"
 namespace axdl::primedep::MetroidPrime {
-class AnimPOIData final : public TypedResource('EVNT', ".evnt.json", ".evnt", DESCRIPTION("Animation POI Data")) {
+class AnimPOIData final : public TypedResource('EVNT', ".event", ".evnt", DESCRIPTION("Animation POI Data")) {
 public:
   AnimPOIData(const char* ptr, std::size_t size);
 

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "PrimeDep/Types.hpp"
+#include "converter.h"
 #include <algorithm>
+#include <athena/utf8proc.h>
 #include <codecvt>
 #include <locale>
 #include <string>
@@ -131,13 +133,26 @@ constexpr double SBig(double val) noexcept { return val; }
 #endif
 
 static std::u16string convertStringToUTF16(const std::string& str) {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-  return convert.from_bytes(str);
+  const auto len = utf8_to_utf16(reinterpret_cast<utf8_t const*>(str.c_str()), str.length(), nullptr, 0);
+  if (len == 0) {
+    return {};
+  }
+  std::u16string out;
+  out.resize(len);
+  utf8_to_utf16(reinterpret_cast<utf8_t const*>(str.data()), str.length(), reinterpret_cast<utf16_t*>(out.data()), len);
+  return out;
 }
 
 static std::string convertUTF16ToString(const std::u16string& str) {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-  return convert.to_bytes(str);
+  const auto len = utf16_to_utf8(reinterpret_cast<utf16_t const*>(str.c_str()), str.length(), nullptr, 0);
+  if (len == 0) {
+    return {};
+  }
+  std::string out;
+  out.resize(len);
+  utf16_to_utf8(reinterpret_cast<utf16_t const*>(str.c_str()), str.length(), reinterpret_cast<utf8_t*>(out.data()),
+                len);
+  return out;
 }
 
 template <size_t N>
