@@ -1,6 +1,7 @@
 #pragma once
 #include "PrimeDep/Utils.hpp"
 #include "athena/IStreamReader.hpp"
+#include "athena/IStreamWriter.hpp"
 
 namespace axdl::primedep {
 class FourCC {
@@ -20,6 +21,7 @@ public:
   }
 
   explicit FourCC(athena::io::IStreamReader& in) { in.readUBytesToBuf(fcc, 4); }
+  void PutTo(athena::io::IStreamWriter& out) const { out.writeBytes(fcc, 4); }
 
   constexpr FourCC& operator=(const FourCC&) noexcept = default;
   constexpr FourCC& operator=(FourCC&&) noexcept = default;

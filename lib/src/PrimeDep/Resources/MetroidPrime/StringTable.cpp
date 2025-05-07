@@ -32,15 +32,14 @@ StringTable::StringTable(const char* ptr, const std::size_t size) {
   }
 
   const auto dataStart = in.position();
-  for (int i = 0; i < languageOffsets.size(); i++) {
-    in.seek(dataStart + languageOffsets[i].second, athena::SeekOrigin::Begin);
-    StringPool& pool = m_languages[languageOffsets[i].first];
+  for (auto& languageOffset : languageOffsets) {
+    in.seek(dataStart + languageOffset.second, athena::SeekOrigin::Begin);
+    StringPool& pool = m_languages[languageOffset.first];
     pool.m_strings.resize(stringCount);
     in.readUint32Big();
     std::vector<uint32_t> stringOffsets;
     const auto poolStart = in.position();
     for (int j = 0; j < stringCount; ++j) {
-      // Account for the string lookup table and string count
       stringOffsets.emplace_back(in.readUint32Big());
     }
     for (int j = 0; j < stringCount; j++) {
@@ -148,12 +147,17 @@ bool StringTable::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
   nlohmann::ordered_json json;
   json["Version"] = magic_enum::enum_name(m_version);
-  for (const auto& language : m_languages) {
+  for (const auto& languageFcc : kLanguages) {
+    if (!m_languages.contains(languageFcc)) {
+      continue;
+    }
+
+    const auto& language = m_languages.at(languageFcc);
     auto& lang = json["Languages"].emplace_back();
-    lang["Region"] = language.first.toString();
+    lang["Region"] = languageFcc.toString();
     auto& strings = lang["Strings"];
-    for (int i = 0; i < language.second.m_strings.size(); ++i) {
-      strings.push_back(language.second.m_strings[i]);
+    for (const auto& m_string : language.m_strings) {
+      strings.push_back(m_string);
     }
   }
 

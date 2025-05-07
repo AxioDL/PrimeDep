@@ -44,7 +44,9 @@ public:
   AssetId32Big() = default;
   explicit AssetId32Big(const uint32_t id) : AssetId(id) {}
   explicit AssetId32Big(const uint32_t id, const FourCC& fcc) : AssetId(id) { resolveRepPath(fcc); }
-  explicit AssetId32Big(athena::io::IStreamReader& in, const FourCC& fcc) : AssetId32Big(in.readUint32Big(), fcc) {}
+  explicit AssetId32Big(athena::io::IStreamReader& in, const FourCC& fcc) : AssetId32Big(in.readUint32Big(), fcc) {
+    resolveRepPath(fcc);
+  }
   explicit AssetId32Big(const nlohmann::ordered_json& in, const FourCC& type);
   static AssetId32Big FromString(const std::string& str) {
     AssetId32Big ret;
@@ -58,12 +60,12 @@ public:
 
   void PutTo(athena::io::IStreamWriter& out) const override;
   void PutTo(nlohmann::ordered_json& out, const FourCC& type) const override;
-  std::string toString() const override { return std::format("{:08X}", id); }
+  [[nodiscard]] std::string toString() const override { return std::format("{:08X}", id); }
 
 private:
   void resolveRepPath(const FourCC& fcc);
 };
 
-static const AssetId32Big kInvalidAssetId32Big = AssetId32Big();
+static const auto kInvalidAssetId32Big = AssetId32Big();
 
 } // namespace axdl::primedep
