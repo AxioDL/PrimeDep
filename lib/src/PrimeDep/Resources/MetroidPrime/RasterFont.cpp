@@ -4,6 +4,7 @@
 #include "PrimeDep/ResourcePool.hpp"
 #include "tiny_gltf.h"
 
+#include <athena/FileReader.hpp>
 #include <athena/MemoryReader.hpp>
 
 namespace axdl::primedep ::MetroidPrime {
@@ -109,7 +110,7 @@ RasterFont::FontInfo::FontInfo(const nlohmann::ordered_json& in) {
 void RasterFont::FontInfo::PutTo(athena::io::IStreamWriter& out) const {
   out.writeBool(m_unknown1);
   out.writeBool(m_unknown2);
-  out.writeUint32(m_unknown3);
+  out.writeUint32Big(m_unknown3);
   out.writeUint32Big(m_fontSize);
   out.writeString(m_name);
 }
@@ -153,16 +154,16 @@ RasterFont::RasterFont(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
   const auto magic = FourCC(in);
   assert(magic == kMagic);
-  const auto version = in.readUint32Big();
+  m_version = in.readUint32Big();
 
   m_monoHeight = in.readUint32Big();
   m_monoWidth = in.readUint32Big();
 
-  if (version >= 1) {
+  if (m_version >= 1) {
     m_baseline = in.readUint32Big();
   }
 
-  if (version >= 2) {
+  if (m_version >= 2) {
     m_lineMargin = in.readUint32Big();
   }
 
@@ -174,7 +175,7 @@ RasterFont::RasterFont(const char* ptr, const std::size_t size) {
 
   m_glyphs.reserve(glyphCount);
   while (glyphCount--) {
-    m_glyphs.emplace_back(in, version);
+    m_glyphs.emplace_back(in, m_version);
   }
 
   uint32_t kernCount = in.readUint32Big();
@@ -182,6 +183,26 @@ RasterFont::RasterFont(const char* ptr, const std::size_t size) {
 
   while (kernCount--) {
     m_kernPairs.emplace_back(in);
+  }
+}
+
+RasterFont::RasterFont(const nlohmann::ordered_json& in)
+: m_version(in.value("Version", 4)), m_monoWidth(in.value("MonoWidth", 0)), m_monoHeight(in.value("MonoHeight", 0)) {
+  if (m_version >= 1) {
+    m_baseline = in.value("Baseline", 0);
+  }
+  if (m_version >= 2) {
+    m_lineMargin = in.value("LineMargin", 0);
+  }
+  m_fontInfo = FontInfo(in.value("FontInfo", nlohmann::ordered_json()));
+  m_texture = AssetId32Big(in, FOURCC('TXTR'));
+  m_mode = in.value("Mode", 0);
+  for (const auto& glyphs = in.value("Glyphs", nlohmann::ordered_json()); const auto& glyph : glyphs) {
+    m_glyphs.emplace_back(glyph);
+  }
+
+  for (const auto& kernPairs = in.value("KernPairs", nlohmann::ordered_json()); const auto& kernPair : kernPairs) {
+    m_kernPairs.emplace_back(kernPair);
   }
 }
 
@@ -271,7 +292,11 @@ bool RasterFont::canIngest(const nlohmann::ordered_json& metadata) {
   return metadata["ResourceType"] == ResourceType().toString();
 }
 
-std::shared_ptr<IResource> RasterFont::ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
-  return nullptr;
+std::shared_ptr<IResource> RasterFont::ingest([[maybe_unused]] const nlohmann::ordered_json& metadata,
+                                              const std::string_view path) {
+  const auto p = GetRawPath(path);
+  athena::io::FileReader reader(p.generic_string());
+  nlohmann::ordered_json in = nlohmann::ordered_json::parse(reader.readString());
+  return std::make_shared<RasterFont>(in);
 }
 } // namespace axdl::primedep::MetroidPrime
