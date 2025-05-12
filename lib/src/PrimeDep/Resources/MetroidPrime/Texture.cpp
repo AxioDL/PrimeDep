@@ -8,6 +8,17 @@
 
 namespace axdl::primedep ::MetroidPrime {
 
+constexpr uint32_t RetroFormatToGXFormat(const EPaletteFormat fmt) {
+  switch (fmt) {
+  case EPaletteFormat::RGB565:
+    return GX_TF_RGB565;
+  case EPaletteFormat::RGB5A3:
+    return GX_TF_RGB5A3;
+  default:
+    return -1;
+  }
+}
+
 constexpr uint32_t RetroFormatToGXFormat(const ETexelFormat fmt) {
   switch (fmt) {
   case ETexelFormat::C4:
@@ -116,18 +127,62 @@ bool Texture::writeCooked(const std::string_view path) const {
   return !out.hasError();
 }
 
-bool Texture::writeUncooked(const std::string_view path) const {
-  if (m_format == ETexelFormat::C4 || m_format == ETexelFormat::C8 || m_format == ETexelFormat::C14X2) {
+bool Texture::writeUncookedImageIndexed(std::string_view path) const {
+  return false;
+  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+  if (!png) {
     return false;
   }
+  FILE* fp = fopen(path.data(), "wb");
 
-  const auto p = rawPath(path);
+  png_infop info = png_create_info_struct(png);
+  png_init_io(png, fp);
+  png_set_compression_level(png, 0);
+
+  auto tlut = convert_tlut(
+      RetroFormatToGXFormat(m_palette->format()), std::max(m_palette->width(), m_palette->height()),
+      ArrayRef(reinterpret_cast<uint8_t*>(m_palette->entries()), m_palette->entryCount() * sizeof(uint16_t)));
+
+  png_set_IHDR(png, info, m_width, m_height, 8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+               PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+  png_set_PLTE(png, info, reinterpret_cast<const png_const_colorp>(tlut.data()), m_palette->entryCount());
+  png_write_info(png, info);
+  auto tex =
+      convert_texture(RetroFormatToGXFormat(m_format), m_width, m_height, m_numMips,
+                      ArrayRef(m_data.get(), GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format),
+                                                                m_numMips > 0, m_numMips)));
+
+  int stride = m_width;
+
+  for (int y = 0; y < m_height; y++) {
+    png_write_row(png, &tex.data()[(m_height - 1 - y) * stride]);
+  }
+
+  png_write_end(png, nullptr);
+  png_write_flush(png);
+  png_destroy_write_struct(&png, &info);
+  fflush(fp);
+  fclose(fp);
+
+  static bool wrotePalette = false;
+  if (!wrotePalette && path.contains("deface13b_tex")) {
+    athena::io::FileWriter out("test.palette.bin");
+    athena::io::FileWriter index("test.index.bin");
+    out.writeUBytes(tlut.data(), tlut.size());
+    index.writeUBytes(tex.data(), tex.size());
+    wrotePalette = true;
+  }
+
+  return true;
+}
+
+bool Texture::writeUncookedImage(const std::string_view path) const {
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
   if (!png) {
     return false;
   }
 
-  FILE* fp = fopen(p.generic_string().c_str(), "wb");
+  FILE* fp = fopen(path.data(), "wb");
 
   png_infop info = png_create_info_struct(png);
   png_init_io(png, fp);
@@ -148,17 +203,16 @@ bool Texture::writeUncooked(const std::string_view path) const {
                       ArrayRef(m_data.get(), GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format),
                                                                 m_numMips > 0, m_numMips)));
 
-  std::vector<png_bytep> rowPointers(m_height);
   int stride = m_width;
   if (m_format != ETexelFormat::I4 && m_format != ETexelFormat::I8) {
     stride *= 4;
   }
 
   for (int y = 0; y < m_height; y++) {
-    rowPointers[m_height - 1 - y] = (png_bytep)(tex.data() + y * stride);
+    png_write_row(png, &tex.data()[(m_height - 1 - y) * stride]);
   }
 
-  png_write_rows(png, rowPointers.data(), m_height);
+  //  png_write_rows(png, rowPointers.data(), m_height);
 
   png_write_end(png, nullptr);
   png_write_flush(png);
@@ -166,15 +220,15 @@ bool Texture::writeUncooked(const std::string_view path) const {
   fflush(fp);
   fclose(fp);
 
-  static bool wroteTest = false;
-  if (!wroteTest && path.contains("defaultshadow")) {
-    FILE* fp = fopen("test.data", "wb");
-    fwrite(tex.data(), tex.size(), 1, fp);
-    fclose(fp);
-    wroteTest = true;
+  return true;
+}
+bool Texture::writeUncooked(const std::string_view path) const {
+  const auto p = rawPath(path).generic_string();
+  if (m_format == ETexelFormat::C4 || m_format == ETexelFormat::C8 || m_format == ETexelFormat::C14X2) {
+    return writeUncookedImageIndexed(p);
   }
 
-  return true;
+  return writeUncookedImage(p);
 }
 
 nlohmann::ordered_json Texture::metadata(const std::string_view path) const {

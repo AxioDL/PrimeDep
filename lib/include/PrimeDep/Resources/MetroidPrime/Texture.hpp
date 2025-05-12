@@ -36,7 +36,14 @@ public:
 
   void PutTo(athena::io::IStreamWriter& out) const;
   void PutTo(nlohmann::ordered_json& out) const;
-  uint32_t entryCount() const { return m_width * m_height; }
+  [[nodiscard]] uint32_t entryCount() const { return m_width * m_height; }
+  uint16_t* entries() const { return m_entries.get(); }
+
+  [[nodiscard]] EPaletteFormat format() const { return m_format; }
+  [[nodiscard]] uint16_t width() const { return m_width; }
+  void setWidth(const uint16_t width) { m_width = width; }
+  [[nodiscard]] uint16_t height() const { return m_height; }
+  void setHeight(const uint16_t height) { m_height = height; }
 
 private:
   EPaletteFormat m_format;
@@ -55,8 +62,8 @@ public:
 
   [[nodiscard]] uint32_t numMips() const { return m_numMips; }
 
-  bool writeCooked(std::string_view path) const override;
-  bool writeUncooked(std::string_view path) const override;
+  [[nodiscard]] bool writeCooked(std::string_view path) const override;
+  [[nodiscard]] bool writeUncooked(std::string_view path) const override;
 
   [[nodiscard]] nlohmann::ordered_json metadata(std::string_view path) const override;
 
@@ -64,11 +71,14 @@ public:
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();
   }
-  static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
+  static std::shared_ptr<IResource> ingest([[maybe_unused]] const nlohmann::ordered_json& metadata,
+                                           [[maybe_unused]] std::string_view path) {
     return nullptr;
   }
 
 private:
+  [[nodiscard]] bool writeUncookedImageIndexed(std::string_view path) const;
+  [[nodiscard]] bool writeUncookedImage(std::string_view path) const;
   ETexelFormat m_format;
   uint16_t m_width;
   uint16_t m_height;
