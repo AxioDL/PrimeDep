@@ -54,15 +54,15 @@ add_library(
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json
-                                      magic_enum tinygltf PNG::PNG glm::glm)
+  magic_enum tinygltf PNG::PNG glm::glm)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar
-                                          -Wno-ignored-attributes)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    -Wno-ignored-attributes)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar
-                                          -Wno-ignored-attributes)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    -Wno-ignored-attributes)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_definitions(PrimeDep PRIVATE _CRT_SECURE_NO_DEPRECATE=1
-                                              _CRT_SECURE_NO_WARNINGS=1)
-endif()
+    _CRT_SECURE_NO_WARNINGS=1)
+endif ()
