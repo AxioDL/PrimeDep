@@ -50,7 +50,10 @@ add_library(
   src/PrimeDep/Resources/MetroidPrime/StringTable.cpp
   src/PrimeDep/Resources/MetroidPrime/Texture.cpp
   src/PrimeDep/texture_decode.cpp
-  src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp)
+  src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp
+  src/PrimeDep/Particles/ParticleDataFactory.cpp
+  include/PrimeDep/Particles/SpawnSystemKeyframeData.hpp
+  src/PrimeDep/Particles/SpawnSystemKeyframeData.cpp)
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json

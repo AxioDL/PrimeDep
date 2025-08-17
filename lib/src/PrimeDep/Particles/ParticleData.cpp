@@ -1,5 +1,4 @@
 #include "PrimeDep/Particles/ParticleData.hpp"
-#include "../../../include/PrimeDep/Resources/MetroidPrime/Particle.hpp"
 #include "PrimeDep/ResourceUtils.hpp"
 
 #include <magic_enum/magic_enum.hpp>
