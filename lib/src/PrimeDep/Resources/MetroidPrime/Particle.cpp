@@ -20,7 +20,7 @@ Particle::Particle(const char* ptr, const std::size_t size) {
   if (particles::ParticleDataFactory::GetClassID(in) != FOURCC('GPSM')) {
     return;
   }
-  // loadParticleProperties(in);
+  loadParticleProperties(in);
 }
 
 std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t size) {
@@ -29,10 +29,218 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
 
 [[nodiscard]] bool Particle::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
-  nlohmann::ordered_json data;
+  nlohmann::ordered_json data = nlohmann::ordered_json::object();
 
   if (m_particleSystemLifetime) {
-    data["ParticleSystemLifetime"] = m_particleSystemLifetime->value();
+    m_particleSystemLifetime->PutTo(data["ParticleSystemLifetime"]);
+  }
+
+  if (m_particleSystemWarmupTime) {
+    m_particleSystemWarmupTime->PutTo(data["ParticleSystemWarmupTime"]);
+  }
+
+  if (m_particleSystemTimeScale) {
+    m_particleSystemTimeScale->PutTo(data["ParticleSystemTimeScale"]);
+  }
+
+  if (m_particleSystemOffset) {
+    m_particleSystemOffset->PutTo(data["ParticleSystemOffset"]);
+  }
+
+  if (m_particleSystemSeed) {
+    m_particleSystemSeed->PutTo(data["ParticleSystemSeed"]);
+  }
+
+  if (m_lineLength) {
+    m_lineLength->PutTo(data["LineLength"]);
+  }
+
+  if (m_lineWidth) {
+    m_lineWidth->PutTo(data["LineWidth"]);
+  }
+
+  if (m_maxParticles) {
+    m_maxParticles->PutTo(data["MaxParticles"]);
+  }
+
+  if (m_particleColor) {
+    m_particleColor->PutTo(data["ParticleColor"]);
+  }
+
+  if (m_generationRate) {
+    m_generationRate->PutTo(data["GenerationRate"]);
+  }
+
+  if (m_particleLifetime) {
+    m_particleLifetime->PutTo(data["ParticleLifetime"]);
+  }
+
+  if (m_lines != kDefaultLines) {
+    data["Lines"] = m_lines;
+  }
+
+  if (m_scaleLeadingLinePoint != kDefaultScaleLeadingLinePoint) {
+    data["ScaleLeadingLinePoint"] = m_scaleLeadingLinePoint;
+  }
+
+  if (m_additiveAlpha != kDefaultAdditiveAlpha) {
+    data["AdditiveAlpha"] = m_additiveAlpha;
+  }
+
+  if (m_enableZBuffer != kDefaultEnableZBuffer) {
+    data["EnableZBuffer"] = m_enableZBuffer;
+  }
+
+  if (m_sort != kDefaultSort) {
+    data["Sort"] = m_sort;
+  }
+
+  if (m_enableLighting != kDefaultEnableLighting) {
+    data["EnableLighting"] = m_enableLighting;
+  }
+
+  if (m_orientToOrigin != kDefaultOrientToOrigin) {
+    data["OrientToOrigin"] = m_orientToOrigin;
+  }
+
+  if (m_rightVectorScaledOnParticle != kDefaultRightVectorScaledOnParticle) {
+    data["RightVectorScaledOnParticle"] = m_rightVectorScaledOnParticle;
+  }
+
+  if (m_motionBlur != kDefaultMotionBlur) {
+    data["MotionBlur"] = m_motionBlur;
+  }
+
+  if (m_particleModelAdditiveAlpha != kDefaultParticleModelAdditiveAlpha) {
+    data["ParticleModelAdditiveAlpha"] = m_particleModelAdditiveAlpha;
+  }
+
+  if (m_particleModelUnorientedSquare != kDefaultParticleModelUnorientedSquare) {
+    data["ParticleModelUnorientedSquare"] = m_particleModelUnorientedSquare;
+  }
+
+  if (m_particleModelOrientation != kDefaultParticleModelOrientation) {
+    data["ParticleModelOrientation"] = m_particleModelOrientation;
+  }
+
+  if (m_vectorMod1Local != kDefaultVectorMod1Local) {
+    data["VectorMod1Local"] = m_vectorMod1Local;
+  }
+
+  if (m_vectorMod2Local != kDefaultVectorMod2Local) {
+    data["VectorMod2Local"] = m_vectorMod2Local;
+  }
+
+  if (m_vectorMod3Local != kDefaultVectorMod3Local) {
+    data["VectorMod3Local"] = m_vectorMod3Local;
+  }
+
+  if (m_vectorMod4Local != kDefaultVectorMod4Local) {
+    data["VectorMod4Local"] = m_vectorMod4Local;
+  }
+
+  if (m_colorIndirect != kDefaultColorIndirect) {
+    data["ColorIndirect"] = m_colorIndirect;
+  }
+
+  if (m_optionalSystem != kDefaultOptionalSystem) {
+    data["OptionalSystem"] = m_optionalSystem;
+  }
+
+  if (m_motionBlurSamples) {
+    m_motionBlurSamples->PutTo(data["MotionBlurSamples"]);
+  }
+
+  if (m_particleSize) {
+    m_particleSize->PutTo(data["ParticleSize"]);
+  }
+
+  if (m_particleAngle) {
+    m_particleAngle->PutTo(data["ParticleAngle"]);
+  }
+
+  if (m_texture) {
+    m_texture->PutTo(data["Texture"]);
+  }
+
+  if (m_indirectTexture) {
+    m_indirectTexture->PutTo(data["IndirectTexture"]);
+  }
+
+  if (m_particleModel) {
+    m_particleModel->PutTo(data["ParticleModel"], Model::ResourceType());
+  }
+
+  if (m_particleModelOffset) {
+    m_particleModelOffset->PutTo(data["ParticleModelOffset"]);
+  }
+
+  if (m_particleModelRotation) {
+    m_particleModelRotation->PutTo(data["ParticleModelRotation"]);
+  }
+
+  if (m_particleModelScale) {
+    m_particleModelScale->PutTo(data["ParticleModelScale"]);
+  }
+
+  if (m_particleModelColor) {
+    m_particleModelColor->PutTo(data["ParticleModelColor"]);
+  }
+
+  if (m_particleVelocity1) {
+    m_particleVelocity1->PutTo(data["ParticleVelocity1"]);
+  }
+
+  if (m_particleVelocity2) {
+    m_particleVelocity2->PutTo(data["ParticleVelocity2"]);
+  }
+
+  if (m_particleVelocity3) {
+    m_particleVelocity3->PutTo(data["ParticleVelocity3"]);
+  }
+
+  if (m_particleVelocity4) {
+    m_particleVelocity4->PutTo(data["ParticleVelocity4"]);
+  }
+
+  if (m_countedChildSystem) {
+    m_countedChildSystem->PutTo(data["CountedChildSystem"], Particle::ResourceType());
+  }
+
+  if (m_childSystemSpawnCount) {
+    m_childSystemSpawnCount->PutTo(data["ChildSystemSpawnCount"]);
+  }
+
+  if (m_childSystemSpawnFrame) {
+    m_childSystemSpawnFrame->PutTo(data["ChildSystemSpawnFrame"]);
+  }
+
+  if (m_doneChildSystem) {
+    m_doneChildSystem->PutTo(data["DoneChildSystem"], Particle::ResourceType());
+  }
+
+  if (m_doneChildSystemSpawnCount) {
+    m_doneChildSystemSpawnCount->PutTo(data["DoneChildSystemSpawnCount"]);
+  }
+
+  if (m_doneChildSystemSpawnFrame) {
+    m_doneChildSystemSpawnFrame->PutTo(data["DoneChildSystemSpawnFrame"]);
+  }
+
+  if (m_intervalChildSystem) {
+    m_intervalChildSystem->PutTo(data["IntervalChildSystem"], Particle::ResourceType());
+  }
+
+  if (m_intervalChildSystemSpawnInterval) {
+    m_intervalChildSystemSpawnInterval->PutTo(data["IntervalChildSystemSpawnInterval"]);
+  }
+
+  if (m_intervalChildSystemSpawnFrame) {
+    m_intervalChildSystemSpawnFrame->PutTo(data["IntervalChildSystemSpawnFrame"]);
+  }
+
+  if (m_spawnSystems) {
+    m_spawnSystems->PutTo(data["SpawnSystems"]);
   }
 
   athena::io::FileWriter writer(p.generic_string());
@@ -46,7 +254,7 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
 void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
   auto classId = particles::ParticleDataFactory::GetClassID(reader);
 
-  while (classId != FOURCC('_END')) {
+  while (classId != FOURCC('_END') && !reader.hasError()) {
     switch (classId.num) {
     case SBIG('PSLT'):
       m_particleSystemLifetime.reset(particles::ParticleDataFactory::GetIntElement(reader));
@@ -205,7 +413,9 @@ void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
       m_intervalChildSystemSpawnFrame.reset(particles::ParticleDataFactory::GetIntElement(reader));
       break;
     case SBIG('KSSM'):
-      m_spawnSystems = particles::SpawnSystemKeyframeData(reader);
+      if (particles::ParticleDataFactory::GetClassID(reader) != FOURCC('NONE')) {
+        m_spawnSystems = particles::SpawnSystemKeyframeData(reader);
+      }
       break;
     case SBIG('SSWH'):
       m_childSwooshSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, ParticleSwoosh::ResourceType());

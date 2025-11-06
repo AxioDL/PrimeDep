@@ -7,7 +7,8 @@
 #include <tiny_gltf.h>
 
 namespace axdl::primedep ::MetroidPrime {
-class CharLayoutInfo final : public TypedResource('CINF', ".gltf", ".cin", DESCRIPTION("Character Skeletal Rigging")) {
+class CharLayoutInfo final
+: public TypedResource('CINF', ".skeleton.gltf", ".cin", DESCRIPTION("Character Skeletal Rigging")) {
 public:
   struct Bone {
     uint32_t segId{};

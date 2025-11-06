@@ -3,6 +3,7 @@
 #include "nlohmann/json_fwd.hpp"
 
 #include <athena/IStreamReader.hpp>
+#include <athena/IStreamWriter.hpp>
 
 namespace axdl::primedep {
 class CharAnimTime {
@@ -20,7 +21,8 @@ public:
   : m_time(time), m_type(m_time != 0.f ? EType::NonZero : EType::ZeroSteady) {}
   constexpr CharAnimTime(const EType type, const float t) : m_time(t), m_type(type) {}
   explicit CharAnimTime(athena::io::IStreamReader& in)
-  : m_time(in.readFloatBig()), m_type(static_cast<EType>(in.readFloatBig())) {}
+  : m_time(in.readFloatBig()), m_type(static_cast<EType>(in.readUint32Big())) {}
+  explicit CharAnimTime(const nlohmann::ordered_json& in);
 
   static constexpr CharAnimTime Infinity() { return {EType::Infinity, 1.0f}; }
   [[nodiscard]] float GetSeconds() const { return m_time; }
@@ -43,6 +45,7 @@ public:
   CharAnimTime operator*(const float& other) const;
   float operator/(const CharAnimTime& other) const;
 
+  void PutTo(athena::io::IStreamWriter& out) const;
   void PutTo(nlohmann::ordered_json& json) const;
 
 private:

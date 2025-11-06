@@ -31,11 +31,34 @@ std::optional<AssetId32Big> GetAssetID32Big(athena::io::IStreamReader& reader, c
   return {AssetId32Big(reader, type)};
 }
 
-ColorElement* GetColorElement(athena::io::IStreamReader& reader) { return nullptr; }
+ColorElement* GetColorElement(athena::io::IStreamReader& reader) {
+  switch (GetClassID(reader)) {
+  case SBIG('CNST'): {
+    return new CEConstant(reader);
+  }
+  case SBIG('KEYE'):
+  case SBIG('KEYP'): {
+    return new CEKeyframeEmitter(reader);
+  }
+  default:
+    return nullptr;
+  }
+}
 IntElement* GetIntElement(athena::io::IStreamReader& reader) { return nullptr; }
 RealElement* GetRealElement(athena::io::IStreamReader& reader) { return nullptr; }
 VectorElement* GetVectorElement(athena::io::IStreamReader& reader) { return nullptr; }
 EmitterElement* GetEmitterElement(athena::io::IStreamReader& reader) { return nullptr; }
-ModVectorElement* GetModVectorElement(athena::io::IStreamReader& reader) { return nullptr; }
+ModVectorElement* GetModVectorElement(athena::io::IStreamReader& reader) {
+  switch (GetClassID(reader)) {
+  case SBIG('NONE'): {
+    return nullptr;
+  }
+  case SBIG('CNST'): {
+    return new MVEConstant(reader);
+  }
+  default:
+    return nullptr;
+  }
+}
 UVElement* GetUVElement(athena::io::IStreamReader& reader) { return nullptr; }
 } // namespace axdl::primedep::particles::ParticleDataFactory

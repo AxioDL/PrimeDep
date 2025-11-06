@@ -29,9 +29,31 @@ POINode::POINode(athena::io::IStreamReader& in)
   assert(x4_ == 1 && "x4_ is not 1!");
 }
 
+POINode::POINode(const nlohmann::ordered_json& in)
+: x8_name(in.value("Name", x8_name))
+, x18_type(magic_enum::enum_cast<EPOIType>(in.value("Type", "")).value_or(EPOIType::Invalid))
+, x1c_time(in["Time"])
+, x24_index(in.value("Index", x24_index))
+, x28_unique(in.value("Unique", x28_unique))
+, x2c_weight(in.value("Weight", x2c_weight))
+, x30_charIdx(in.value("Character", x30_charIdx))
+, x34_flags(in.value("Flags", x34_flags)) {}
+
 bool POINode::operator>(const POINode& other) const { return x1c_time > other.x1c_time; }
 
 bool POINode::operator<(const POINode& other) const { return x1c_time < other.x1c_time; }
+
+void POINode::PutTo(athena::io::IStreamWriter& out) const {
+  out.writeUint16Big(x4_);
+  out.writeString(x8_name);
+  out.writeUint16Big(static_cast<uint16_t>(x18_type));
+  x1c_time.PutTo(out);
+  out.writeInt32Big(x24_index);
+  out.writeBool(x28_unique);
+  out.writeFloatBig(x2c_weight);
+  out.writeInt32Big(x30_charIdx);
+  out.writeInt32Big(x34_flags);
+}
 
 void POINode::PutTo(nlohmann::ordered_json& j) const {
   j["Name"] = x8_name;

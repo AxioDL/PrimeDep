@@ -5,8 +5,7 @@
 namespace axdl::primedep::particles {
 class IntElement : public IElement {
 public:
-  void PutTo(athena::io::IStreamWriter& out) override {}
-  void PutTo(nlohmann::ordered_json& out) override {}
-  virtual int value() = 0;
+  void PutTo(athena::io::IStreamWriter& out) const override {}
+  void PutTo(nlohmann::ordered_json& out) const override {}
 };
 } // namespace axdl::primedep::particles

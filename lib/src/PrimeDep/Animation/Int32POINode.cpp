@@ -12,15 +12,24 @@ Int32POINode::Int32POINode(const std::string_view name, const EPOIType type, con
 Int32POINode::Int32POINode(athena::io::IStreamReader& in)
 : POINode(in), x38_val(in.readInt32Big()), x3c_locatorName(in.readString()) {}
 
+Int32POINode::Int32POINode(const nlohmann::ordered_json& in)
+: POINode(in), x38_val(in.value("Value", x38_val)), x3c_locatorName(in.value("Locator", x3c_locatorName)) {}
+
 Int32POINode Int32POINode::CopyNodeMinusStartTime(const Int32POINode& node, const CharAnimTime& startTime) {
   Int32POINode ret = node;
   ret.x1c_time -= startTime;
   return ret;
 }
 
+void Int32POINode::PutTo(athena::io::IStreamWriter& out) const {
+  POINode::PutTo(out);
+  out.writeUint32(x38_val);
+  out.writeString(x3c_locatorName);
+}
 void Int32POINode::PutTo(nlohmann::ordered_json& j) const {
   POINode::PutTo(j);
   j["Value"] = x38_val;
+  j["Locator"] = x3c_locatorName;
 }
 
 } // namespace axdl::primedep

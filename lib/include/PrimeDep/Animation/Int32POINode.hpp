@@ -9,11 +9,13 @@ public:
   Int32POINode(std::string_view name, EPOIType type, const CharAnimTime& time, int32_t index, bool unique, float weight,
                int32_t charIndex, int32_t flags, int32_t val, std::string_view locator);
   explicit Int32POINode(athena::io::IStreamReader& in);
+  explicit Int32POINode(const nlohmann::ordered_json& in);
   [[nodiscard]] int32_t GetValue() const { return x38_val; }
   [[nodiscard]] std::string_view GetLocatorName() const { return x3c_locatorName; }
 
   static Int32POINode CopyNodeMinusStartTime(const Int32POINode& node, const CharAnimTime& startTime);
 
+  void PutTo(athena::io::IStreamWriter& out) const override;
   void PutTo(nlohmann::ordered_json& j) const override;
 
 private:

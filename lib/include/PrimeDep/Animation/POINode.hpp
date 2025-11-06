@@ -1,13 +1,14 @@
 #pragma once
 #include "nlohmann/json_fwd.hpp"
 
+#include <PrimeDep/Animation/CharAnimTime.hpp>
 #include <cstdint>
 #include <string_view>
-#include <PrimeDep/Animation/CharAnimTime.hpp>
 using namespace std::string_view_literals;
 
 namespace axdl::primedep {
 enum class EPOIType : uint16_t {
+  Invalid = UINT16_MAX,
   Loop = 0,
   EmptyBool = 1,
   EmptyInt32 = 2,
@@ -23,6 +24,7 @@ public:
   explicit POINode(std::string_view name, EPOIType type, const CharAnimTime& time, int32_t index, bool unique,
                    float weight, int32_t charIdx, int32_t flags);
   explicit POINode(athena::io::IStreamReader& in);
+  explicit POINode(const nlohmann::ordered_json& in);
   virtual ~POINode() = default;
 
   [[nodiscard]] std::string_view GetString() const { return x8_name; }
@@ -38,17 +40,18 @@ public:
   bool operator>(const POINode& other) const;
   bool operator<(const POINode& other) const;
 
+  virtual void PutTo(athena::io::IStreamWriter& out) const;
   virtual void PutTo(nlohmann::ordered_json& j) const;
 
 protected:
   uint16_t x4_ = 1;
   std::string x8_name;
-  EPOIType x18_type;
-  CharAnimTime x1c_time;
-  int32_t x24_index;
-  bool x28_unique;
-  float x2c_weight;
+  EPOIType x18_type{EPOIType::Invalid};
+  CharAnimTime x1c_time{};
+  int32_t x24_index{};
+  bool x28_unique{};
+  float x2c_weight{};
   int32_t x30_charIdx = -1;
-  int32_t x34_flags;
+  int32_t x34_flags{};
 };
 } // namespace axdl::primedep

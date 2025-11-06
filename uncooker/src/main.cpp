@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
       string->writeMetadata(fileOut.generic_string(), repPath);
       //(void)string->writeCooked(fileOut.generic_string());
       if (!string->writeUncooked(fileOut.generic_string())) {
-        std::cout << "Unable to uncook " << repPath << std::endl;
+        //   std::cerr << "Unable to uncook " << repPath << std::endl;
       }
       manifest["Assets"].push_back(string->rawPath(string->repPath()));
     }

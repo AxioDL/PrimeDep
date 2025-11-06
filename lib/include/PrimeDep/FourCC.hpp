@@ -39,6 +39,8 @@ public:
 
   explicit operator bool() const noexcept { return num != 0; }
 
+  operator uint32_t() const { return num; }
+
   union {
     char fcc[4];
     uint32_t num = 0x58585858;

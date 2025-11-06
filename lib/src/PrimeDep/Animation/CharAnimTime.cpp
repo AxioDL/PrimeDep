@@ -6,6 +6,11 @@
 #include <cmath>
 
 namespace axdl::primedep {
+
+CharAnimTime::CharAnimTime(const nlohmann::ordered_json& in)
+: m_time(in.value("Time", m_time))
+, m_type(magic_enum::enum_cast<EType>(in.value("Type", "")).value_or(EType::Infinity)) {}
+
 bool CharAnimTime::EqualsZero() const {
   if (m_type == EType::ZeroIncreasing || m_type == EType::ZeroSteady || m_type == EType::ZeroDecreasing)
     return true;
@@ -255,9 +260,14 @@ float CharAnimTime::operator/(const CharAnimTime& other) const {
   return m_time / other.m_time;
 }
 
+void CharAnimTime::PutTo(athena::io::IStreamWriter& out) const {
+  out.writeFloatBig(m_time);
+  out.writeUint32Big(static_cast<uint32_t>(m_type));
+}
+
 void CharAnimTime::PutTo(nlohmann::ordered_json& json) const {
-  json["Type"] = magic_enum::enum_name(m_type);
   json["Time"] = m_time;
+  json["Type"] = magic_enum::enum_name(m_type);
 }
 
 } // namespace axdl::primedep

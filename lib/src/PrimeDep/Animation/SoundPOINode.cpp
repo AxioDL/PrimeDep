@@ -19,10 +19,23 @@ SoundPOINode::SoundPOINode(const std::string_view name, const EPOIType type, con
 , x3c_falloff(falloff)
 , x40_maxDist(maxDist) {}
 
+SoundPOINode::SoundPOINode(const nlohmann::ordered_json& in)
+: POINode(in)
+, x38_sfxId(in.value("SoundID", x38_sfxId))
+, x3c_falloff(in.value("Falloff", x3c_falloff))
+, x40_maxDist(in.value("MaxDist", x40_maxDist)) {}
+
 SoundPOINode SoundPOINode::CopyNodeMinusStartTime(const SoundPOINode& node, const CharAnimTime& startTime) {
   SoundPOINode ret = node;
   ret.x1c_time -= startTime;
   return ret;
+}
+
+void SoundPOINode::PutTo(athena::io::IStreamWriter& out) const {
+  POINode::PutTo(out);
+  out.writeUint32Big(x38_sfxId);
+  out.writeFloatBig(x3c_falloff);
+  out.writeFloatBig(x40_maxDist);
 }
 
 void SoundPOINode::PutTo(nlohmann::ordered_json& j) const {

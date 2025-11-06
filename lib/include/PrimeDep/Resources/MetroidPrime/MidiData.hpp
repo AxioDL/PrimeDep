@@ -17,6 +17,8 @@ public:
 
   nlohmann::ordered_json metadata(std::string_view repPath) const override;
 
+  std::optional<std::vector<ObjectTag32Big>> childTags() const override { return {{m_soundGroup}}; }
+
 private:
   uint32_t m_setupId{};
   uint32_t m_groupId{};

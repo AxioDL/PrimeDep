@@ -9,8 +9,8 @@ namespace axdl::primedep::particles {
 class IElement {
 public:
   virtual ~IElement() = default;
-  virtual void PutTo(athena::io::IStreamWriter& out) = 0;
-  virtual void PutTo(nlohmann::ordered_json& out) = 0;
+  virtual void PutTo(athena::io::IStreamWriter& out) const = 0;
+  virtual void PutTo(nlohmann::ordered_json& out) const = 0;
 };
 
 }; // namespace axdl::primedep::particles

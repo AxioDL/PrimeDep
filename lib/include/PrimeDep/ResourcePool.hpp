@@ -63,7 +63,7 @@ public:
     if (path.starts_with("$/")) {
       path = path.substr(2);
     }
-    return (m_rootPath / path).generic_string();
+    return (m_rootPath / path);
   }
 
   [[nodiscard]] std::string cookedRepPathFromRawRepPath(const std::string_view repPath, const FourCC& type) const {

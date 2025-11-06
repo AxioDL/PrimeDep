@@ -53,7 +53,9 @@ add_library(
   src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp
   src/PrimeDep/Particles/ParticleDataFactory.cpp
   include/PrimeDep/Particles/SpawnSystemKeyframeData.hpp
-  src/PrimeDep/Particles/SpawnSystemKeyframeData.cpp)
+  src/PrimeDep/Particles/SpawnSystemKeyframeData.cpp
+  src/PrimeDep/Particles/ColorElement.cpp
+  src/PrimeDep/Particles/ModVectorElement.cpp)
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json

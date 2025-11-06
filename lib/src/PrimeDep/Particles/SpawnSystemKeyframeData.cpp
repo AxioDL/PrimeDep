@@ -38,7 +38,7 @@ SpawnSystemKeyframeData::SpawnSystemKeyframeData(athena::io::IStreamReader& in)
   const uint32_t count = in.readUint32Big();
   for (int i = 0; i < count; ++i) {
     const uint32_t frame = in.readUint32Big();
-    std::vector<SpawnSystemKeyframeInfo> spawnInfo =
+    std::vector<SpawnSystemKeyframeInfo>& spawnInfo =
         m_frames.emplace_back(frame, std::vector<SpawnSystemKeyframeInfo>()).second;
     const uint32_t infoCount = in.readUint32Big();
     for (int j = 0; j < infoCount; ++j) {
@@ -54,7 +54,7 @@ SpawnSystemKeyframeData::SpawnSystemKeyframeData(const nlohmann::ordered_json& i
 , m_unknown3(in.value("Unknown3", 0)) {
   for (const auto frames = in["Frames"]; const auto frame : frames) {
     int frameIndex = frame.value("Frame", 0);
-    auto spawns = m_frames.emplace_back(frameIndex, std::vector<SpawnSystemKeyframeInfo>()).second;
+    auto& spawns = m_frames.emplace_back(frameIndex, std::vector<SpawnSystemKeyframeInfo>()).second;
     for (const auto frameSpawns = frame["Spawns"]; const auto spawn : frameSpawns) {
       spawns.emplace_back(spawn);
     }
@@ -79,11 +79,11 @@ void SpawnSystemKeyframeData::PutTo(nlohmann::ordered_json& out) const {
   out["Unknown2"] = m_unknown2;
   out["EndFrame"] = m_endFrame;
   out["Unknown3"] = m_unknown3;
-  auto frames = out["Frames"];
+  auto& frames = out["Frames"];
   for (const auto [frame, spawns] : m_frames) {
-    auto frameOut = frames.emplace_back();
+    auto& frameOut = frames.emplace_back();
     frameOut["Frame"] = frame;
-    auto spawnsOut = frameOut["Spawns"];
+    auto& spawnsOut = frameOut["Spawns"];
     for (const auto spawn : spawns) {
       spawn.PutTo(spawnsOut.emplace_back());
     }

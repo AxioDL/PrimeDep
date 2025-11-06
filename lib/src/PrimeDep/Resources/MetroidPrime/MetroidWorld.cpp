@@ -4,7 +4,7 @@
 #include "PrimeDep/Resources/MetroidPrime/StringTable.hpp"
 #include "athena/MemoryReader.hpp"
 
-namespace axdl::primedep ::MetroidPrime {
+namespace axdl::primedep::MetroidPrime {
 MetroidWorld::Relay::Relay(athena::io::IStreamReader& in)
 : relayId(in.readUint32Big()), targetId(in.readUint32Big()), message(in.readUint16Big()), active(in.readBool()) {}
 
