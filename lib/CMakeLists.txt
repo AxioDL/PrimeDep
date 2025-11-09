@@ -55,7 +55,12 @@ add_library(
   include/PrimeDep/Particles/SpawnSystemKeyframeData.hpp
   src/PrimeDep/Particles/SpawnSystemKeyframeData.cpp
   src/PrimeDep/Particles/ColorElement.cpp
-  src/PrimeDep/Particles/ModVectorElement.cpp)
+  src/PrimeDep/Particles/ModVectorElement.cpp
+  src/PrimeDep/Particles/IntElement.cpp
+  src/PrimeDep/Particles/RealElement.cpp
+  src/PrimeDep/Particles/EmitterElement.cpp
+  include/PrimeDep/Particles/KeyframeEmitterData.hpp
+  src/PrimeDep/Particles/VectorElement.cpp)
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json

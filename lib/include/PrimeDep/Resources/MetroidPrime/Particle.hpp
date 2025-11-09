@@ -4,6 +4,7 @@
 #include "PrimeDep/Particles/SpawnSystemKeyframeData.hpp"
 
 namespace axdl::primedep::particles {
+class IElement;
 class IntElement;
 class RealElement;
 class VectorElement;

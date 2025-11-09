@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
         create_directories(fileOut.parent_path());
       }
       string->writeMetadata(fileOut.generic_string(), repPath);
-      //(void)string->writeCooked(fileOut.generic_string());
+      (void)string->writeCooked(fileOut.generic_string());
       if (!string->writeUncooked(fileOut.generic_string())) {
         //   std::cerr << "Unable to uncook " << repPath << std::endl;
       }

@@ -14,6 +14,8 @@
 #include "PrimeDep/Resources/MetroidPrime/ParticleSwoosh.hpp"
 #include "athena/MemoryReader.hpp"
 
+#include <iostream>
+
 namespace axdl::primedep::MetroidPrime {
 Particle::Particle(const char* ptr, const std::size_t size) {
   athena::io::MemoryReader in(ptr, size, true);
@@ -249,7 +251,14 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
   return !writer.hasError();
 }
 
-[[nodiscard]] bool Particle::writeCooked(const std::string_view path) const { return false; }
+[[nodiscard]] bool Particle::writeCooked(const std::string_view path) const {
+  const auto p = cookedPath(path);
+
+  athena::io::FileWriter writer(p.generic_string());
+  particles::ParticleDataFactory::SetClassID(writer, FOURCC('GPSM'));
+
+  return false && !writer.hasError();
+}
 
 void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
   auto classId = particles::ParticleDataFactory::GetClassID(reader);
@@ -484,6 +493,7 @@ void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
       m_accessParameter8.reset(particles::ParticleDataFactory::GetRealElement(reader));
       break;
     default:
+      std::cout << "Unhandled particle type" << classId.toString() << std::endl;
       break;
     }
 
