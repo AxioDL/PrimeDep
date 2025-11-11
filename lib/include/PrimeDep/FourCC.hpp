@@ -39,7 +39,7 @@ public:
 
   explicit operator bool() const noexcept { return num != 0; }
 
-  operator uint32_t() const { return num; }
+  constexpr operator uint32_t() const { return num; }
 
   union {
     char fcc[4];

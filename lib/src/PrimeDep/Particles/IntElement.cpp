@@ -8,24 +8,18 @@
 
 namespace axdl::primedep::particles {
 
-void IENone::PutTo(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetClassID(out, FOURCC('NONE')); }
-void IENone::PutTo(nlohmann::ordered_json& out) const { ParticleDataFactory::SetClassID(out, "None"); }
+IEConstant::IEConstant(athena::io::IStreamReader& in) : IntElement(in), m_value(ParticleDataFactory::GetInt(in)) {}
+IEConstant::IEConstant(const nlohmann::ordered_json& in) : IntElement(in), m_value(in.value("Value", 0)) {}
 
-IEConstant::IEConstant(athena::io::IStreamReader& in) : m_value(ParticleDataFactory::GetInt(in)) {}
-IEConstant::IEConstant(const nlohmann::ordered_json& in) : m_value(in.value("Value", 0)) {}
+void IEConstant::PutToInternal(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetInt(out, m_value); }
 
-void IEConstant::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
-  ParticleDataFactory::SetInt(out, m_value);
-}
-
-void IEConstant::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "Constant");
+void IEConstant::PutToInternal(nlohmann::ordered_json& out) const {
   ParticleDataFactory::SetInt(out, "Value", m_value);
 }
 
 IEKeyframeEmitter::IEKeyframeEmitter(athena::io::IStreamReader& in)
-: m_percent(in.readUint32Big())
+: IntElement(in)
+, m_percent(in.readUint32Big())
 , m_unknown1(in.readUint32Big())
 , m_loop(in.readBool())
 , m_unknown2(in.readBool())
@@ -38,7 +32,8 @@ IEKeyframeEmitter::IEKeyframeEmitter(athena::io::IStreamReader& in)
 }
 
 IEKeyframeEmitter::IEKeyframeEmitter(const nlohmann::ordered_json& in)
-: m_percent(in.value("Percent", 0))
+: IntElement(in)
+, m_percent(in.value("Percent", 0))
 , m_unknown1(in.value("Unknown1", 0))
 , m_loop(in.value("Loop", false))
 , m_unknown2(in.value("Unknown2", false))
@@ -51,8 +46,7 @@ IEKeyframeEmitter::IEKeyframeEmitter(const nlohmann::ordered_json& in)
   }
 }
 
-void IEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, m_percent ? FOURCC('KEYP') : FOURCC('KEYE'));
+void IEKeyframeEmitter::PutToInternal(athena::io::IStreamWriter& out) const {
   out.writeUint32Big(m_percent);
   out.writeUint32Big(m_unknown1);
   out.writeBool(m_loop);
@@ -65,8 +59,7 @@ void IEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
   }
 }
 
-void IEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "KeyframeEmitter");
+void IEKeyframeEmitter::PutToInternal(nlohmann::ordered_json& out) const {
   out["Percent"] = m_percent;
   out["Unknown1"] = m_unknown1;
   out["Loop"] = m_loop;
@@ -79,237 +72,167 @@ void IEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
   }
 }
 
-IETimeScale::IETimeScale(athena::io::IStreamReader& in) : m_scale(ParticleDataFactory::GetRealElement(in)) {}
+IETimeScale::IETimeScale(athena::io::IStreamReader& in)
+: IntElement(in), m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
 IETimeScale::IETimeScale(const nlohmann::ordered_json& in)
-: m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
+: IntElement(in), m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
 
 IETimeScale::~IETimeScale() {}
 
-void IETimeScale::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_scale) {
-    return;
-  }
+void IETimeScale::PutToInternal(athena::io::IStreamWriter& out) const { m_scale->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('TSCL'));
-  m_scale->PutTo(out);
-}
-
-void IETimeScale::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_scale) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeScale"sv);
-  m_scale->PutTo(out["Scale"]);
-}
+void IETimeScale::PutToInternal(nlohmann::ordered_json& out) const { m_scale->PutTo(out); }
 
 IEDeath::IEDeath(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IEDeath::IEDeath(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
-void IEDeath::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('DETH'));
+void IEDeath::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IEDeath::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Death");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IEDeath::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IETimeChain::IETimeChain(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in))
-, m_b(ParticleDataFactory::GetIntElement(in))
-, m_switchFrame(ParticleDataFactory::GetIntElement(in)) {}
-
-IETimeChain::IETimeChain(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A"))
+: IntElement(in)
+, m_a(ParticleDataFactory::GetIntElement(in, "A"))
 , m_b(ParticleDataFactory::GetIntElement(in, "B"))
 , m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
-void IETimeChain::PutTo(athena::io::IStreamWriter& out) const {
-  // Int Elements must have all 3 elements specified
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
+IETimeChain::IETimeChain(const nlohmann::ordered_json& in)
+: IntElement(in)
+, m_a(ParticleDataFactory::GetIntElement(in, "A"))
+, m_b(ParticleDataFactory::GetIntElement(in, "B"))
+, m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
-  ParticleDataFactory::SetClassID(out, FOURCC('CHAN'));
+void IETimeChain::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_switchFrame->PutTo(out);
 }
 
-void IETimeChain::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeChain"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_switchFrame->PutTo(out["SwitchFrame"]);
+void IETimeChain::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_switchFrame->PutTo(out);
 }
 
 IEAdd::IEAdd(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IEAdd::IEAdd(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
-void IEAdd::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('ADD_'));
+void IEAdd::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IEAdd::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Add");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IEAdd::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IEMultiply::IEMultiply(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {
+  m_a->setPropertyName("A");
+  m_b->setPropertyName("B");
+}
 
 IEMultiply::IEMultiply(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {
+  m_a->setPropertyName("A");
+  m_b->setPropertyName("B");
+}
 
-void IEMultiply::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('MULT'));
+void IEMultiply::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IEMultiply::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Multiply");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IEMultiply::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IEModulo::IEModulo(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IEModulo::IEModulo(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {
+  m_a->setPropertyName("A");
+  m_b->setPropertyName("B");
+}
 
-void IEModulo::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('MODU'));
+void IEModulo::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IEModulo::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Modulo");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IEModulo::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IERandom::IERandom(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetIntElement(in)), m_max(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+, m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
 
 IERandom::IERandom(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetIntElement(in, "Min")), m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+, m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
 
-void IERandom::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('RAND'));
+void IERandom::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
 }
 
-void IERandom::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "Random");
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
+void IERandom::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
 }
 
-IEImpulse::IEImpulse(athena::io::IStreamReader& in) : m_impulse(ParticleDataFactory::GetIntElement(in)) {}
+IEImpulse::IEImpulse(athena::io::IStreamReader& in)
+: IntElement(in), m_impulse(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
-IEImpulse::IEImpulse(const nlohmann::ordered_json& in) : m_impulse(ParticleDataFactory::GetIntElement(in, "Value")) {}
+IEImpulse::IEImpulse(const nlohmann::ordered_json& in)
+: IntElement(in), m_impulse(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
-void IEImpulse::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_impulse) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('IMPL'));
-  m_impulse->PutTo(out);
-}
+void IEImpulse::PutToInternal(athena::io::IStreamWriter& out) const { m_impulse->PutTo(out); }
 
-void IEImpulse::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_impulse) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Impulse");
-  m_impulse->PutTo(out["Value"]);
-}
+void IEImpulse::PutToInternal(nlohmann::ordered_json& out) const { m_impulse->PutTo(out); }
 
 IELifetimePercent::IELifetimePercent(athena::io::IStreamReader& in)
-: m_lifetime(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_lifetime(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
 IELifetimePercent::IELifetimePercent(const nlohmann::ordered_json& in)
-: m_lifetime(ParticleDataFactory::GetIntElement(in, "Value")) {}
+: IntElement(in), m_lifetime(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
-void IELifetimePercent::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_lifetime) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('ILPT'));
-  m_lifetime->PutTo(out);
-}
+void IELifetimePercent::PutToInternal(athena::io::IStreamWriter& out) const { m_lifetime->PutTo(out); }
 
-void IELifetimePercent::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_lifetime) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "LifetimePercent");
-  m_lifetime->PutTo(out["Value"]);
-}
+void IELifetimePercent::PutToInternal(nlohmann::ordered_json& out) const { m_lifetime->PutTo(out); }
 
 IESampleAndHold::IESampleAndHold(athena::io::IStreamReader& in)
-: m_sampleSource(ParticleDataFactory::GetIntElement(in))
-, m_waitFramesMin(ParticleDataFactory::GetIntElement(in))
-, m_waitFramesMax(ParticleDataFactory::GetIntElement(in)) {}
-
-IESampleAndHold::IESampleAndHold(const nlohmann::ordered_json& in)
-: m_sampleSource(ParticleDataFactory::GetIntElement(in, "SampleSource"))
+: IntElement(in)
+, m_sampleSource(ParticleDataFactory::GetIntElement(in, "SampleSource"))
 , m_waitFramesMin(ParticleDataFactory::GetIntElement(in, "WaitFramesMin"))
 , m_waitFramesMax(ParticleDataFactory::GetIntElement(in, "WaitFramesMax")) {}
 
-void IESampleAndHold::PutTo(athena::io::IStreamWriter& out) const {
+IESampleAndHold::IESampleAndHold(const nlohmann::ordered_json& in)
+: IntElement(in)
+, m_sampleSource(ParticleDataFactory::GetIntElement(in, "SampleSource"))
+, m_waitFramesMin(ParticleDataFactory::GetIntElement(in, "WaitFramesMin"))
+, m_waitFramesMax(ParticleDataFactory::GetIntElement(in, "WaitFramesMax")) {}
+
+void IESampleAndHold::PutToInternal(athena::io::IStreamWriter& out) const {
   if (!m_sampleSource || !m_waitFramesMin || m_waitFramesMax) {
     return;
   }
@@ -319,178 +242,122 @@ void IESampleAndHold::PutTo(athena::io::IStreamWriter& out) const {
   m_waitFramesMax->PutTo(out);
 }
 
-void IESampleAndHold::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_sampleSource || !m_waitFramesMin || m_waitFramesMax) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "SampleAndHold"sv);
-  m_sampleSource->PutTo(out["SampleSource"]);
-  m_waitFramesMin->PutTo(out["WaitFramesMin"]);
-  m_waitFramesMax->PutTo(out["WaitFramesMax"]);
+void IESampleAndHold::PutToInternal(nlohmann::ordered_json& out) const {
+  m_sampleSource->PutTo(out);
+  m_waitFramesMin->PutTo(out);
+  m_waitFramesMax->PutTo(out);
 }
 
 IEInitialRandom::IEInitialRandom(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetIntElement(in)), m_max(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+, m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
 
 IEInitialRandom::IEInitialRandom(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetIntElement(in, "Min")), m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+, m_max(ParticleDataFactory::GetIntElement(in, "Max")) {}
 
-void IEInitialRandom::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('IRND'));
+void IEInitialRandom::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
 }
 
-void IEInitialRandom::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "InitialRandom");
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
+void IEInitialRandom::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
 }
 
 IEClamp::IEClamp(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetIntElement(in))
-, m_max(ParticleDataFactory::GetIntElement(in))
-, m_value(ParticleDataFactory::GetIntElement(in)) {}
-
-IEClamp::IEClamp(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
 , m_max(ParticleDataFactory::GetIntElement(in, "Max"))
 , m_value(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
-void IEClamp::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max || m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('CLMP'));
+IEClamp::IEClamp(const nlohmann::ordered_json& in)
+: IntElement(in)
+, m_min(ParticleDataFactory::GetIntElement(in, "Min"))
+, m_max(ParticleDataFactory::GetIntElement(in, "Max"))
+, m_value(ParticleDataFactory::GetIntElement(in, "Value")) {}
+
+void IEClamp::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
   m_value->PutTo(out);
 }
 
-void IEClamp::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max || m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Clamp"sv);
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
-  m_value->PutTo(out["Value"]);
+void IEClamp::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
+  m_value->PutTo(out);
 }
 
 IEPulse::IEPulse(athena::io::IStreamReader& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in))
-, m_bDuration(ParticleDataFactory::GetIntElement(in))
-, m_a(ParticleDataFactory::GetIntElement(in))
-, m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+, m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
+, m_a(ParticleDataFactory::GetIntElement(in, "A"))
+, m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IEPulse::IEPulse(const nlohmann::ordered_json& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+: IntElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
 , m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
 , m_a(ParticleDataFactory::GetIntElement(in, "A"))
 , m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IEPulse::~IEPulse() {}
 
-void IEPulse::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('PULS'));
+void IEPulse::PutToInternal(athena::io::IStreamWriter& out) const {
   m_aDuration->PutTo(out);
   m_aDuration->PutTo(out);
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IEPulse::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Pulse"sv);
-  m_aDuration->PutTo(out["DurationA"]);
-  m_aDuration->PutTo(out["DurationB"]);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IEPulse::PutToInternal(nlohmann::ordered_json& out) const {
+  m_aDuration->PutTo(out);
+  m_aDuration->PutTo(out);
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IERealToInt::IERealToInt(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
+: IntElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 IERealToInt::IERealToInt(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: IntElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 IERealToInt::~IERealToInt() {}
 
-void IERealToInt::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('RTOI'));
+void IERealToInt::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IERealToInt::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "RealToInt");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IERealToInt::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 IESubtract::IESubtract(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetIntElement(in)) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
 IESubtract::IESubtract(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
+: IntElement(in), m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetIntElement(in, "B")) {}
 
-void IESubtract::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('SUB_'));
+void IESubtract::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void IESubtract::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Subtract");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void IESubtract::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
-void IEGetCumulativeParticleCount::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('GTCP'));
-}
-
-void IEGetCumulativeParticleCount::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "GetCumulativeParticleCount"sv);
-}
-
-void IEGetActiveParticleCount::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('GAPC'));
-}
-
-void IEGetActiveParticleCount::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "GetActiveParticleCount"sv);
-}
-
-void IEGetEmitterTime::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('GEMT'));
-}
-
-void IEGetEmitterTime::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "GetEmitterTime"sv);
-}
 } // namespace axdl::primedep::particles

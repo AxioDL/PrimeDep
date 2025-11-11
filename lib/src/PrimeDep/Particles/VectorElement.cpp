@@ -8,43 +8,35 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep::particles {
-void VENone::PutTo(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetClassID(out, FOURCC('NONE')); }
-void VENone::PutTo(nlohmann::ordered_json& out) const { ParticleDataFactory::SetClassID(out, "None"); }
-
 VEConstant::VEConstant(athena::io::IStreamReader& in)
-: m_x(ParticleDataFactory::GetRealElement(in))
-, m_y(ParticleDataFactory::GetRealElement(in))
-, m_z(ParticleDataFactory::GetRealElement(in)) {}
+: VectorElement(in)
+, m_x(ParticleDataFactory::GetRealElement(in, "X"))
+, m_y(ParticleDataFactory::GetRealElement(in, "Y"))
+, m_z(ParticleDataFactory::GetRealElement(in, "Z")) {}
 
 VEConstant::VEConstant(const nlohmann::ordered_json& in)
-: m_x(ParticleDataFactory::GetRealElement(in, "X"))
+: VectorElement(in)
+, m_x(ParticleDataFactory::GetRealElement(in, "X"))
 , m_y(ParticleDataFactory::GetRealElement(in, "Y"))
 , m_z(ParticleDataFactory::GetRealElement(in, "Z")) {}
 
 VEConstant::~VEConstant() {}
 
-void VEConstant::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_x || !m_y || !m_z) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
+void VEConstant::PutToInternal(athena::io::IStreamWriter& out) const {
   m_x->PutTo(out);
   m_y->PutTo(out);
   m_z->PutTo(out);
 }
 
-void VEConstant::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_x || !m_y || !m_z) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Constant");
-  m_x->PutTo(out["X"]);
-  m_y->PutTo(out["Y"]);
-  m_z->PutTo(out["Z"]);
+void VEConstant::PutToInternal(nlohmann::ordered_json& out) const {
+  m_x->PutTo(out);
+  m_y->PutTo(out);
+  m_z->PutTo(out);
 }
 
 VEKeyframeEmitter::VEKeyframeEmitter(athena::io::IStreamReader& in)
-: m_percent(in.readUint32Big())
+: VectorElement(in)
+, m_percent(in.readUint32Big())
 , m_unknown1(in.readUint32Big())
 , m_loop(in.readBool())
 , m_unknown2(in.readBool())
@@ -57,7 +49,8 @@ VEKeyframeEmitter::VEKeyframeEmitter(athena::io::IStreamReader& in)
 }
 
 VEKeyframeEmitter::VEKeyframeEmitter(const nlohmann::ordered_json& in)
-: m_percent(in.value("Percent", 0))
+: VectorElement(in)
+, m_percent(in.value("Percent", 0))
 , m_unknown1(in.value("Unknown1", 0))
 , m_loop(in.value("Loop", false))
 , m_unknown2(in.value("Unknown2", false))
@@ -70,7 +63,7 @@ VEKeyframeEmitter::VEKeyframeEmitter(const nlohmann::ordered_json& in)
   }
 }
 
-void VEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
+void VEKeyframeEmitter::PutToInternal(athena::io::IStreamWriter& out) const {
   ParticleDataFactory::SetClassID(out, m_percent ? FOURCC('KEYP') : FOURCC('KEYE'));
   out.writeUint32Big(m_percent);
   out.writeUint32Big(m_unknown1);
@@ -84,7 +77,7 @@ void VEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
   }
 }
 
-void VEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
+void VEKeyframeEmitter::PutToInternal(nlohmann::ordered_json& out) const {
   ParticleDataFactory::SetClassID(out, "KeyframeEmitter");
   out["Percent"] = m_percent;
   out["Unknown1"] = m_unknown1;
@@ -99,77 +92,146 @@ void VEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
 }
 
 VETimeChain::VETimeChain(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetVectorElement(in))
-, m_b(ParticleDataFactory::GetVectorElement(in))
-, m_switchFrame(ParticleDataFactory::GetIntElement(in)) {}
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B"))
+, m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 VETimeChain::VETimeChain(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
 , m_b(ParticleDataFactory::GetVectorElement(in, "B"))
 , m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 VETimeChain::~VETimeChain() {}
 
-void VETimeChain::PutTo(athena::io::IStreamWriter& out) const {
-  // Color Elements must have all 3 elements specified
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, FOURCC('CHAN'));
+void VETimeChain::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_switchFrame->PutTo(out);
 }
 
-void VETimeChain::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeChain"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_switchFrame->PutTo(out["SwitchFrame"]);
+void VETimeChain::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_switchFrame->PutTo(out);
 }
 
-VEBounce::VEBounce(athena::io::IStreamReader& in)
-: m_planePoint(ParticleDataFactory::GetVectorElement(in))
-, m_planeNormal(ParticleDataFactory::GetVectorElement(in))
-, m_friction(ParticleDataFactory::GetRealElement(in))
-, m_restitution(ParticleDataFactory::GetRealElement(in))
-, m_dieOnPenetration(ParticleDataFactory::GetBool(in)) {}
+VEAngleCone::VEAngleCone(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_angleConstantX(ParticleDataFactory::GetRealElement(in, "AngleConstantX"sv))
+, m_angleConstantY(ParticleDataFactory::GetRealElement(in, "AngleConstantY"sv))
+, m_angleXRange(ParticleDataFactory::GetRealElement(in, "AngleXRange"sv))
+, m_angleYRange(ParticleDataFactory::GetRealElement(in, "AngleYRange"sv))
+, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude"sv)) {}
 
-VEBounce::VEBounce(const nlohmann::ordered_json& in)
-: m_planePoint(ParticleDataFactory::GetVectorElement(in, "PlanePoint"))
-, m_planeNormal(ParticleDataFactory::GetVectorElement(in, "PlaneNormal"))
-, m_friction(ParticleDataFactory::GetRealElement(in, "Friction"))
-, m_restitution(ParticleDataFactory::GetRealElement(in, "Restitution"))
-, m_dieOnPenetration(ParticleDataFactory::GetBool(in, "DieOnPenetration")) {}
+VEAngleCone::VEAngleCone(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_angleConstantX(ParticleDataFactory::GetRealElement(in, "AngleConstantX"sv))
+, m_angleConstantY(ParticleDataFactory::GetRealElement(in, "AngleConstantY"sv))
+, m_angleXRange(ParticleDataFactory::GetRealElement(in, "AngleXRange"sv))
+, m_angleYRange(ParticleDataFactory::GetRealElement(in, "AngleYRange"sv))
+, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude"sv)) {}
 
-VEBounce::~VEBounce() {}
+VEAngleCone::~VEAngleCone() {}
 
-void VEBounce::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_planePoint || !m_planeNormal || !m_friction || !m_restitution) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('BNCE'));
-  m_planePoint->PutTo(out);
-  m_planeNormal->PutTo(out);
-  m_friction->PutTo(out);
-  m_restitution->PutTo(out);
-  ParticleDataFactory::SetBool(out, m_dieOnPenetration);
+void VEAngleCone::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_angleConstantX->PutTo(out);
+  m_angleConstantY->PutTo(out);
+  m_angleXRange->PutTo(out);
+  m_angleYRange->PutTo(out);
+  m_magnitude->PutTo(out);
 }
 
-void VEBounce::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_planePoint || !m_planeNormal || !m_friction || !m_restitution) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Bounce");
-  m_planePoint->PutTo(out["PlanePoint"]);
-  m_planeNormal->PutTo(out["PlaneNormal"]);
-  m_friction->PutTo(out["Friction"]);
-  m_restitution->PutTo(out["Restitution"]);
-  ParticleDataFactory::SetBool(out, "DieOnPenetration", m_dieOnPenetration);
+void VEAngleCone::PutToInternal(nlohmann::ordered_json& out) const {
+  m_angleConstantX->PutTo(out);
+  m_angleConstantY->PutTo(out);
+  m_angleXRange->PutTo(out);
+  m_angleYRange->PutTo(out);
+  m_magnitude->PutTo(out);
 }
+
+VEAdd::VEAdd(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "A")) {}
+
+VEAdd::VEAdd(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "A")) {}
+
+void VEAdd::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+void VEAdd::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+VECircleCluster::VECircleCluster(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
+, m_deltaAngle(ParticleDataFactory::GetIntElement(in, "DeltaAngle"))
+, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude")) {}
+VECircleCluster::VECircleCluster(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
+, m_deltaAngle(ParticleDataFactory::GetIntElement(in, "DeltaAngle"))
+, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude")) {}
+
+VECircleCluster::~VECircleCluster() {}
+
+void VECircleCluster::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_direction->PutTo(out);
+  m_upVector->PutTo(out);
+  m_deltaAngle->PutTo(out);
+  m_magnitude->PutTo(out);
+}
+
+void VECircleCluster::PutToInternal(nlohmann::ordered_json& out) const {
+  m_direction->PutTo(out);
+  m_upVector->PutTo(out);
+  m_deltaAngle->PutTo(out);
+  m_magnitude->PutTo(out);
+}
+
+VECircle::VECircle(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
+, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
+, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
+, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
+
+VECircle::VECircle(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
+, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
+, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
+, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
+
+VECircle::~VECircle() {}
+
+void VECircle::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_direction->PutTo(out);
+  m_upVector->PutTo(out);
+  m_angleConstant->PutTo(out);
+  m_angleLinear->PutTo(out);
+  m_radius->PutTo(out);
+}
+
+void VECircle::PutToInternal(nlohmann::ordered_json& out) const {
+  m_direction->PutTo(out);
+  m_upVector->PutTo(out);
+  m_angleConstant->PutTo(out);
+  m_angleLinear->PutTo(out);
+  m_radius->PutTo(out);
+}
+
 } // namespace axdl::primedep::particles

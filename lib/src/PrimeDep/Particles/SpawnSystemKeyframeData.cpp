@@ -1,6 +1,9 @@
 #include "PrimeDep/Particles/SpawnSystemKeyframeData.hpp"
 
+#include "PrimeDep/Particles/ParticleDataFactory.hpp"
 #include "nlohmann/json.hpp"
+
+#include <iostream>
 
 namespace axdl::primedep::particles {
 
@@ -30,11 +33,11 @@ void SpawnSystemKeyframeData::SpawnSystemKeyframeInfo::PutTo(nlohmann::ordered_j
   out["Unknown3"] = m_unknown3;
 }
 
-SpawnSystemKeyframeData::SpawnSystemKeyframeData(athena::io::IStreamReader& in)
-: m_unknown1(in.readUint32Big())
-, m_unknown2(in.readUint32Big())
-, m_endFrame(in.readUint32Big())
-, m_unknown3(in.readUint32Big()) {
+SpawnSystemKeyframeData::SpawnSystemKeyframeData(athena::io::IStreamReader& in) {
+  m_unknown1 = in.readUint32Big();
+  m_unknown2 = in.readUint32Big();
+  m_endFrame = in.readUint32Big();
+  m_unknown3 = in.readUint32Big();
   const uint32_t count = in.readUint32Big();
   for (int i = 0; i < count; ++i) {
     const uint32_t frame = in.readUint32Big();
@@ -45,6 +48,7 @@ SpawnSystemKeyframeData::SpawnSystemKeyframeData(athena::io::IStreamReader& in)
       spawnInfo.emplace_back(in);
     }
   }
+  m_valid = true;
 }
 
 SpawnSystemKeyframeData::SpawnSystemKeyframeData(const nlohmann::ordered_json& in)
@@ -52,16 +56,24 @@ SpawnSystemKeyframeData::SpawnSystemKeyframeData(const nlohmann::ordered_json& i
 , m_unknown2(in.value("Unknown2", 0))
 , m_endFrame(in.value("EndFrame", 0))
 , m_unknown3(in.value("Unknown3", 0)) {
-  for (const auto frames = in["Frames"]; const auto frame : frames) {
-    int frameIndex = frame.value("Frame", 0);
-    auto& spawns = m_frames.emplace_back(frameIndex, std::vector<SpawnSystemKeyframeInfo>()).second;
-    for (const auto frameSpawns = frame["Spawns"]; const auto spawn : frameSpawns) {
-      spawns.emplace_back(spawn);
+  if (in.contains("Frames")) {
+    for (const auto frames = in["Frames"]; const auto frame : frames) {
+      int frameIndex = frame.value("Frame", 0);
+      auto& spawns = m_frames.emplace_back(frameIndex, std::vector<SpawnSystemKeyframeInfo>()).second;
+      for (const auto frameSpawns = frame["Spawns"]; const auto spawn : frameSpawns) {
+        spawns.emplace_back(spawn);
+      }
     }
   }
+  m_valid = in.value("Valid", false);
 }
 
 void SpawnSystemKeyframeData::PutTo(athena::io::IStreamWriter& out) const {
+  if (!m_valid) {
+    ParticleDataFactory::SetClassID(out, FOURCC('NONE'));
+    return;
+  }
+  ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
   out.writeUint32Big(m_unknown1);
   out.writeUint32Big(m_unknown2);
   out.writeUint32Big(m_endFrame);

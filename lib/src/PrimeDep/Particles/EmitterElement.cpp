@@ -5,20 +5,23 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep::particles {
-EESimpleEmitter::EESimpleEmitter(athena::io::IStreamReader& in) {
+EESimpleEmitter::EESimpleEmitter(athena::io::IStreamReader& in) : EmitterElement(in) {
   if (ParticleDataFactory::GetClassID(in) == FOURCC('ILOC')) {
-    m_initialLocation.reset(ParticleDataFactory::GetVectorElement(in));
+    m_initialLocation.reset(ParticleDataFactory::GetVectorElement(in, "InitialLocation"));
     if (ParticleDataFactory::GetClassID(in) == FOURCC('IVEC')) {
-      m_vector.reset(ParticleDataFactory::GetVectorElement(in));
+      m_vector.reset(ParticleDataFactory::GetVectorElement(in, "Vector"));
     }
   }
 }
 
 EESimpleEmitter::EESimpleEmitter(const nlohmann::ordered_json& in)
-: m_initialLocation(ParticleDataFactory::GetVectorElement(in, "InitialLocation"))
+: EmitterElement(in)
+, m_initialLocation(ParticleDataFactory::GetVectorElement(in, "InitialLocation"))
 , m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 
-void EESimpleEmitter::PutTo(athena::io::IStreamWriter& out) const {
+EESimpleEmitter::~EESimpleEmitter() {}
+
+void EESimpleEmitter::PutToInternal(athena::io::IStreamWriter& out) const {
   if (m_initialLocation) {
     ParticleDataFactory::SetClassID(out, FOURCC('ILOC'));
     m_initialLocation->PutTo(out);
@@ -29,15 +32,14 @@ void EESimpleEmitter::PutTo(athena::io::IStreamWriter& out) const {
   }
 }
 
-void EESimpleEmitter::PutTo(nlohmann::ordered_json& out) const {
+void EESimpleEmitter::PutToInternal(nlohmann::ordered_json& out) const {
   ParticleDataFactory::SetClassID(out, "SimpleEmitter");
 
   if (m_initialLocation) {
-    m_initialLocation->PutTo(out["InitialLocation"]);
-  }
-
-  if (m_vector) {
-    m_vector->PutTo(out["Vector"]);
+    m_initialLocation->PutTo(out);
+    if (m_vector) {
+      m_vector->PutTo(out);
+    }
   }
 }
 

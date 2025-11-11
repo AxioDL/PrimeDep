@@ -24,6 +24,7 @@ public:
     uint32_t m_unknown3;
   };
 
+  SpawnSystemKeyframeData() = default;
   explicit SpawnSystemKeyframeData(athena::io::IStreamReader& in);
   explicit SpawnSystemKeyframeData(const nlohmann::ordered_json& in);
 
@@ -31,10 +32,11 @@ public:
   void PutTo(nlohmann::ordered_json& out) const;
 
 private:
-  uint32_t m_unknown1;
-  uint32_t m_unknown2;
-  uint32_t m_endFrame;
-  uint32_t m_unknown3;
+  bool m_valid{};
+  uint32_t m_unknown1{};
+  uint32_t m_unknown2{};
+  uint32_t m_endFrame{};
+  uint32_t m_unknown3{};
   std::vector<std::pair<uint32_t, std::vector<SpawnSystemKeyframeInfo>>> m_frames;
 };
 }; // namespace axdl::primedep::particles

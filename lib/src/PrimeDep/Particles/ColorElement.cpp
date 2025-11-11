@@ -8,49 +8,40 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep::particles {
-void CENone::PutTo(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetClassID(out, FOURCC('NONE')); }
-void CENone::PutTo(nlohmann::ordered_json& out) const { ParticleDataFactory::SetClassID(out, "None"); }
-CEConstant::CEConstant(athena::io::IStreamReader& in)
-: m_r(ParticleDataFactory::GetRealElement(in))
-, m_g(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in))
-, m_a(ParticleDataFactory::GetRealElement(in)) {}
 
-CEConstant::CEConstant(const nlohmann::ordered_json& in) {}
+CEConstant::CEConstant(athena::io::IStreamReader& in)
+: ColorElement(in)
+, m_r(ParticleDataFactory::GetRealElement(in, "R"))
+, m_g(ParticleDataFactory::GetRealElement(in, "G"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_a(ParticleDataFactory::GetRealElement(in, "A")) {}
+
+CEConstant::CEConstant(const nlohmann::ordered_json& in)
+: ColorElement(in)
+, m_r(ParticleDataFactory::GetRealElement(in, "R"))
+, m_g(ParticleDataFactory::GetRealElement(in, "G"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_a(ParticleDataFactory::GetRealElement(in, "A")) {}
 
 CEConstant::~CEConstant() {}
 
-void CEConstant::PutTo(athena::io::IStreamWriter& out) const {
-  // Color Elements must have all 4 channels specified
-  if (!m_r || !m_g || !m_b || !m_a) {
-    return;
-  }
-
-  // Write the class identifier first
-  ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
-
-  // Now the color channels in RGBA order
+void CEConstant::PutToInternal(athena::io::IStreamWriter& out) const {
   m_r->PutTo(out);
   m_g->PutTo(out);
   m_b->PutTo(out);
   m_a->PutTo(out);
 }
 
-void CEConstant::PutTo(nlohmann::ordered_json& out) const {
-  // Color Elements must have all 4 channels specified
-  if (!m_r || !m_g || !m_b || !m_a) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "Constant");
-  m_r->PutTo(out["R"]);
-  m_r->PutTo(out["G"]);
-  m_r->PutTo(out["B"]);
-  m_r->PutTo(out["A"]);
+void CEConstant::PutToInternal(nlohmann::ordered_json& out) const {
+  m_r->PutTo(out);
+  m_g->PutTo(out);
+  m_b->PutTo(out);
+  m_a->PutTo(out);
 }
 
 CEKeyframeEmitter::CEKeyframeEmitter(athena::io::IStreamReader& in)
-: m_percent(in.readUint32Big())
+: ColorElement(in)
+, m_percent(in.readUint32Big())
 , m_unknown1(in.readUint32Big())
 , m_loop(in.readBool())
 , m_unknown2(in.readBool())
@@ -63,7 +54,8 @@ CEKeyframeEmitter::CEKeyframeEmitter(athena::io::IStreamReader& in)
 }
 
 CEKeyframeEmitter::CEKeyframeEmitter(const nlohmann::ordered_json& in)
-: m_percent(in.value("Percent", 0))
+: ColorElement(in)
+, m_percent(in.value("Percent", 0))
 , m_unknown1(in.value("Unknown1", 0))
 , m_loop(in.value("Loop", false))
 , m_unknown2(in.value("Unknown2", false))
@@ -76,8 +68,7 @@ CEKeyframeEmitter::CEKeyframeEmitter(const nlohmann::ordered_json& in)
   }
 }
 
-void CEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, m_percent ? FOURCC('KEYP') : FOURCC('KEYE'));
+void CEKeyframeEmitter::PutToInternal(athena::io::IStreamWriter& out) const {
   out.writeUint32Big(m_percent);
   out.writeUint32Big(m_unknown1);
   out.writeBool(m_loop);
@@ -90,8 +81,7 @@ void CEKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
   }
 }
 
-void CEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "KeyframeEmitter");
+void CEKeyframeEmitter::PutToInternal(nlohmann::ordered_json& out) const {
   out["Percent"] = m_percent;
   out["Unknown1"] = m_unknown1;
   out["Loop"] = m_loop;
@@ -105,145 +95,115 @@ void CEKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
 }
 
 CETimeChain::CETimeChain(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetColorElement(in))
-, m_b(ParticleDataFactory::GetColorElement(in))
-, m_switchFrame(ParticleDataFactory::GetIntElement(in)) {}
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B"))
+, m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 CETimeChain::CETimeChain(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetColorElement(in, "A"))
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
 , m_b(ParticleDataFactory::GetColorElement(in, "B"))
 , m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 CETimeChain::~CETimeChain() {}
 
-void CETimeChain::PutTo(athena::io::IStreamWriter& out) const {
-  // Color Elements must have all 3 elements specified
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, FOURCC('CHAN'));
+void CETimeChain::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_switchFrame->PutTo(out);
 }
 
-void CETimeChain::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeChain"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_switchFrame->PutTo(out["SwitchFrame"]);
+void CETimeChain::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_switchFrame->PutTo(out);
 }
 
 CEFadeEnd::CEFadeEnd(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetColorElement(in))
-, m_b(ParticleDataFactory::GetColorElement(in))
-, m_startFrame(ParticleDataFactory::GetRealElement(in))
-, m_endFrame(ParticleDataFactory::GetRealElement(in)) {}
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B"))
+, m_startFrame(ParticleDataFactory::GetRealElement(in, "StartFrame"))
+, m_endFrame(ParticleDataFactory::GetRealElement(in, "EndFrame")) {}
 
-CEFadeEnd::CEFadeEnd(const nlohmann::ordered_json& in) {}
+CEFadeEnd::CEFadeEnd(const nlohmann::ordered_json& in)
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B"))
+, m_startFrame(ParticleDataFactory::GetRealElement(in, "StartFrame"))
+, m_endFrame(ParticleDataFactory::GetRealElement(in, "EndFrame")) {}
 
 CEFadeEnd::~CEFadeEnd() {}
 
-void CEFadeEnd::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b || !m_startFrame || !m_endFrame) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('CFDE'));
+void CEFadeEnd::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_startFrame->PutTo(out);
   m_endFrame->PutTo(out);
 }
 
-void CEFadeEnd::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_startFrame || !m_endFrame) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "FadeEnd"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_startFrame->PutTo(out["StartFrame"]);
-  m_endFrame->PutTo(out["EndFrame"]);
+void CEFadeEnd::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_startFrame->PutTo(out);
+  m_endFrame->PutTo(out);
 }
 
 CEFade::CEFade(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetColorElement(in))
-, m_b(ParticleDataFactory::GetColorElement(in))
-, m_endFrame(ParticleDataFactory::GetRealElement(in)) {}
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B"))
+, m_endFrame(ParticleDataFactory::GetRealElement(in, "EndFrame")) {}
 
-CEFade::CEFade(const nlohmann::ordered_json& in) {}
+CEFade::CEFade(const nlohmann::ordered_json& in)
+: ColorElement(in)
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B"))
+, m_endFrame(ParticleDataFactory::GetRealElement(in, "EndFrame")) {}
 
 CEFade::~CEFade() {}
 
-void CEFade::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b || !m_endFrame) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('FADE'));
+void CEFade::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_endFrame->PutTo(out);
 }
 
-void CEFade::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_endFrame) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Fade"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_endFrame->PutTo(out["EndFrame"]);
+void CEFade::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_endFrame->PutTo(out);
 }
 
 CEPulse::CEPulse(athena::io::IStreamReader& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in))
-, m_bDuration(ParticleDataFactory::GetIntElement(in))
-, m_a(ParticleDataFactory::GetColorElement(in))
-, m_b(ParticleDataFactory::GetColorElement(in)) {}
+: ColorElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+, m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
+, m_a(ParticleDataFactory::GetColorElement(in, "A"))
+, m_b(ParticleDataFactory::GetColorElement(in, "B")) {}
 
 CEPulse::CEPulse(const nlohmann::ordered_json& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+: ColorElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
 , m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
 , m_a(ParticleDataFactory::GetColorElement(in, "A"))
 , m_b(ParticleDataFactory::GetColorElement(in, "B")) {}
 
 CEPulse::~CEPulse() {}
 
-void CEPulse::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('PULS'));
+void CEPulse::PutToInternal(athena::io::IStreamWriter& out) const {
   m_aDuration->PutTo(out);
   m_aDuration->PutTo(out);
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void CEPulse::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Pulse"sv);
-  m_aDuration->PutTo(out["DurationA"]);
-  m_aDuration->PutTo(out["DurationB"]);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-}
-CEParticleColor::CEParticleColor(athena::io::IStreamReader& in) {}
-CEParticleColor::CEParticleColor(const nlohmann::ordered_json& in) {}
-
-void CEParticleColor::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PCOL'));
-}
-
-void CEParticleColor::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleColor");
+void CEPulse::PutToInternal(nlohmann::ordered_json& out) const {
+  m_aDuration->PutTo(out);
+  m_aDuration->PutTo(out);
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 } // namespace axdl::primedep::particles

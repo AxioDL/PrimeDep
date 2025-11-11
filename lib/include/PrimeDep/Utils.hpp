@@ -11,6 +11,11 @@
 
 using namespace std::string_view_literals;
 
+namespace athena::io {
+class IStreamWriter;
+}
+#include "nlohmann/json_fwd.hpp"
+
 namespace axdl {
 #undef bswap16
 #undef bswap32
@@ -175,4 +180,23 @@ struct TemplateString {
   constexpr operator std::string_view() const { return std::string_view(data, N); }
 };
 
+// A helper struct to check for the existence of a member function
+template <typename T, typename = void>
+struct has_PutTo : std::false_type {};
+
+template <typename C, typename Ret, typename... Args>
+struct has_PutTo<C, Ret(Args...)> {
+private:
+  template <typename T>
+  static constexpr auto check(T*) ->
+      typename std::is_same<decltype(std::declval<T>().serialize(std::declval<Args>()...)), Ret>::type;
+
+  template <typename>
+  static constexpr std::false_type check(...);
+
+  typedef decltype(check<C>(0)) type;
+
+public:
+  static constexpr bool value = type::value;
+};
 } // namespace axdl

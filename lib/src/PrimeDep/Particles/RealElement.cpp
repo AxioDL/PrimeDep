@@ -7,24 +7,18 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep::particles {
-void RENone::PutTo(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetClassID(out, FOURCC('NONE')); }
-void RENone::PutTo(nlohmann::ordered_json& out) const { ParticleDataFactory::SetClassID(out, "None"); }
+REConstant::REConstant(athena::io::IStreamReader& in) : RealElement(in), m_value(ParticleDataFactory::GetReal(in)) {}
+REConstant::REConstant(const nlohmann::ordered_json& in) : RealElement(in), m_value(in.value("Value", 0)) {}
 
-REConstant::REConstant(athena::io::IStreamReader& in) : m_value(ParticleDataFactory::GetReal(in)) {}
-REConstant::REConstant(const nlohmann::ordered_json& in) : m_value(in.value("Value", 0)) {}
+void REConstant::PutToInternal(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetReal(out, m_value); }
 
-void REConstant::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
-  ParticleDataFactory::SetReal(out, m_value);
-}
-
-void REConstant::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "Constant");
+void REConstant::PutToInternal(nlohmann::ordered_json& out) const {
   ParticleDataFactory::SetReal(out, "Value", m_value);
 }
 
 REKeyframeEmitter::REKeyframeEmitter(athena::io::IStreamReader& in)
-: m_percent(in.readUint32Big())
+: RealElement(in)
+, m_percent(in.readUint32Big())
 , m_unknown1(in.readUint32Big())
 , m_loop(in.readBool())
 , m_unknown2(in.readBool())
@@ -32,12 +26,13 @@ REKeyframeEmitter::REKeyframeEmitter(athena::io::IStreamReader& in)
 , m_loopStart(in.readInt32Big()) {
   int keyCount = in.readUint32Big();
   while (keyCount--) {
-    m_keys.emplace_back(in.readInt32Big());
+    m_keys.emplace_back(in.readFloatBig());
   }
 }
 
 REKeyframeEmitter::REKeyframeEmitter(const nlohmann::ordered_json& in)
-: m_percent(in.value("Percent", 0))
+: RealElement(in)
+, m_percent(in.value("Percent", 0))
 , m_unknown1(in.value("Unknown1", 0))
 , m_loop(in.value("Loop", false))
 , m_unknown2(in.value("Unknown2", false))
@@ -50,8 +45,7 @@ REKeyframeEmitter::REKeyframeEmitter(const nlohmann::ordered_json& in)
   }
 }
 
-void REKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, m_percent ? FOURCC('KEYP') : FOURCC('KEYE'));
+void REKeyframeEmitter::PutToInternal(athena::io::IStreamWriter& out) const {
   out.writeUint32Big(m_percent);
   out.writeUint32Big(m_unknown1);
   out.writeBool(m_loop);
@@ -60,12 +54,11 @@ void REKeyframeEmitter::PutTo(athena::io::IStreamWriter& out) const {
   out.writeInt32Big(m_loopStart);
   out.writeUint32Big(m_keys.size());
   for (const auto& key : m_keys) {
-    out.writeInt32Big(key);
+    out.writeFloatBig(key);
   }
 }
 
-void REKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "KeyframeEmitter");
+void REKeyframeEmitter::PutToInternal(nlohmann::ordered_json& out) const {
   out["Percent"] = m_percent;
   out["Unknown1"] = m_unknown1;
   out["Loop"] = m_loop;
@@ -78,41 +71,30 @@ void REKeyframeEmitter::PutTo(nlohmann::ordered_json& out) const {
   }
 }
 
-RETimeScale::RETimeScale(athena::io::IStreamReader& in) : m_scale(ParticleDataFactory::GetRealElement(in)) {}
+RETimeScale::RETimeScale(athena::io::IStreamReader& in)
+: RealElement(in), m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
 RETimeScale::RETimeScale(const nlohmann::ordered_json& in)
-: m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
+: RealElement(in), m_scale(ParticleDataFactory::GetRealElement(in, "Scale")) {}
 
 RETimeScale::~RETimeScale() {}
 
-void RETimeScale::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_scale) {
-    return;
-  }
+void RETimeScale::PutToInternal(athena::io::IStreamWriter& out) const { m_scale->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('SCAL'));
-  m_scale->PutTo(out);
-}
-
-void RETimeScale::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_scale) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeScale"sv);
-  m_scale->PutTo(out["Scale"]);
-}
+void RETimeScale::PutToInternal(nlohmann::ordered_json& out) const { m_scale->PutTo(out); }
 
 RESineWave::RESineWave(athena::io::IStreamReader& in)
-: m_frequency(ParticleDataFactory::GetRealElement(in))
-, m_amplitude(ParticleDataFactory::GetRealElement(in))
-, m_phase(ParticleDataFactory::GetRealElement(in)) {}
-
-RESineWave::RESineWave(const nlohmann::ordered_json& in)
-: m_frequency(ParticleDataFactory::GetRealElement(in, "Frequency"))
+: RealElement(in)
+, m_frequency(ParticleDataFactory::GetRealElement(in, "Frequency"))
 , m_amplitude(ParticleDataFactory::GetRealElement(in, "Amplitude"))
 , m_phase(ParticleDataFactory::GetRealElement(in, "Phase")) {}
 
-void RESineWave::PutTo(athena::io::IStreamWriter& out) const {
+RESineWave::RESineWave(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_frequency(ParticleDataFactory::GetRealElement(in, "Frequency"))
+, m_amplitude(ParticleDataFactory::GetRealElement(in, "Amplitude"))
+, m_phase(ParticleDataFactory::GetRealElement(in, "Phase")) {}
+
+void RESineWave::PutToInternal(athena::io::IStreamWriter& out) const {
   if (!m_frequency || !m_amplitude) {
     return;
   }
@@ -121,223 +103,181 @@ void RESineWave::PutTo(athena::io::IStreamWriter& out) const {
   m_amplitude->PutTo(out);
 }
 
-void RESineWave::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_frequency || !m_amplitude) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "SineWave");
-  m_frequency->PutTo(out["Frequency"]);
-  m_amplitude->PutTo(out["Amplitude"]);
-  m_phase->PutTo(out["Phase"]);
+void RESineWave::PutToInternal(nlohmann::ordered_json& out) const {
+  m_frequency->PutTo(out);
+  m_amplitude->PutTo(out);
+  m_phase->PutTo(out);
 }
 
 REAdd::REAdd(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 REAdd::REAdd(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
-void REAdd::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('ADD_'));
+void REAdd::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void REAdd::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Add");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void REAdd::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 REMultiply::REMultiply(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 REMultiply::REMultiply(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
-void REMultiply::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('MULT'));
+void REMultiply::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void REMultiply::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Multiply");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void REMultiply::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 REDotProduct::REDotProduct(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetVectorElement(in)), m_b(ParticleDataFactory::GetVectorElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
 
 REDotProduct::REDotProduct(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetVectorElement(in, "A")), m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
 
 REDotProduct::~REDotProduct() {}
 
-void REDotProduct::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('DOTP'));
+void REDotProduct::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void REDotProduct::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "DotProduct");
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void REDotProduct::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 RERandom::RERandom(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetRealElement(in)), m_max(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+, m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
 
 RERandom::RERandom(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetRealElement(in, "Min")), m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+, m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
 
-void RERandom::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('RAND'));
+void RERandom::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
 }
 
-void RERandom::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "Random");
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
+void RERandom::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
 }
 
 REInitialRandom::REInitialRandom(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetRealElement(in)), m_max(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+, m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
 
 REInitialRandom::REInitialRandom(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetRealElement(in, "Min")), m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+, m_max(ParticleDataFactory::GetRealElement(in, "Max")) {}
 
-void REInitialRandom::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('IRND'));
+void REInitialRandom::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
 }
 
-void REInitialRandom::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "InitialRandom");
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
+void REInitialRandom::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
 }
 
 RETimeChain::RETimeChain(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in))
-, m_switchFrame(ParticleDataFactory::GetIntElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 RETimeChain::RETimeChain(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A"))
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
 , m_b(ParticleDataFactory::GetRealElement(in, "B"))
 , m_switchFrame(ParticleDataFactory::GetIntElement(in, "SwitchFrame")) {}
 
 RETimeChain::~RETimeChain() {}
 
-void RETimeChain::PutTo(athena::io::IStreamWriter& out) const {
-  // Int Elements must have all 3 elements specified
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, FOURCC('CHAN'));
+void RETimeChain::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_switchFrame->PutTo(out);
 }
 
-void RETimeChain::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_switchFrame) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "TimeChain"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_switchFrame->PutTo(out["SwitchFrame"]);
+void RETimeChain::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_switchFrame->PutTo(out);
 }
 
 REClamp::REClamp(athena::io::IStreamReader& in)
-: m_min(ParticleDataFactory::GetRealElement(in))
-, m_max(ParticleDataFactory::GetRealElement(in))
-, m_value(ParticleDataFactory::GetRealElement(in)) {}
-
-REClamp::REClamp(const nlohmann::ordered_json& in)
-: m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
 , m_max(ParticleDataFactory::GetRealElement(in, "Max"))
 , m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
 
-void REClamp::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_min || !m_max || m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('CLMP'));
+REClamp::REClamp(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_min(ParticleDataFactory::GetRealElement(in, "Min"))
+, m_max(ParticleDataFactory::GetRealElement(in, "Max"))
+, m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
+
+void REClamp::PutToInternal(athena::io::IStreamWriter& out) const {
   m_min->PutTo(out);
   m_max->PutTo(out);
   m_value->PutTo(out);
 }
 
-void REClamp::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_min || !m_max || m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Clamp"sv);
-  m_min->PutTo(out["Min"]);
-  m_max->PutTo(out["Max"]);
-  m_value->PutTo(out["Value"]);
+void REClamp::PutToInternal(nlohmann::ordered_json& out) const {
+  m_min->PutTo(out);
+  m_max->PutTo(out);
+  m_value->PutTo(out);
 }
 
 REPulse::REPulse(athena::io::IStreamReader& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in))
-, m_bDuration(ParticleDataFactory::GetIntElement(in))
-, m_a(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+, m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 REPulse::REPulse(const nlohmann::ordered_json& in)
-: m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+: RealElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
 , m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
 , m_a(ParticleDataFactory::GetRealElement(in, "A"))
 , m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 REPulse::~REPulse() {}
 
-void REPulse::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
+void REPulse::PutToInternal(athena::io::IStreamWriter& out) const {
   ParticleDataFactory::SetClassID(out, FOURCC('PULS'));
   m_aDuration->PutTo(out);
   m_aDuration->PutTo(out);
@@ -345,325 +285,160 @@ void REPulse::PutTo(athena::io::IStreamWriter& out) const {
   m_b->PutTo(out);
 }
 
-void REPulse::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_aDuration || !m_bDuration || !m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Pulse"sv);
-  m_aDuration->PutTo(out["DurationA"]);
-  m_aDuration->PutTo(out["DurationB"]);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void REPulse::PutToInternal(nlohmann::ordered_json& out) const {
+  m_aDuration->PutTo(out);
+  m_aDuration->PutTo(out);
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 RELifetimePercent::RELifetimePercent(athena::io::IStreamReader& in)
-: m_lifetime(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in), m_lifetime(ParticleDataFactory::GetRealElement(in, "Value")) {}
 
 RELifetimePercent::RELifetimePercent(const nlohmann::ordered_json& in)
-: m_lifetime(ParticleDataFactory::GetRealElement(in, "Value")) {}
+: RealElement(in), m_lifetime(ParticleDataFactory::GetRealElement(in, "Value")) {}
 
-void RELifetimePercent::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_lifetime) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('RLPT'));
-  m_lifetime->PutTo(out);
-}
+void RELifetimePercent::PutToInternal(athena::io::IStreamWriter& out) const { m_lifetime->PutTo(out); }
 
-void RELifetimePercent::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_lifetime) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "LifetimePercent");
-  m_lifetime->PutTo(out["Value"]);
-}
+void RELifetimePercent::PutToInternal(nlohmann::ordered_json& out) const { m_lifetime->PutTo(out); }
 
 RELifetimeTween::RELifetimeTween(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 RELifetimeTween::RELifetimeTween(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
-void RELifetimeTween::PutTo(athena::io::IStreamWriter& out) const {
-  // Int Elements must have all 3 elements specified
-  if (!m_a || !m_b) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, FOURCC('LFTW'));
+void RELifetimeTween::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void RELifetimeTween::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "LifetimeTween"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void RELifetimeTween::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
-void REParticleRotationOrLineWidth::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PRLW'));
-}
-void REParticleRotationOrLineWidth::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleRotationOrLineWidth");
-}
-
-void REParticleSizeOrLineLength::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PSLL'));
-}
-void REParticleSizeOrLineLength::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleSizeOrLineLength");
-}
-
-void REParticleAccessParameter1::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP1'));
-}
-void REParticleAccessParameter1::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter1");
-}
-
-void REParticleAccessParameter2::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP2'));
-}
-void REParticleAccessParameter2::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter2");
-}
-
-void REParticleAccessParameter3::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP3'));
-}
-void REParticleAccessParameter3::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter3");
-}
-
-void REParticleAccessParameter4::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP4'));
-}
-void REParticleAccessParameter4::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter4");
-}
-
-void REParticleAccessParameter5::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP5'));
-}
-void REParticleAccessParameter5::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter5");
-}
-
-void REParticleAccessParameter6::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP6'));
-}
-void REParticleAccessParameter6::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter6");
-}
-
-void REParticleAccessParameter7::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP7'));
-}
-void REParticleAccessParameter7::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter7");
-}
-
-void REParticleAccessParameter8::PutTo(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PAP8'));
-}
-void REParticleAccessParameter8::PutTo(nlohmann::ordered_json& out) const {
-  ParticleDataFactory::SetClassID(out, "ParticleAccessParameter8");
-}
-
-REVectorXToReal::REVectorXToReal(athena::io::IStreamReader& in) : m_vector(ParticleDataFactory::GetVectorElement(in)) {}
+REVectorXToReal::REVectorXToReal(athena::io::IStreamReader& in)
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 REVectorXToReal::REVectorXToReal(const nlohmann::ordered_json& in)
-: m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 
 REVectorXToReal::~REVectorXToReal() {}
 
-void REVectorXToReal::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_vector) {
-    return;
-  }
+void REVectorXToReal::PutToInternal(athena::io::IStreamWriter& out) const { m_vector->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('VXTR'));
-  m_vector->PutTo(out);
-}
+void REVectorXToReal::PutToInternal(nlohmann::ordered_json& out) const { m_vector->PutTo(out); }
 
-void REVectorXToReal::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_vector) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "VectorXToReal"sv);
-  m_vector->PutTo(out["Vector"]);
-}
-
-REVectorYToReal::REVectorYToReal(athena::io::IStreamReader& in) : m_vector(ParticleDataFactory::GetVectorElement(in)) {}
+REVectorYToReal::REVectorYToReal(athena::io::IStreamReader& in)
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 REVectorYToReal::REVectorYToReal(const nlohmann::ordered_json& in)
-: m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 
 REVectorYToReal::~REVectorYToReal() {}
 
-void REVectorYToReal::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_vector) {
-    return;
-  }
+void REVectorYToReal::PutToInternal(athena::io::IStreamWriter& out) const { m_vector->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('VYTR'));
-  m_vector->PutTo(out);
-}
+void REVectorYToReal::PutToInternal(nlohmann::ordered_json& out) const { m_vector->PutTo(out); }
 
-void REVectorYToReal::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_vector) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "VectorYToReal"sv);
-  m_vector->PutTo(out["Vector"]);
-}
-
-REVectorZToReal::REVectorZToReal(athena::io::IStreamReader& in) : m_vector(ParticleDataFactory::GetVectorElement(in)) {}
+REVectorZToReal::REVectorZToReal(athena::io::IStreamReader& in)
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 REVectorZToReal::REVectorZToReal(const nlohmann::ordered_json& in)
-: m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 
 REVectorZToReal::~REVectorZToReal() {}
 
-void REVectorZToReal::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_vector) {
-    return;
-  }
+void REVectorZToReal::PutToInternal(athena::io::IStreamWriter& out) const { m_vector->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('VZTR'));
-  m_vector->PutTo(out);
-}
-
-void REVectorZToReal::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_vector) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "VectorZToReal"sv);
-  m_vector->PutTo(out["Vector"]);
-}
+void REVectorZToReal::PutToInternal(nlohmann::ordered_json& out) const { m_vector->PutTo(out); }
 
 REVectorMagnitude::REVectorMagnitude(athena::io::IStreamReader& in)
-: m_vector(ParticleDataFactory::GetVectorElement(in)) {}
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 REVectorMagnitude::REVectorMagnitude(const nlohmann::ordered_json& in)
-: m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
+: RealElement(in), m_vector(ParticleDataFactory::GetVectorElement(in, "Vector")) {}
 
 REVectorMagnitude::~REVectorMagnitude() {}
 
-void REVectorMagnitude::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_vector) {
-    return;
-  }
+void REVectorMagnitude::PutToInternal(athena::io::IStreamWriter& out) const { m_vector->PutTo(out); }
 
-  ParticleDataFactory::SetClassID(out, FOURCC('VMAG'));
-  m_vector->PutTo(out);
-}
-
-void REVectorMagnitude::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_vector) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "VectorMagnitude"sv);
-  m_vector->PutTo(out["Vector"]);
-}
+void REVectorMagnitude::PutToInternal(nlohmann::ordered_json& out) const { m_vector->PutTo(out); }
 
 RECompareLessThan::RECompareLessThan(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in))
-, m_c(ParticleDataFactory::GetRealElement(in))
-, m_d(ParticleDataFactory::GetRealElement(in)) {}
-
-RECompareLessThan::RECompareLessThan(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A"))
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
 , m_b(ParticleDataFactory::GetRealElement(in, "B"))
 , m_c(ParticleDataFactory::GetRealElement(in, "C"))
 , m_d(ParticleDataFactory::GetRealElement(in, "D")) {}
 
-void RECompareLessThan::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b || !m_c || !m_d) {
-    return;
-  }
+RECompareLessThan::RECompareLessThan(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_c(ParticleDataFactory::GetRealElement(in, "C"))
+, m_d(ParticleDataFactory::GetRealElement(in, "D")) {}
 
-  ParticleDataFactory::SetClassID(out, FOURCC('CLTN'));
+void RECompareLessThan::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_c->PutTo(out);
   m_d->PutTo(out);
 }
 
-void RECompareLessThan::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_c || !m_d) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "CompareLessThan"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_c->PutTo(out["C"]);
-  m_d->PutTo(out["D"]);
+void RECompareLessThan::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_c->PutTo(out);
+  m_d->PutTo(out);
 }
 
 RECompareEqual::RECompareEqual(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in))
-, m_c(ParticleDataFactory::GetRealElement(in))
-, m_d(ParticleDataFactory::GetRealElement(in)) {}
-
-RECompareEqual::RECompareEqual(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A"))
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
 , m_b(ParticleDataFactory::GetRealElement(in, "B"))
 , m_c(ParticleDataFactory::GetRealElement(in, "C"))
 , m_d(ParticleDataFactory::GetRealElement(in, "D")) {}
 
-void RECompareEqual::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b || !m_c || !m_d) {
-    return;
-  }
+RECompareEqual::RECompareEqual(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_c(ParticleDataFactory::GetRealElement(in, "C"))
+, m_d(ParticleDataFactory::GetRealElement(in, "D")) {}
 
-  ParticleDataFactory::SetClassID(out, FOURCC('CEQL'));
+void RECompareEqual::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_c->PutTo(out);
   m_d->PutTo(out);
 }
 
-void RECompareEqual::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_c || !m_d) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "CompareEqual"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_c->PutTo(out["C"]);
-  m_d->PutTo(out["D"]);
+void RECompareEqual::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_c->PutTo(out);
+  m_d->PutTo(out);
 }
 
 REConstantRange::REConstantRange(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in))
-, m_b(ParticleDataFactory::GetRealElement(in))
-, m_c(ParticleDataFactory::GetRealElement(in))
-, m_d(ParticleDataFactory::GetRealElement(in))
-, m_e(ParticleDataFactory::GetRealElement(in)) {}
-
-REConstantRange::REConstantRange(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A"))
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
 , m_b(ParticleDataFactory::GetRealElement(in, "B"))
 , m_c(ParticleDataFactory::GetRealElement(in, "C"))
 , m_d(ParticleDataFactory::GetRealElement(in, "D"))
 , m_e(ParticleDataFactory::GetRealElement(in, "E")) {}
 
-void REConstantRange::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b || !m_c || !m_d || !m_e) {
-    return;
-  }
+REConstantRange::REConstantRange(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B"))
+, m_c(ParticleDataFactory::GetRealElement(in, "C"))
+, m_d(ParticleDataFactory::GetRealElement(in, "D"))
+, m_e(ParticleDataFactory::GetRealElement(in, "E")) {}
 
-  ParticleDataFactory::SetClassID(out, FOURCC('CRNG'));
+void REConstantRange::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
   m_c->PutTo(out);
@@ -671,189 +446,115 @@ void REConstantRange::PutTo(athena::io::IStreamWriter& out) const {
   m_e->PutTo(out);
 }
 
-void REConstantRange::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b || !m_c || !m_d || !m_e) {
-    return;
-  }
-
-  ParticleDataFactory::SetClassID(out, "ConstantRange"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
-  m_c->PutTo(out["C"]);
-  m_d->PutTo(out["D"]);
-  m_e->PutTo(out["D"]);
-  m_e->PutTo(out["E"]);
+void REConstantRange::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+  m_c->PutTo(out);
+  m_d->PutTo(out);
+  m_e->PutTo(out);
 }
 
-REExternalVar::REExternalVar(athena::io::IStreamReader& in) : m_value(ParticleDataFactory::GetIntElement(in)) {}
+REExternalVar::REExternalVar(athena::io::IStreamReader& in)
+: RealElement(in), m_value(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
 REExternalVar::REExternalVar(const nlohmann::ordered_json& in)
-: m_value(ParticleDataFactory::GetIntElement(in, "Value")) {}
+: RealElement(in), m_value(ParticleDataFactory::GetIntElement(in, "Value")) {}
 
 REExternalVar::~REExternalVar() {}
 
-void REExternalVar::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('CEXT'));
-  m_value->PutTo(out);
-}
+void REExternalVar::PutToInternal(athena::io::IStreamWriter& out) const { m_value->PutTo(out); }
 
-void REExternalVar::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_value) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "ExternalVar"sv);
-  m_value->PutTo(out["Value"]);
-}
+void REExternalVar::PutToInternal(nlohmann::ordered_json& out) const { m_value->PutTo(out); }
 
 REIntTimesReal::REIntTimesReal(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetIntElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
-
+: RealElement(in)
+, m_a(ParticleDataFactory::GetIntElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 REIntTimesReal::REIntTimesReal(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetIntElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetIntElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 REIntTimesReal::~REIntTimesReal() {}
 
-void REIntTimesReal::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('ITRL'));
+void REIntTimesReal::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void REIntTimesReal::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "IntTimesReal"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void REIntTimesReal::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 RESubtract::RESubtract(athena::io::IStreamReader& in)
-: m_a(ParticleDataFactory::GetRealElement(in)), m_b(ParticleDataFactory::GetRealElement(in)) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 RESubtract::RESubtract(const nlohmann::ordered_json& in)
-: m_a(ParticleDataFactory::GetRealElement(in, "A")), m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
 
 RESubtract::~RESubtract() {}
 
-void RESubtract::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('SUB_'));
+void RESubtract::PutToInternal(athena::io::IStreamWriter& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
-void RESubtract::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_a || !m_b) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "Subtract"sv);
-  m_a->PutTo(out["A"]);
-  m_b->PutTo(out["B"]);
+void RESubtract::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
 }
 
 REGetComponentRed::REGetComponentRed(athena::io::IStreamReader& in)
-: m_color(ParticleDataFactory::GetColorElement(in)) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentRed::REGetComponentRed(const nlohmann::ordered_json& in)
-: m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentRed::~REGetComponentRed() {}
 
-void REGetComponentRed::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('GTCR'));
-  m_color->PutTo(out);
-}
+void REGetComponentRed::PutToInternal(athena::io::IStreamWriter& out) const { m_color->PutTo(out); }
 
-void REGetComponentRed::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "GetComponentRed"sv);
-  m_color->PutTo(out["Color"]);
-}
+void REGetComponentRed::PutToInternal(nlohmann::ordered_json& out) const { m_color->PutTo(out); }
 
 REGetComponentGreen::REGetComponentGreen(athena::io::IStreamReader& in)
-: m_color(ParticleDataFactory::GetColorElement(in)) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentGreen::REGetComponentGreen(const nlohmann::ordered_json& in)
-: m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentGreen::~REGetComponentGreen() {}
 
-void REGetComponentGreen::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('GTCG'));
-  m_color->PutTo(out);
-}
+void REGetComponentGreen::PutToInternal(athena::io::IStreamWriter& out) const { m_color->PutTo(out); }
 
-void REGetComponentGreen::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "GetComponentGreen"sv);
-  m_color->PutTo(out["Color"]);
-}
+void REGetComponentGreen::PutToInternal(nlohmann::ordered_json& out) const { m_color->PutTo(out); }
 
 REGetComponentBlue::REGetComponentBlue(athena::io::IStreamReader& in)
-: m_color(ParticleDataFactory::GetColorElement(in)) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentBlue::REGetComponentBlue(const nlohmann::ordered_json& in)
-: m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentBlue::~REGetComponentBlue() {}
 
-void REGetComponentBlue::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('GTCG'));
-  m_color->PutTo(out);
-}
+void REGetComponentBlue::PutToInternal(athena::io::IStreamWriter& out) const { m_color->PutTo(out); }
 
-void REGetComponentBlue::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "GetComponentBlue"sv);
-  m_color->PutTo(out["Color"]);
-}
+void REGetComponentBlue::PutToInternal(nlohmann::ordered_json& out) const { m_color->PutTo(out); }
 
 REGetComponentAlpha::REGetComponentAlpha(athena::io::IStreamReader& in)
-: m_color(ParticleDataFactory::GetColorElement(in)) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentAlpha::REGetComponentAlpha(const nlohmann::ordered_json& in)
-: m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
+: RealElement(in), m_color(ParticleDataFactory::GetColorElement(in, "Color")) {}
 
 REGetComponentAlpha::~REGetComponentAlpha() {}
 
-void REGetComponentAlpha::PutTo(athena::io::IStreamWriter& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, FOURCC('GTCG'));
-  m_color->PutTo(out);
-}
+void REGetComponentAlpha::PutToInternal(athena::io::IStreamWriter& out) const { m_color->PutTo(out); }
 
-void REGetComponentAlpha::PutTo(nlohmann::ordered_json& out) const {
-  if (!m_color) {
-    return;
-  }
-  ParticleDataFactory::SetClassID(out, "GetComponentAlpha"sv);
-  m_color->PutTo(out["Color"]);
-}
+void REGetComponentAlpha::PutToInternal(nlohmann::ordered_json& out) const { m_color->PutTo(out); }
 
 } // namespace axdl::primedep::particles
