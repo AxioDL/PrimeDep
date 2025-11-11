@@ -278,16 +278,15 @@ REPulse::REPulse(const nlohmann::ordered_json& in)
 REPulse::~REPulse() {}
 
 void REPulse::PutToInternal(athena::io::IStreamWriter& out) const {
-  ParticleDataFactory::SetClassID(out, FOURCC('PULS'));
   m_aDuration->PutTo(out);
-  m_aDuration->PutTo(out);
+  m_bDuration->PutTo(out);
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
 
 void REPulse::PutToInternal(nlohmann::ordered_json& out) const {
   m_aDuration->PutTo(out);
-  m_aDuration->PutTo(out);
+  m_bDuration->PutTo(out);
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
@@ -365,6 +364,26 @@ REVectorMagnitude::~REVectorMagnitude() {}
 void REVectorMagnitude::PutToInternal(athena::io::IStreamWriter& out) const { m_vector->PutTo(out); }
 
 void REVectorMagnitude::PutToInternal(nlohmann::ordered_json& out) const { m_vector->PutTo(out); }
+
+REInitialSwitch::REInitialSwitch(athena::io::IStreamReader& in)
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+
+REInitialSwitch::REInitialSwitch(const nlohmann::ordered_json& in)
+: RealElement(in)
+, m_a(ParticleDataFactory::GetRealElement(in, "A"))
+, m_b(ParticleDataFactory::GetRealElement(in, "B")) {}
+
+void REInitialSwitch::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+void REInitialSwitch::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
 
 RECompareLessThan::RECompareLessThan(athena::io::IStreamReader& in)
 : RealElement(in)

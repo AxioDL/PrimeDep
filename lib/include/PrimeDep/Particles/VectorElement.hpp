@@ -71,22 +71,21 @@ private:
   std::vector<Vector3f> m_keys;
 };
 
-class VETimeChain final : public VectorElement {
+class VECone final : public VectorElement {
 public:
-  DEFINE_ELEMENT('CHAN', "TimeChain");
-  explicit VETimeChain(athena::io::IStreamReader& in);
-  explicit VETimeChain(const nlohmann::ordered_json& in);
-  ~VETimeChain() override;
+  DEFINE_ELEMENT('CONE', "Cone");
+  explicit VECone(athena::io::IStreamReader& in);
+  explicit VECone(const nlohmann::ordered_json& in);
+  ~VECone() override;
 
-  bool isValid() const override { return m_a && m_b && m_switchFrame; }
+  bool isValid() const override { return m_direction && m_baseRadius; }
 
 private:
   void PutToInternal(athena::io::IStreamWriter& out) const override;
   void PutToInternal(nlohmann::ordered_json& out) const override;
 
-  std::unique_ptr<VectorElement> m_a;
-  std::unique_ptr<VectorElement> m_b;
-  std::unique_ptr<IntElement> m_switchFrame;
+  std::unique_ptr<VectorElement> m_direction;
+  std::unique_ptr<RealElement> m_baseRadius;
 };
 
 class VEAngleCone final : public VectorElement {
@@ -111,6 +110,46 @@ private:
   std::unique_ptr<RealElement> m_magnitude;
 };
 
+class VECircle final : public VectorElement {
+public:
+  DEFINE_ELEMENT('CIRC', "Circle");
+  explicit VECircle(athena::io::IStreamReader& in);
+  explicit VECircle(const nlohmann::ordered_json& in);
+  ~VECircle() override;
+
+  bool isValid() const override {
+    return m_circleOffset && m_circleNormal && m_angleConstant && m_angleLinear && m_radius;
+  }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+  std::unique_ptr<VectorElement> m_circleOffset;
+  std::unique_ptr<VectorElement> m_circleNormal;
+  std::unique_ptr<RealElement> m_angleConstant;
+  std::unique_ptr<RealElement> m_angleLinear;
+  std::unique_ptr<RealElement> m_radius;
+};
+
+class VECircleCluster final : public VectorElement {
+public:
+  DEFINE_ELEMENT('CCLU', "CircleCluster");
+  explicit VECircleCluster(athena::io::IStreamReader& in);
+  explicit VECircleCluster(const nlohmann::ordered_json& in);
+  ~VECircleCluster() override;
+
+  bool isValid() const override { return m_circleOffset && m_circleNormal && m_cycleFrames && m_randomFactor; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+
+  std::unique_ptr<VectorElement> m_circleOffset;
+  std::unique_ptr<VectorElement> m_circleNormal;
+  std::unique_ptr<IntElement> m_cycleFrames;
+  std::unique_ptr<RealElement> m_randomFactor;
+};
+
 class VEAdd final : public VectorElement {
 public:
   DEFINE_ELEMENT('ADD_', "Add");
@@ -126,44 +165,6 @@ private:
 
   std::unique_ptr<VectorElement> m_a;
   std::unique_ptr<VectorElement> m_b;
-};
-
-class VECircleCluster final : public VectorElement {
-public:
-  DEFINE_ELEMENT('CCLU', "CircleCluster");
-  explicit VECircleCluster(athena::io::IStreamReader& in);
-  explicit VECircleCluster(const nlohmann::ordered_json& in);
-  ~VECircleCluster() override;
-
-  bool isValid() const override { return m_direction && m_upVector && m_deltaAngle && m_magnitude; }
-
-private:
-  void PutToInternal(athena::io::IStreamWriter& out) const override;
-  void PutToInternal(nlohmann::ordered_json& out) const override;
-
-  std::unique_ptr<VectorElement> m_direction;
-  std::unique_ptr<VectorElement> m_upVector;
-  std::unique_ptr<IntElement> m_deltaAngle;
-  std::unique_ptr<RealElement> m_magnitude;
-};
-
-class VECircle final : public VectorElement {
-public:
-  DEFINE_ELEMENT('CIRC', "Circle");
-  explicit VECircle(athena::io::IStreamReader& in);
-  explicit VECircle(const nlohmann::ordered_json& in);
-  ~VECircle() override;
-
-  bool isValid() const override { return m_direction && m_upVector && m_angleConstant && m_angleLinear && m_radius; }
-
-private:
-  void PutToInternal(athena::io::IStreamWriter& out) const override;
-  void PutToInternal(nlohmann::ordered_json& out) const override;
-  std::unique_ptr<VectorElement> m_direction;
-  std::unique_ptr<VectorElement> m_upVector;
-  std::unique_ptr<RealElement> m_angleConstant;
-  std::unique_ptr<RealElement> m_angleLinear;
-  std::unique_ptr<RealElement> m_radius;
 };
 
 class VEMultiply final : public VectorElement {
@@ -182,19 +183,22 @@ private:
   std::unique_ptr<VectorElement> m_b;
 };
 
-class VERealToVector final : public VectorElement {
+class VETimeChain final : public VectorElement {
 public:
-  DEFINE_ELEMENT('RTOV', "RealToVector");
-  explicit VERealToVector(athena::io::IStreamReader& in);
-  explicit VERealToVector(const nlohmann::ordered_json& in);
-  ~VERealToVector() override;
+  DEFINE_ELEMENT('CHAN', "TimeChain");
+  explicit VETimeChain(athena::io::IStreamReader& in);
+  explicit VETimeChain(const nlohmann::ordered_json& in);
+  ~VETimeChain() override;
 
-  bool isValid() const override { return !!m_value; }
+  bool isValid() const override { return m_a && m_b && m_switchFrame; }
 
 private:
   void PutToInternal(athena::io::IStreamWriter& out) const override;
   void PutToInternal(nlohmann::ordered_json& out) const override;
-  std::unique_ptr<RealElement> m_value;
+
+  std::unique_ptr<VectorElement> m_a;
+  std::unique_ptr<VectorElement> m_b;
+  std::unique_ptr<IntElement> m_switchFrame;
 };
 
 class VEPulse final : public VectorElement {
@@ -215,11 +219,26 @@ private:
   std::unique_ptr<VectorElement> m_b;
 };
 
-class VEParticleVelocity final : public VectorElement {
+class VERealToVector final : public VectorElement {
 public:
-  DEFINE_ELEMENT('PVEL', "ParticleVelocity");
-  explicit VEParticleVelocity(athena::io::IStreamReader& in) : VectorElement(in) {}
-  explicit VEParticleVelocity(const nlohmann::ordered_json& in) : VectorElement(in) {}
+  DEFINE_ELEMENT('RTOV', "RealToVector");
+  explicit VERealToVector(athena::io::IStreamReader& in);
+  explicit VERealToVector(const nlohmann::ordered_json& in);
+  ~VERealToVector() override;
+
+  bool isValid() const override { return !!m_value; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+  std::unique_ptr<RealElement> m_value;
+};
+
+class VEParticleLocation final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PLOC', "ParticleLocation");
+  explicit VEParticleLocation(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleLocation(const nlohmann::ordered_json& in) : VectorElement(in) {}
 
   bool isValid() const override { return true; }
 
@@ -230,7 +249,7 @@ private:
 
 class VEParticleColor final : public VectorElement {
 public:
-  DEFINE_ELEMENT('PCOL', "ParticleColor");
+  DEFINE_ELEMENT('PLCO', "ParticleColor");
   explicit VEParticleColor(athena::io::IStreamReader& in) : VectorElement(in) {}
   explicit VEParticleColor(const nlohmann::ordered_json& in) : VectorElement(in) {}
 
@@ -241,11 +260,11 @@ private:
   void PutToInternal(nlohmann::ordered_json& out) const override {}
 };
 
-class VEParticleLocation final : public VectorElement {
+class VEParticleVelocity final : public VectorElement {
 public:
-  DEFINE_ELEMENT('PLOC', "ParticleLocation");
-  explicit VEParticleLocation(athena::io::IStreamReader& in) : VectorElement(in) {}
-  explicit VEParticleLocation(const nlohmann::ordered_json& in) : VectorElement(in) {}
+  DEFINE_ELEMENT('PVEL', "ParticleVelocity");
+  explicit VEParticleVelocity(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleVelocity(const nlohmann::ordered_json& in) : VectorElement(in) {}
 
   bool isValid() const override { return true; }
 

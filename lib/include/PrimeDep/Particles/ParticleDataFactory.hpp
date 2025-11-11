@@ -17,6 +17,7 @@ FourCC GetClassID(athena::io::IStreamReader& reader);
 std::string GetClassID(const nlohmann::ordered_json& data);
 void SetClassID(athena::io::IStreamWriter& writer, const FourCC& type);
 void SetClassID(nlohmann::ordered_json& data, std::string_view type);
+FourCC PeekClassID(athena::io::IStreamReader& reader);
 
 bool GetBool(athena::io::IStreamReader& reader, bool defaultValue = false);
 bool GetBool(const nlohmann::ordered_json& reader, std::string_view propertyName, bool defaultValue = false);

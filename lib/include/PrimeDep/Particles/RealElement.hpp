@@ -454,6 +454,22 @@ private:
   std::unique_ptr<VectorElement> m_vector;
 };
 
+class REInitialSwitch final : public RealElement {
+public:
+  DEFINE_ELEMENT('ISWT', "InitialSwitch");
+  explicit REInitialSwitch(athena::io::IStreamReader& in);
+  explicit REInitialSwitch(const nlohmann::ordered_json& in);
+
+  bool isValid() const override { return m_a && m_b; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+
+  std::unique_ptr<RealElement> m_a;
+  std::unique_ptr<RealElement> m_b;
+};
+
 class RECompareLessThan final : public RealElement {
 public:
   DEFINE_ELEMENT('CLTN', "CompareLessThan");

@@ -117,6 +117,28 @@ void VETimeChain::PutToInternal(nlohmann::ordered_json& out) const {
   m_switchFrame->PutTo(out);
 }
 
+VECone::VECone(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_baseRadius(ParticleDataFactory::GetRealElement(in, "BaseRadius")) {}
+
+VECone::VECone(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
+, m_baseRadius(ParticleDataFactory::GetRealElement(in, "BaseRadius")) {}
+
+VECone::~VECone() {}
+
+void VECone::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_direction->PutTo(out);
+  m_baseRadius->PutTo(out);
+}
+
+void VECone::PutToInternal(nlohmann::ordered_json& out) const {
+  m_direction->PutTo(out);
+  m_baseRadius->PutTo(out);
+}
+
 VEAngleCone::VEAngleCone(athena::io::IStreamReader& in)
 : VectorElement(in)
 , m_angleConstantX(ParticleDataFactory::GetRealElement(in, "AngleConstantX"sv))
@@ -151,6 +173,70 @@ void VEAngleCone::PutToInternal(nlohmann::ordered_json& out) const {
   m_magnitude->PutTo(out);
 }
 
+VECircle::VECircle(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_circleOffset(ParticleDataFactory::GetVectorElement(in, "CircleOffset"))
+, m_circleNormal(ParticleDataFactory::GetVectorElement(in, "CircleNormal"))
+, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
+, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
+, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
+
+VECircle::VECircle(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_circleOffset(ParticleDataFactory::GetVectorElement(in, "CircleOffset"))
+, m_circleNormal(ParticleDataFactory::GetVectorElement(in, "CircleNormal"))
+, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
+, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
+, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
+
+VECircle::~VECircle() {}
+
+void VECircle::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_circleOffset->PutTo(out);
+  m_circleNormal->PutTo(out);
+  m_angleConstant->PutTo(out);
+  m_angleLinear->PutTo(out);
+  m_radius->PutTo(out);
+}
+
+void VECircle::PutToInternal(nlohmann::ordered_json& out) const {
+  m_circleOffset->PutTo(out);
+  m_circleNormal->PutTo(out);
+  m_angleConstant->PutTo(out);
+  m_angleLinear->PutTo(out);
+  m_radius->PutTo(out);
+}
+
+VECircleCluster::VECircleCluster(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_circleOffset(ParticleDataFactory::GetVectorElement(in, "CircleOffset"))
+, m_circleNormal(ParticleDataFactory::GetVectorElement(in, "CircleNormal"))
+, m_cycleFrames(ParticleDataFactory::GetIntElement(in, "CycleFrames"))
+, m_randomFactor(ParticleDataFactory::GetRealElement(in, "RandomFactor")) {}
+
+VECircleCluster::VECircleCluster(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_circleOffset(ParticleDataFactory::GetVectorElement(in, "CircleOffset"))
+, m_circleNormal(ParticleDataFactory::GetVectorElement(in, "CircleNormal"))
+, m_cycleFrames(ParticleDataFactory::GetIntElement(in, "CycleFrames"))
+, m_randomFactor(ParticleDataFactory::GetRealElement(in, "RandomFactor")) {}
+
+VECircleCluster::~VECircleCluster() {}
+
+void VECircleCluster::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_circleOffset->PutTo(out);
+  m_circleNormal->PutTo(out);
+  m_cycleFrames->PutTo(out);
+  m_randomFactor->PutTo(out);
+}
+
+void VECircleCluster::PutToInternal(nlohmann::ordered_json& out) const {
+  m_circleOffset->PutTo(out);
+  m_circleNormal->PutTo(out);
+  m_cycleFrames->PutTo(out);
+  m_randomFactor->PutTo(out);
+}
+
 VEAdd::VEAdd(athena::io::IStreamReader& in)
 : VectorElement(in)
 , m_a(ParticleDataFactory::GetVectorElement(in, "A"))
@@ -169,69 +255,6 @@ void VEAdd::PutToInternal(athena::io::IStreamWriter& out) const {
 void VEAdd::PutToInternal(nlohmann::ordered_json& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
-}
-
-VECircleCluster::VECircleCluster(athena::io::IStreamReader& in)
-: VectorElement(in)
-, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
-, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
-, m_deltaAngle(ParticleDataFactory::GetIntElement(in, "DeltaAngle"))
-, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude")) {}
-VECircleCluster::VECircleCluster(const nlohmann::ordered_json& in)
-: VectorElement(in)
-, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
-, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
-, m_deltaAngle(ParticleDataFactory::GetIntElement(in, "DeltaAngle"))
-, m_magnitude(ParticleDataFactory::GetRealElement(in, "Magnitude")) {}
-
-VECircleCluster::~VECircleCluster() {}
-
-void VECircleCluster::PutToInternal(athena::io::IStreamWriter& out) const {
-  m_direction->PutTo(out);
-  m_upVector->PutTo(out);
-  m_deltaAngle->PutTo(out);
-  m_magnitude->PutTo(out);
-}
-
-void VECircleCluster::PutToInternal(nlohmann::ordered_json& out) const {
-  m_direction->PutTo(out);
-  m_upVector->PutTo(out);
-  m_deltaAngle->PutTo(out);
-  m_magnitude->PutTo(out);
-}
-
-VECircle::VECircle(athena::io::IStreamReader& in)
-: VectorElement(in)
-, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
-, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
-, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
-, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
-, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
-
-VECircle::VECircle(const nlohmann::ordered_json& in)
-: VectorElement(in)
-, m_direction(ParticleDataFactory::GetVectorElement(in, "Direction"))
-, m_upVector(ParticleDataFactory::GetVectorElement(in, "UpVector"))
-, m_angleConstant(ParticleDataFactory::GetRealElement(in, "AngleConstant"))
-, m_angleLinear(ParticleDataFactory::GetRealElement(in, "AngleLinear"))
-, m_radius(ParticleDataFactory::GetRealElement(in, "Radius")) {}
-
-VECircle::~VECircle() {}
-
-void VECircle::PutToInternal(athena::io::IStreamWriter& out) const {
-  m_direction->PutTo(out);
-  m_upVector->PutTo(out);
-  m_angleConstant->PutTo(out);
-  m_angleLinear->PutTo(out);
-  m_radius->PutTo(out);
-}
-
-void VECircle::PutToInternal(nlohmann::ordered_json& out) const {
-  m_direction->PutTo(out);
-  m_upVector->PutTo(out);
-  m_angleConstant->PutTo(out);
-  m_angleLinear->PutTo(out);
-  m_radius->PutTo(out);
 }
 
 VEMultiply::VEMultiply(athena::io::IStreamReader& in)
@@ -253,18 +276,6 @@ void VEMultiply::PutToInternal(nlohmann::ordered_json& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
-
-VERealToVector::VERealToVector(athena::io::IStreamReader& in)
-: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
-
-VERealToVector::VERealToVector(const nlohmann::ordered_json& in)
-: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
-
-VERealToVector::~VERealToVector() {}
-
-void VERealToVector::PutToInternal(athena::io::IStreamWriter& out) const { m_value->PutTo(out); }
-
-void VERealToVector::PutToInternal(nlohmann::ordered_json& out) const { m_value->PutTo(out); }
 
 VEPulse::VEPulse(athena::io::IStreamReader& in)
 : VectorElement(in)
@@ -295,6 +306,18 @@ void VEPulse::PutToInternal(nlohmann::ordered_json& out) const {
   m_a->PutTo(out);
   m_b->PutTo(out);
 }
+
+VERealToVector::VERealToVector(athena::io::IStreamReader& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
+
+VERealToVector::VERealToVector(const nlohmann::ordered_json& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
+
+VERealToVector::~VERealToVector() {}
+
+void VERealToVector::PutToInternal(athena::io::IStreamWriter& out) const { m_value->PutTo(out); }
+
+void VERealToVector::PutToInternal(nlohmann::ordered_json& out) const { m_value->PutTo(out); }
 
 VESubtract::VESubtract(athena::io::IStreamReader& in)
 : VectorElement(in)

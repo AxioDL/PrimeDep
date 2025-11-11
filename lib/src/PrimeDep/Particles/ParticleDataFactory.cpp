@@ -10,11 +10,22 @@
 #include "PrimeDep/Particles/UVElement.hpp"
 #include "PrimeDep/Particles/VectorElement.hpp"
 
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep::particles::ParticleDataFactory {
 FourCC GetClassID(athena::io::IStreamReader& reader) { return FourCC(reader); }
 std::string GetClassID(const nlohmann::ordered_json& data) { return data.value("Type", std::string()); }
+
+FourCC PeekClassID(athena::io::IStreamReader& reader) {
+  // Store old position so we can restore it after reading the 4cc
+  const auto oldPos = reader.position();
+  const FourCC ret{reader};
+  // Restore the old position, we want to restore it rather than simply seek back 4 byte to prevent drifting back 4
+  // bytes on failed reads
+  reader.seek(oldPos, athena::SeekOrigin::Begin);
+  return ret;
+}
 
 void SetClassID(athena::io::IStreamWriter& writer, const FourCC& type) { type.PutTo(writer); }
 void SetClassID(nlohmann::ordered_json& data, const std::string_view type) { data["Type"] = type; }
@@ -93,6 +104,7 @@ void SetAssetID32Big(athena::io::IStreamWriter& writer, const std::optional<Asse
     SetClassID(writer, FOURCC('NONE'));
     return;
   }
+  SetClassID(writer, FOURCC('CNST'));
   value->PutTo(writer);
 }
 
@@ -107,7 +119,8 @@ void SetAssetID32Big(nlohmann::ordered_json& writer, const std::string_view prop
 ColorElement* GetColorElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   ColorElement* element = nullptr;
 
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case CENone::ClassID():
     element = new CENone(reader);
     break;
@@ -134,6 +147,7 @@ ColorElement* GetColorElement(athena::io::IStreamReader& reader, const std::stri
     element = new CEParticleColor(reader);
     break;
   default:
+    std::cout << "[ColorElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
   if (element) {
@@ -176,7 +190,8 @@ ColorElement* GetColorElement(const nlohmann::ordered_json& reader, const std::s
 IntElement* GetIntElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   IntElement* element = nullptr;
 
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case IENone::ClassID():
     element = new IENone(reader);
     break;
@@ -242,6 +257,7 @@ IntElement* GetIntElement(athena::io::IStreamReader& reader, const std::string_v
     element = new IEGetEmitterTime(reader);
     break;
   default:
+    std::cout << "[IntElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
 
@@ -309,7 +325,8 @@ IntElement* GetIntElement(const nlohmann::ordered_json& reader, const std::strin
 
 RealElement* GetRealElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   RealElement* element = nullptr;
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case RENone::ClassID():
     element = new RENone(reader);
     break;
@@ -398,6 +415,9 @@ RealElement* GetRealElement(athena::io::IStreamReader& reader, const std::string
   case REVectorMagnitude::ClassID():
     element = new REVectorMagnitude(reader);
     break;
+  case REInitialSwitch::ClassID():
+    element = new REInitialSwitch(reader);
+    break;
   case RECompareLessThan::ClassID():
     element = new RECompareLessThan(reader);
     break;
@@ -429,6 +449,7 @@ RealElement* GetRealElement(athena::io::IStreamReader& reader, const std::string
     element = new REGetComponentAlpha(reader);
     break;
   default:
+    std::cout << "[RealElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
   if (element) {
@@ -561,7 +582,8 @@ RealElement* GetRealElement(const nlohmann::ordered_json& reader, const std::str
 
 VectorElement* GetVectorElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   VectorElement* element = nullptr;
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case VENone::ClassID():
     element = new VENone(reader);
     break;
@@ -572,38 +594,41 @@ VectorElement* GetVectorElement(athena::io::IStreamReader& reader, const std::st
   case VEKeyframeEmitter::ClassIDNormal():
     element = new VEKeyframeEmitter(reader);
     break;
-  case VETimeChain::ClassID():
-    element = new VETimeChain(reader);
-    break;
   case VEAngleCone::ClassID():
     element = new VEAngleCone(reader);
     break;
-  case VEAdd::ClassID():
-    element = new VEAdd(reader);
-    break;
-  case VECircleCluster::ClassID():
-    element = new VECircleCluster(reader);
+  case VECone::ClassID():
+    element = new VECone(reader);
     break;
   case VECircle::ClassID():
     element = new VECircle(reader);
     break;
+  case VECircleCluster::ClassID():
+    element = new VECircleCluster(reader);
+    break;
+  case VEAdd::ClassID():
+    element = new VEAdd(reader);
+    break;
   case VEMultiply::ClassID():
     element = new VEMultiply(reader);
     break;
-  case VERealToVector::ClassID():
-    element = new VERealToVector(reader);
+  case VETimeChain::ClassID():
+    element = new VETimeChain(reader);
     break;
   case VEPulse::ClassID():
     element = new VEPulse(reader);
     break;
-  case VEParticleVelocity::ClassID():
-    element = new VEParticleVelocity(reader);
+  case VERealToVector::ClassID():
+    element = new VERealToVector(reader);
+    break;
+  case VEParticleLocation::ClassID():
+    element = new VEParticleLocation(reader);
     break;
   case VEParticleColor::ClassID():
     element = new VEParticleColor(reader);
     break;
-  case VEParticleLocation::ClassID():
-    element = new VEParticleLocation(reader);
+  case VEParticleVelocity::ClassID():
+    element = new VEParticleVelocity(reader);
     break;
   case VEParticleSystemOrientationFront::ClassID():
     element = new VEParticleSystemOrientationFront(reader);
@@ -624,6 +649,7 @@ VectorElement* GetVectorElement(athena::io::IStreamReader& reader, const std::st
     element = new VEColorToVector(reader);
     break;
   default:
+    std::cout << "[VectorElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
   if (element) {
@@ -644,26 +670,30 @@ VectorElement* GetVectorElement(const nlohmann::ordered_json& reader, const std:
     element = new VEConstant(reader);
   } else if (type == VEKeyframeEmitter::ClassName()) {
     element = new VEKeyframeEmitter(reader);
-  } else if (type == VETimeChain::ClassName()) {
-    element = new VETimeChain(reader);
+  } else if (type == VECone::ClassName()) {
+    element = new VECone(reader);
   } else if (type == VEAngleCone::ClassName()) {
     element = new VEAngleCone(reader);
   } else if (type == VECircleCluster::ClassName()) {
     element = new VECircleCluster(reader);
   } else if (type == VECircle::ClassName()) {
     element = new VECircle(reader);
+  } else if (type == VEAdd::ClassName()) {
+    element = new VEAdd(reader);
   } else if (type == VEMultiply::ClassName()) {
     element = new VEMultiply(reader);
-  } else if (type == VERealToVector::ClassName()) {
-    element = new VERealToVector(reader);
+  } else if (type == VETimeChain::ClassName()) {
+    element = new VETimeChain(reader);
   } else if (type == VEPulse::ClassName()) {
     element = new VEPulse(reader);
-  } else if (type == VEParticleVelocity::ClassName()) {
-    element = new VEParticleVelocity(reader);
+  } else if (type == VERealToVector::ClassName()) {
+    element = new VERealToVector(reader);
   } else if (type == VEParticleColor::ClassName()) {
     element = new VEParticleColor(reader);
   } else if (type == VEParticleLocation::ClassName()) {
     element = new VEParticleLocation(reader);
+  } else if (type == VEParticleVelocity::ClassName()) {
+    element = new VEParticleVelocity(reader);
   } else if (type == VEParticleSystemOrientationFront::ClassName()) {
     element = new VEParticleSystemOrientationFront(reader);
   } else if (type == VEParticleSystemOrientationUp::ClassName()) {
@@ -688,11 +718,23 @@ VectorElement* GetVectorElement(const nlohmann::ordered_json& reader, const std:
 EmitterElement* GetEmitterElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   EmitterElement* element = nullptr;
 
-  switch (GetClassID(reader)) {
-  case EESimpleEmitter::ClassID():
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
+  case EENone::ClassID():
+    element = new EENone(reader);
+    break;
+  case EESimpleEmitter::ClassIDNew():
+  case EESimpleEmitter::ClassIDOld():
     element = new EESimpleEmitter(reader);
     break;
+  case VESphere::ClassID():
+    element = new VESphere(reader);
+    break;
+  case VEAngleSphere::ClassID():
+    element = new VEAngleSphere(reader);
+    break;
   default:
+    std::cout << "[EmitterElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
 
@@ -713,6 +755,10 @@ EmitterElement* GetEmitterElement(const nlohmann::ordered_json& reader, const st
   const auto type = GetClassID(reader[propertyName]);
   if (type == EESimpleEmitter::ClassName()) {
     element = new EESimpleEmitter(reader);
+  } else if (type == VESphere::ClassName()) {
+    element = new VESphere(reader);
+  } else if (type == VEAngleSphere::ClassName()) {
+    element = new VEAngleSphere(reader);
   }
   if (element) {
     element->setPropertyName(propertyName);
@@ -724,20 +770,49 @@ EmitterElement* GetEmitterElement(const nlohmann::ordered_json& reader, const st
 ModVectorElement* GetModVectorElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   ModVectorElement* element = nullptr;
 
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case MVENone::ClassID():
     element = new MVENone(reader);
     break;
   case MVEConstant::ClassID():
     element = new MVEConstant(reader);
     break;
+  case MVEGravity::ClassID():
+    element = new MVEGravity(reader);
+    break;
+  case MVEWind::ClassID():
+    element = new MVEWind(reader);
+    break;
+  case MVEExplode::ClassID():
+    element = new MVEExplode(reader);
+    break;
+  case MVETimeChain::ClassID():
+    element = new MVETimeChain(reader);
+    break;
+  case MVEPulse::ClassID():
+    element = new MVEPulse(reader);
+    break;
   case MVEImplosion::ClassID():
     element = new MVEImplosion(reader);
+    break;
+  case MVELinearImplosion::ClassID():
+    element = new MVELinearImplosion(reader);
+    break;
+  case MVEExponentialImplosion::ClassID():
+    element = new MVEExponentialImplosion(reader);
+    break;
+  case MVESwirl::ClassID():
+    element = new MVESwirl(reader);
     break;
   case MVEBounce::ClassID():
     element = new MVEBounce(reader);
     break;
+  case MVESetPosition::ClassID():
+    element = new MVESetPosition(reader);
+    break;
   default:
+    std::cout << "[ModVectorElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
 
@@ -759,10 +834,28 @@ ModVectorElement* GetModVectorElement(const nlohmann::ordered_json& reader, cons
     element = new MVENone(reader);
   } else if (type == MVEConstant::ClassName()) {
     element = new MVEConstant(reader);
+  } else if (type == MVEGravity::ClassName()) {
+    element = new MVEGravity(reader);
+  } else if (type == MVEWind::ClassName()) {
+    element = new MVEWind(reader);
+  } else if (type == MVEExplode::ClassName()) {
+    element = new MVEExplode(reader);
+  } else if (type == MVETimeChain::ClassName()) {
+    element = new MVETimeChain(reader);
+  } else if (type == MVEPulse::ClassName()) {
+    element = new MVEPulse(reader);
   } else if (type == MVEImplosion::ClassName()) {
     element = new MVEImplosion(reader);
+  } else if (type == MVELinearImplosion::ClassName()) {
+    element = new MVELinearImplosion(reader);
+  } else if (type == MVEExponentialImplosion::ClassName()) {
+    element = new MVEExponentialImplosion(reader);
+  } else if (type == MVESwirl::ClassName()) {
+    element = new MVESwirl(reader);
   } else if (type == MVEBounce::ClassName()) {
     element = new MVEBounce(reader);
+  } else if (type == MVESetPosition::ClassName()) {
+    element = new MVESetPosition(reader);
   }
 
   if (element) {
@@ -775,7 +868,8 @@ ModVectorElement* GetModVectorElement(const nlohmann::ordered_json& reader, cons
 UVElement* GetUVElement(athena::io::IStreamReader& reader, const std::string_view propertyName) {
   UVElement* element = nullptr;
 
-  switch (GetClassID(reader)) {
+  const auto clsId = GetClassID(reader);
+  switch (clsId) {
   case UVENone::ClassID():
     element = new UVENone(reader);
     break;
@@ -786,6 +880,7 @@ UVElement* GetUVElement(athena::io::IStreamReader& reader, const std::string_vie
     element = new UVEAnimated32Big(reader);
     break;
   default:
+    std::cout << "[UVElement] Unhandled element type " << clsId.toString() << std::endl;
     break;
   }
 

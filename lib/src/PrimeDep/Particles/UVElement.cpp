@@ -32,6 +32,7 @@ UVEAnimated32Big::UVEAnimated32Big(athena::io::IStreamReader& reader)
 , m_tileHeight(ParticleDataFactory::GetIntElement(reader, "TileHeight"))
 , m_strideWidth(ParticleDataFactory::GetIntElement(reader, "StrideWidth"))
 , m_strideHeight(ParticleDataFactory::GetIntElement(reader, "StrideWidth"))
+, m_cycleFrames(ParticleDataFactory::GetIntElement(reader, "CycleFrames"))
 , m_loop(ParticleDataFactory::GetBool(reader)) {}
 
 UVEAnimated32Big::UVEAnimated32Big(const nlohmann::ordered_json& reader)
@@ -41,6 +42,7 @@ UVEAnimated32Big::UVEAnimated32Big(const nlohmann::ordered_json& reader)
 , m_tileHeight(ParticleDataFactory::GetIntElement(reader, "TileHeight"))
 , m_strideWidth(ParticleDataFactory::GetIntElement(reader, "StrideWidth"))
 , m_strideHeight(ParticleDataFactory::GetIntElement(reader, "StrideWidth"))
+, m_cycleFrames(ParticleDataFactory::GetIntElement(reader, "CycleFrames"))
 , m_loop(ParticleDataFactory::GetBool(reader, "Loop")) {}
 
 UVEAnimated32Big::~UVEAnimated32Big() {}
@@ -51,6 +53,7 @@ void UVEAnimated32Big::PutToInternal(athena::io::IStreamWriter& out) const {
   m_tileHeight->PutTo(out);
   m_strideWidth->PutTo(out);
   m_strideHeight->PutTo(out);
+  m_cycleFrames->PutTo(out);
   ParticleDataFactory::SetBool(out, m_loop);
 }
 
@@ -60,6 +63,7 @@ void UVEAnimated32Big::PutToInternal(nlohmann::ordered_json& out) const {
   m_tileHeight->PutTo(out);
   m_strideWidth->PutTo(out);
   m_strideHeight->PutTo(out);
+  m_cycleFrames->PutTo(out);
   ParticleDataFactory::SetBool(out, "Loop", m_loop);
 }
 }; // namespace axdl::primedep::particles
