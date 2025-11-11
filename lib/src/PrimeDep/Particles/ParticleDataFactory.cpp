@@ -108,29 +108,29 @@ ColorElement* GetColorElement(athena::io::IStreamReader& reader, const std::stri
   ColorElement* element = nullptr;
 
   switch (GetClassID(reader)) {
-  case SBIG('NONE'):
+  case CENone::ClassID():
     element = new CENone(reader);
     break;
-  case SBIG('CNST'):
+  case CEConstant::ClassID():
     element = new CEConstant(reader);
     break;
-  case SBIG('KEYE'):
-  case SBIG('KEYP'):
+  case CEKeyframeEmitter::ClassIDNormal():
+  case CEKeyframeEmitter::ClassIDPercent():
     element = new CEKeyframeEmitter(reader);
     break;
-  case SBIG('CHAN'):
+  case CETimeChain::ClassID():
     element = new CETimeChain(reader);
     break;
-  case SBIG('CFDE'):
+  case CEFadeEnd::ClassID():
     element = new CEFadeEnd(reader);
     break;
-  case SBIG('FADE'):
+  case CEFade::ClassID():
     element = new CEFade(reader);
     break;
-  case SBIG('PULS'):
+  case CEPulse::ClassID():
     element = new CEPulse(reader);
     break;
-  case SBIG('PCOL'):
+  case CEParticleColor::ClassID():
     element = new CEParticleColor(reader);
     break;
   default:
@@ -316,8 +316,8 @@ RealElement* GetRealElement(athena::io::IStreamReader& reader, const std::string
   case REConstant::ClassID():
     element = new REConstant(reader);
     break;
-  case SBIG('KEYE'):
-  case SBIG('KEYP'):
+  case REKeyframeEmitter::ClassIDNormal():
+  case REKeyframeEmitter::ClassIDPercent():
     element = new REKeyframeEmitter(reader);
     break;
   case RETimeScale::ClassID():
@@ -587,6 +587,42 @@ VectorElement* GetVectorElement(athena::io::IStreamReader& reader, const std::st
   case VECircle::ClassID():
     element = new VECircle(reader);
     break;
+  case VEMultiply::ClassID():
+    element = new VEMultiply(reader);
+    break;
+  case VERealToVector::ClassID():
+    element = new VERealToVector(reader);
+    break;
+  case VEPulse::ClassID():
+    element = new VEPulse(reader);
+    break;
+  case VEParticleVelocity::ClassID():
+    element = new VEParticleVelocity(reader);
+    break;
+  case VEParticleColor::ClassID():
+    element = new VEParticleColor(reader);
+    break;
+  case VEParticleLocation::ClassID():
+    element = new VEParticleLocation(reader);
+    break;
+  case VEParticleSystemOrientationFront::ClassID():
+    element = new VEParticleSystemOrientationFront(reader);
+    break;
+  case VEParticleSystemOrientationUp::ClassID():
+    element = new VEParticleSystemOrientationUp(reader);
+    break;
+  case VEParticleSystemOrientationRight::ClassID():
+    element = new VEParticleSystemOrientationRight(reader);
+    break;
+  case VEParticleSystemTranslation::ClassID():
+    element = new VEParticleSystemTranslation(reader);
+    break;
+  case VESubtract::ClassID():
+    element = new VESubtract(reader);
+    break;
+  case VEColorToVector::ClassID():
+    element = new VEColorToVector(reader);
+    break;
   default:
     break;
   }
@@ -602,16 +638,44 @@ VectorElement* GetVectorElement(const nlohmann::ordered_json& reader, const std:
     return nullptr;
   }
   const auto type = GetClassID(reader[propertyName]);
-  if (type == "None"sv) {
+  if (type == VENone::ClassName()) {
     element = new VENone(reader);
-  } else if (type == "Constant"sv) {
+  } else if (type == VEConstant::ClassName()) {
     element = new VEConstant(reader);
-  } else if (type == "KeyframeEmitter"sv) {
+  } else if (type == VEKeyframeEmitter::ClassName()) {
     element = new VEKeyframeEmitter(reader);
-  } else if (type == "TimeChain"sv) {
+  } else if (type == VETimeChain::ClassName()) {
     element = new VETimeChain(reader);
-  } else if (type == "AngleCone"sv) {
+  } else if (type == VEAngleCone::ClassName()) {
     element = new VEAngleCone(reader);
+  } else if (type == VECircleCluster::ClassName()) {
+    element = new VECircleCluster(reader);
+  } else if (type == VECircle::ClassName()) {
+    element = new VECircle(reader);
+  } else if (type == VEMultiply::ClassName()) {
+    element = new VEMultiply(reader);
+  } else if (type == VERealToVector::ClassName()) {
+    element = new VERealToVector(reader);
+  } else if (type == VEPulse::ClassName()) {
+    element = new VEPulse(reader);
+  } else if (type == VEParticleVelocity::ClassName()) {
+    element = new VEParticleVelocity(reader);
+  } else if (type == VEParticleColor::ClassName()) {
+    element = new VEParticleColor(reader);
+  } else if (type == VEParticleLocation::ClassName()) {
+    element = new VEParticleLocation(reader);
+  } else if (type == VEParticleSystemOrientationFront::ClassName()) {
+    element = new VEParticleSystemOrientationFront(reader);
+  } else if (type == VEParticleSystemOrientationUp::ClassName()) {
+    element = new VEParticleSystemOrientationUp(reader);
+  } else if (type == VEParticleSystemOrientationRight::ClassName()) {
+    element = new VEParticleSystemOrientationRight(reader);
+  } else if (type == VEParticleSystemTranslation::ClassName()) {
+    element = new VEParticleSystemTranslation(reader);
+  } else if (type == VESubtract::ClassName()) {
+    element = new VESubtract(reader);
+  } else if (type == VEColorToVector::ClassName()) {
+    element = new VEColorToVector(reader);
   }
 
   if (element) {
@@ -625,7 +689,7 @@ EmitterElement* GetEmitterElement(athena::io::IStreamReader& reader, const std::
   EmitterElement* element = nullptr;
 
   switch (GetClassID(reader)) {
-  case SBIG('SETR'):
+  case EESimpleEmitter::ClassID():
     element = new EESimpleEmitter(reader);
     break;
   default:
@@ -647,7 +711,7 @@ EmitterElement* GetEmitterElement(const nlohmann::ordered_json& reader, const st
   }
 
   const auto type = GetClassID(reader[propertyName]);
-  if (type == "SimpleEmitter"sv) {
+  if (type == EESimpleEmitter::ClassName()) {
     element = new EESimpleEmitter(reader);
   }
   if (element) {
@@ -661,16 +725,16 @@ ModVectorElement* GetModVectorElement(athena::io::IStreamReader& reader, const s
   ModVectorElement* element = nullptr;
 
   switch (GetClassID(reader)) {
-  case SBIG('NONE'):
+  case MVENone::ClassID():
     element = new MVENone(reader);
     break;
-  case SBIG('CNST'):
+  case MVEConstant::ClassID():
     element = new MVEConstant(reader);
     break;
-  case SBIG('IMPL'):
+  case MVEImplosion::ClassID():
     element = new MVEImplosion(reader);
     break;
-  case SBIG('BNCE'):
+  case MVEBounce::ClassID():
     element = new MVEBounce(reader);
     break;
   default:
@@ -691,13 +755,13 @@ ModVectorElement* GetModVectorElement(const nlohmann::ordered_json& reader, cons
     return nullptr;
   }
   const auto type = GetClassID(reader[propertyName]);
-  if (type == "None") {
+  if (type == MVENone::ClassName()) {
     element = new MVENone(reader);
-  } else if (type == "Constant") {
+  } else if (type == MVEConstant::ClassName()) {
     element = new MVEConstant(reader);
-  } else if (type == "Implosion") {
+  } else if (type == MVEImplosion::ClassName()) {
     element = new MVEImplosion(reader);
-  } else if (type == "Bounce") {
+  } else if (type == MVEBounce::ClassName()) {
     element = new MVEBounce(reader);
   }
 

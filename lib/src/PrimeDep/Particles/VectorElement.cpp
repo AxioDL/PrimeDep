@@ -234,4 +234,98 @@ void VECircle::PutToInternal(nlohmann::ordered_json& out) const {
   m_radius->PutTo(out);
 }
 
+VEMultiply::VEMultiply(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+VEMultiply::VEMultiply(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+void VEMultiply::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+void VEMultiply::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+VERealToVector::VERealToVector(athena::io::IStreamReader& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
+
+VERealToVector::VERealToVector(const nlohmann::ordered_json& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetRealElement(in, "Value")) {}
+
+VERealToVector::~VERealToVector() {}
+
+void VERealToVector::PutToInternal(athena::io::IStreamWriter& out) const { m_value->PutTo(out); }
+
+void VERealToVector::PutToInternal(nlohmann::ordered_json& out) const { m_value->PutTo(out); }
+
+VEPulse::VEPulse(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+, m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+VEPulse::VEPulse(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_aDuration(ParticleDataFactory::GetIntElement(in, "DurationA"))
+, m_bDuration(ParticleDataFactory::GetIntElement(in, "DurationB"))
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+VEPulse::~VEPulse() {}
+
+void VEPulse::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_aDuration->PutTo(out);
+  m_bDuration->PutTo(out);
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+void VEPulse::PutToInternal(nlohmann::ordered_json& out) const {
+  m_aDuration->PutTo(out);
+  m_bDuration->PutTo(out);
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+VESubtract::VESubtract(athena::io::IStreamReader& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+VESubtract::VESubtract(const nlohmann::ordered_json& in)
+: VectorElement(in)
+, m_a(ParticleDataFactory::GetVectorElement(in, "A"))
+, m_b(ParticleDataFactory::GetVectorElement(in, "B")) {}
+
+void VESubtract::PutToInternal(athena::io::IStreamWriter& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+void VESubtract::PutToInternal(nlohmann::ordered_json& out) const {
+  m_a->PutTo(out);
+  m_b->PutTo(out);
+}
+
+VEColorToVector::VEColorToVector(athena::io::IStreamReader& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetColorElement(in, "Value")) {}
+
+VEColorToVector::VEColorToVector(const nlohmann::ordered_json& in)
+: VectorElement(in), m_value(ParticleDataFactory::GetColorElement(in, "Value")) {}
+
+VEColorToVector::~VEColorToVector() {}
+
+void VEColorToVector::PutToInternal(athena::io::IStreamWriter& out) const { m_value->PutTo(out); }
+
+void VEColorToVector::PutToInternal(nlohmann::ordered_json& out) const { m_value->PutTo(out); }
+
 } // namespace axdl::primedep::particles

@@ -16,6 +16,7 @@ void UVEConstant32Big::PutToInternal(athena::io::IStreamWriter& out) const {
   if (!m_textureId || *m_textureId == kInvalidAssetId32Big) {
     ParticleDataFactory::SetClassID(out, FOURCC('NONE'));
   } else {
+    ParticleDataFactory::SetClassID(out, FOURCC('CNST'));
     m_textureId->PutTo(out);
   }
 }

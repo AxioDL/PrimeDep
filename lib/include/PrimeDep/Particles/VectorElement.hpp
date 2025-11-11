@@ -6,6 +6,7 @@
 namespace axdl::primedep::particles {
 class RealElement;
 class IntElement;
+class ColorElement;
 
 class VectorElement : public IElement {
 public:
@@ -165,4 +166,173 @@ private:
   std::unique_ptr<RealElement> m_radius;
 };
 
+class VEMultiply final : public VectorElement {
+public:
+  DEFINE_ELEMENT('MULT', "Multiply");
+  explicit VEMultiply(athena::io::IStreamReader& in);
+  explicit VEMultiply(const nlohmann::ordered_json& in);
+
+  bool isValid() const override { return m_a && m_b; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+
+  std::unique_ptr<VectorElement> m_a;
+  std::unique_ptr<VectorElement> m_b;
+};
+
+class VERealToVector final : public VectorElement {
+public:
+  DEFINE_ELEMENT('RTOV', "RealToVector");
+  explicit VERealToVector(athena::io::IStreamReader& in);
+  explicit VERealToVector(const nlohmann::ordered_json& in);
+  ~VERealToVector() override;
+
+  bool isValid() const override { return !!m_value; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+  std::unique_ptr<RealElement> m_value;
+};
+
+class VEPulse final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PULS', "Pulse");
+  explicit VEPulse(athena::io::IStreamReader& in);
+  explicit VEPulse(const nlohmann::ordered_json& in);
+  ~VEPulse() override;
+
+  bool isValid() const override { return m_aDuration && m_bDuration && m_a && m_b; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+  std::unique_ptr<IntElement> m_aDuration;
+  std::unique_ptr<IntElement> m_bDuration;
+  std::unique_ptr<VectorElement> m_a;
+  std::unique_ptr<VectorElement> m_b;
+};
+
+class VEParticleVelocity final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PVEL', "ParticleVelocity");
+  explicit VEParticleVelocity(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleVelocity(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleColor final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PCOL', "ParticleColor");
+  explicit VEParticleColor(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleColor(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleLocation final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PLOC', "ParticleLocation");
+  explicit VEParticleLocation(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleLocation(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleSystemOrientationFront final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PSOF', "ParticleSystemOrientationFront");
+  explicit VEParticleSystemOrientationFront(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleSystemOrientationFront(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleSystemOrientationUp final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PSOU', "ParticleSystemOrientationUp");
+  explicit VEParticleSystemOrientationUp(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleSystemOrientationUp(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleSystemOrientationRight final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PSOR', "ParticleSystemOrientationRight");
+  explicit VEParticleSystemOrientationRight(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleSystemOrientationRight(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VEParticleSystemTranslation final : public VectorElement {
+public:
+  DEFINE_ELEMENT('PSTR', "ParticleSystemTranslation");
+  explicit VEParticleSystemTranslation(athena::io::IStreamReader& in) : VectorElement(in) {}
+  explicit VEParticleSystemTranslation(const nlohmann::ordered_json& in) : VectorElement(in) {}
+
+  bool isValid() const override { return true; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override {}
+  void PutToInternal(nlohmann::ordered_json& out) const override {}
+};
+
+class VESubtract final : public VectorElement {
+public:
+  DEFINE_ELEMENT('SUB_', "Subtract");
+  explicit VESubtract(athena::io::IStreamReader& in);
+  explicit VESubtract(const nlohmann::ordered_json& in);
+
+  bool isValid() const override { return m_a && m_b; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+
+  std::unique_ptr<VectorElement> m_a;
+  std::unique_ptr<VectorElement> m_b;
+};
+
+class VEColorToVector final : public VectorElement {
+public:
+  DEFINE_ELEMENT('CTVC', "ColorToVector");
+  explicit VEColorToVector(athena::io::IStreamReader& in);
+  explicit VEColorToVector(const nlohmann::ordered_json& in);
+  ~VEColorToVector() override;
+  bool isValid() const override { return !!m_value; }
+
+private:
+  void PutToInternal(athena::io::IStreamWriter& out) const override;
+  void PutToInternal(nlohmann::ordered_json& out) const override;
+  std::unique_ptr<ColorElement> m_value;
+};
 } // namespace axdl::primedep::particles

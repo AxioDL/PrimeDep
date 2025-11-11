@@ -48,7 +48,7 @@ private:
   particles::RealElementProperty m_lineLength{FOURCC('LENG'), "LineLength", this};
   particles::RealElementProperty m_lineWidth{FOURCC('WIDT'), "LineWidth", this};
   particles::IntElementProperty m_maxParticles{FOURCC('MAXP'), "MaxParticles", this};
-  particles::ColorElementProperty m_particleColor{FOURCC('PCOL'), "ParticleColor", this};
+  particles::ColorElementProperty m_particleColor{FOURCC('COLR'), "ParticleColor", this};
   particles::RealElementProperty m_generationRate{FOURCC('GRTE'), "GenerationRate", this};
   particles::IntElementProperty m_particleLifetime{FOURCC('LTME'), "ParticleLifetime", this};
   particles::EmitterElementProperty m_emitter{FOURCC('EMTR'), "Emitter", this};
@@ -60,26 +60,26 @@ private:
   static constexpr bool kDefaultAdditiveAlpha = false;
   particles::BoolElementProperty m_additiveAlpha{kDefaultAdditiveAlpha, FOURCC('AAPH'), "AdditiveAlpha", this};
   static constexpr bool kDefaultEnableZBuffer = false;
-  particles::BoolElementProperty m_enableZBuffer{kDefaultAdditiveAlpha, FOURCC('ZBUF'), "EnableZBuffer", this};
+  particles::BoolElementProperty m_enableZBuffer{kDefaultEnableZBuffer, FOURCC('ZBUF'), "EnableZBuffer", this};
   static constexpr bool kDefaultSort = false;
-  particles::BoolElementProperty m_sort{kDefaultAdditiveAlpha, FOURCC('SORT'), "EnableSort", this};
+  particles::BoolElementProperty m_sort{kDefaultSort, FOURCC('SORT'), "EnableSort", this};
   static constexpr bool kDefaultEnableLighting = false;
-  particles::BoolElementProperty m_enableLighting{kDefaultAdditiveAlpha, FOURCC('LIT_'), "EnableLighting", this};
+  particles::BoolElementProperty m_enableLighting{kDefaultEnableLighting, FOURCC('LIT_'), "EnableLighting", this};
   static constexpr bool kDefaultOrientToOrigin = false;
-  particles::BoolElementProperty m_orientToOrigin{kDefaultAdditiveAlpha, FOURCC('ORNT'), "OrientToOrigin", this};
+  particles::BoolElementProperty m_orientToOrigin{kDefaultOrientToOrigin, FOURCC('ORNT'), "OrientToOrigin", this};
   static constexpr bool kDefaultRightVectorScaledOnParticle = false;
-  particles::BoolElementProperty m_rightVectorScaledOnParticle{kDefaultAdditiveAlpha, FOURCC('RSOP'),
+  particles::BoolElementProperty m_rightVectorScaledOnParticle{kDefaultRightVectorScaledOnParticle, FOURCC('RSOP'),
                                                                "RightVectorScaledOnParticle", this};
   static constexpr bool kDefaultMotionBlur = false;
-  particles::BoolElementProperty m_motionBlur{kDefaultAdditiveAlpha, FOURCC('MBLR'), "MotionBlur", this};
+  particles::BoolElementProperty m_motionBlur{kDefaultMotionBlur, FOURCC('MBLR'), "MotionBlur", this};
   static constexpr bool kDefaultParticleModelAdditiveAlpha = false;
-  particles::BoolElementProperty m_particleModelAdditiveAlpha{kDefaultAdditiveAlpha, FOURCC('PMAB'),
+  particles::BoolElementProperty m_particleModelAdditiveAlpha{kDefaultParticleModelAdditiveAlpha, FOURCC('PMAB'),
                                                               "ParticleModelAdditiveAlpha", this};
   static constexpr bool kDefaultParticleModelUnorientedSquare = false;
-  particles::BoolElementProperty m_particleModelUnorientedSquare{kDefaultAdditiveAlpha, FOURCC('PMUS'),
+  particles::BoolElementProperty m_particleModelUnorientedSquare{kDefaultParticleModelUnorientedSquare, FOURCC('PMUS'),
                                                                  "ParticleModelUnorientedSquare", this};
   static constexpr bool kDefaultParticleModelOrientation = true;
-  particles::BoolElementProperty m_particleModelOrientation{kDefaultAdditiveAlpha, FOURCC('PMOO'),
+  particles::BoolElementProperty m_particleModelOrientation{kDefaultParticleModelOrientation, FOURCC('PMOO'),
                                                             "ParticleModelOrientation", this};
   static constexpr bool kDefaultVectorMod1Local = false;
   particles::BoolElementProperty m_vectorMod1Local{kDefaultVectorMod1Local, FOURCC('VMD1'), "VectorMod1Local", this};
@@ -100,7 +100,7 @@ private:
   particles::UVElementProperty m_indirectTexture{FOURCC('TIND'), "IndirectTexture", this};
   particles::AssetID32BigElementProperty m_particleModel{Model::ResourceType(), FOURCC('PMDL'), "ParticleModel", this};
   particles::VectorElementProperty m_particleModelOffset{FOURCC('PMOP'), "ParticleModelOffset", this};
-  particles::VectorElementProperty m_particleModelRotation{FOURCC('PMRT'), "ParticleModelOrientation", this};
+  particles::VectorElementProperty m_particleModelRotation{FOURCC('PMRT'), "ParticleModelRotation", this};
   particles::VectorElementProperty m_particleModelScale{FOURCC('PMSC'), "ParticleModelScale", this};
   particles::ColorElementProperty m_particleModelColor{FOURCC('PMCL'), "ParticleModelColor", this};
   particles::ModVectorElementProperty m_particleVelocity1{FOURCC('VEL1'), "ParticleVelocity1", this};
@@ -143,6 +143,18 @@ private:
   particles::RealElementProperty m_accessParameter6{FOURCC('ADV6'), "AccessParameter6", this};
   particles::RealElementProperty m_accessParameter7{FOURCC('ADV7'), "AccessParameter7", this};
   particles::RealElementProperty m_accessParameter8{FOURCC('ADV8'), "AccessParameter8", this};
+
+  // Old unused properties, for compatibility’s sake
+  particles::VectorElementProperty m_initialLocation{FOURCC('ILOC'), "OldInitialLocation", this};
+  particles::VectorElementProperty m_initialVector{FOURCC('IVEC'), "OldInitialVector", this};
+  particles::VectorElementProperty m_particleSystemInitialVelocity{FOURCC('PSIV'), "OldParticleSystemInitialVelocity",
+                                                                   this};
+  particles::ModVectorElementProperty m_particleSystemVelocityMod{FOURCC('PSVM'), "OldParticleSystemVelocityMod", this};
+  particles::VectorElementProperty m_particleSystemOrientationVelocity{FOURCC('PSOV'),
+                                                                       "OldParticleSystemOrientationVelocity", this};
+
+  // Load order metadata to produce byte matching files, TODO: Make this part of the properties rather than track
+  // directly
   std::vector<particles::IParticleProperty*> m_loadOrder;
 };
 } // namespace axdl::primedep::MetroidPrime
