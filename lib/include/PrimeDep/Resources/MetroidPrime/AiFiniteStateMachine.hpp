@@ -22,6 +22,7 @@ public:
   private:
     std::string m_name;
     float m_parameter{};
+    bool m_isNot{};
   };
 
   class Transition {

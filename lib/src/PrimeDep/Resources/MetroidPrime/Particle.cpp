@@ -57,7 +57,7 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
   }
   particles::ParticleDataFactory::SetClassID(writer, FOURCC('_END'));
 
-  return false && !writer.hasError();
+  return !writer.hasError();
 }
 
 void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {

@@ -5,20 +5,27 @@
 
 namespace axdl::primedep::MetroidPrime {
 AiFiniteStateMachine::Trigger::Trigger(athena::io::IStreamReader& in)
-: m_name(in.readString()), m_parameter(in.readFloatBig()) {}
+: m_name(in.readString()), m_parameter(in.readFloatBig()) {
+  if (!m_name.empty() && m_name[0] == '!') {
+    m_name.erase(m_name.begin());
+    m_isNot = true;
+  }
+}
 void AiFiniteStateMachine::Trigger::PutTo(athena::io::IStreamWriter& out) const {
-  out.writeString(m_name);
+  out.writeString(m_isNot ? "!" + m_name : m_name);
   out.writeFloatBig(m_parameter);
 }
 
 AiFiniteStateMachine::Trigger::Trigger(const nlohmann::ordered_json& in) {
   m_name = in.value("Name", "");
   m_parameter = in.value("Parameter", 0.f);
+  m_isNot = in.value("IsNot", false);
 }
 
 void AiFiniteStateMachine::Trigger::PutTo(nlohmann::ordered_json& out) const {
   out["Name"] = m_name;
   out["Parameter"] = m_parameter;
+  out["IsNot"] = m_isNot;
 }
 
 AiFiniteStateMachine::Transition::Transition(athena::io::IStreamReader& in) {
