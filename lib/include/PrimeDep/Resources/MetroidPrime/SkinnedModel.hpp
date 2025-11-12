@@ -3,29 +3,29 @@
 #include "PrimeDep/Resources/MetroidPrime/Model.hpp"
 #include "PrimeDep/Resources/MetroidPrime/SkinRules.hpp"
 
-namespace axdl::primedep::MetroidPrime {
+namespace axdl::primedep::animations {
+template <class AssetIdType>
 class SkinnedModel {
 public:
   struct ModelPair {
-    AssetId32Big modelId;
-    AssetId32Big skinId;
+    AssetIdType modelId;
+    AssetIdType skinId;
   };
-  explicit SkinnedModel(athena::io::IStreamReader& in);
-  explicit SkinnedModel(const nlohmann::ordered_json& in);
 
-  void PutTo(athena::io::IStreamWriter& out) const;
-  void PutTo(nlohmann::ordered_json& out) const;
+  const AssetIdType& modelId() const { return m_baseModel.modelId; }
+  void setModelId(const AssetIdType& modelId) { m_baseModel.modelId = modelId; }
 
-  const AssetId32Big& modelId() const { return m_baseModel.modelId; }
-  void setModelId(const AssetId32Big& modelId) { m_baseModel.modelId = modelId; }
+  const AssetIdType& skinId() const { return m_baseModel.skinId; }
+  void setSkinId(const AssetIdType& skinId) { m_baseModel.skinId = skinId; }
 
-  const AssetId32Big& skinId() const { return m_baseModel.skinId; }
-  void setSkinId(const AssetId32Big& skinId) { m_baseModel.skinId = skinId; }
+  const AssetIdType& rigId() const { return m_rigId; }
+  void setRigId(const AssetIdType& rigId) { m_rigId = rigId; }
 
-  const AssetId32Big& rigId() const { return m_rigId; }
-  void setRigId(const AssetId32Big& rigId) { m_rigId = rigId; }
+  void addModel(const AssetIdType& modelId, const AssetIdType& skinId) { m_models.emplace_back(modelId, skinId); }
 
-  void addModel(const AssetId32Big& modelId, const AssetId32Big& skinId) { m_modelIds.emplace_back(modelId, skinId); }
+  void addOverlay(const FourCC type, const AssetIdType& modelId, const AssetIdType& skinId) {
+    m_overlays[type] = {modelId, skinId};
+  }
 
   bool cookModels(std::string_view path) { return false; }
 
@@ -33,7 +33,10 @@ public:
 
 private:
   ModelPair m_baseModel;
-  AssetId32Big m_rigId;
-  std::vector<ModelPair> m_modelIds;
+  AssetIdType m_rigId;
+  std::vector<ModelPair> m_models;
+  std::map<FourCC, ModelPair> m_overlays;
 };
-} // namespace axdl::primedep::MetroidPrime
+
+using SkinnedModel32Big = SkinnedModel<AssetId32Big>;
+} // namespace axdl::primedep::animations

@@ -35,6 +35,12 @@ FetchContent_Declare(
   GIT_TAG 1.0.1
 )
 
+FetchContent_Declare(
+  tga
+  GIT_REPOSITORY https://github.com/aseprite/tga.git
+  GIT_TAG main
+)
+
 set(JSON_ImplicitConversions OFF)
 FetchContent_MakeAvailable(
   athena
@@ -43,6 +49,7 @@ FetchContent_MakeAvailable(
   tinygltf
   argparse
   glm
+  tga
 )
 
 find_package(PNG REQUIRED)

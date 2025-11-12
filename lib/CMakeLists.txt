@@ -60,14 +60,13 @@ add_library(
   src/PrimeDep/Particles/EmitterElement.cpp
   src/PrimeDep/Particles/VectorElement.cpp
   src/PrimeDep/Particles/IElement.cpp
-  include/PrimeDep/Particles/ParticleProperty.hpp
   src/PrimeDep/Particles/ParticleProperty.cpp
   src/PrimeDep/Particles/UVElement.cpp
 )
 
-target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR})
+target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR} ${tga_SOURCE_DIR})
 target_link_libraries(PrimeDep PUBLIC athena-core nlohmann_json::nlohmann_json
-  magic_enum tinygltf PNG::PNG glm::glm)
+  magic_enum tinygltf PNG::PNG glm::glm tga-lib)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(PrimeDep PRIVATE -Wno-multichar

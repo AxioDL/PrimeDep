@@ -11,6 +11,7 @@ namespace axdl::primedep::MetroidPrime {
 class MappableObject {
 public:
   enum class EMappableObjectType : uint32_t {
+    Invalid = UINT32_MAX,
     BlueDoor = 0,
     ShieldDoor = 1,
     IceDoor = 2,
@@ -35,8 +36,9 @@ public:
     SaveStation = 34,
     MissileStation = 37
   };
-  enum class EVisMode {
-    Always,
+  enum class EVisMode : uint32_t {
+    Invalid = UINT32_MAX,
+    Always = 0,
     MapStationOrVisit,
     Visit,
     Never,
@@ -44,9 +46,10 @@ public:
   };
 
   explicit MappableObject(athena::io::IStreamReader& in);
+  explicit MappableObject(const nlohmann::ordered_json& in);
 
-
-  void PutTo(nlohmann::ordered_json& j) const;
+  void PutTo(athena::io::IStreamWriter& out);
+  void PutTo(nlohmann::ordered_json& out) const;
 
 private:
   EMappableObjectType m_type;

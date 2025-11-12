@@ -88,6 +88,7 @@ public:
 
 private:
   uint32_t m_version;
+  uint32_t m_unused;
   EVisMode m_visMode{};
   AABox m_bounds;
   std::vector<MappableObject> m_mappableObjects;

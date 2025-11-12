@@ -1,8 +1,9 @@
 #include "PrimeDep/ResourcePool.hpp"
 
-#include "../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
 #include "PrimeDep/ResourceNameDatabase.hpp"
-#include "json.hpp"
+
+#include <athena/FileReader.hpp>
+#include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
 ResourceDescriptor32Big ResourcePool32Big::resourceDescriptorByName(std::string_view name) {

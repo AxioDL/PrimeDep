@@ -36,7 +36,7 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
   }
 
   m_version = in.readUint32Big();
-  in.readUint32Big();
+  m_unused = in.readUint32Big();
   m_visMode = static_cast<EVisMode>(in.readUint32Big());
   m_bounds = AABox(in);
   auto mappableObjectCount = in.readUint32Big();
@@ -71,7 +71,9 @@ MapArea::MapArea(const char* ptr, const std::size_t size) {
 static glm::mat4 zUpToYUpMatrix() {
   return glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 }
-static glm::mat4 yUpToZUpMatrix() { return glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)); }
+static glm::mat4 yUpToZUpMatrix() {
+  return glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+}
 
 bool MapArea::writeUncooked(std::string_view path) const {
   auto p = rawPath(path);
@@ -97,6 +99,9 @@ bool MapArea::writeUncooked(std::string_view path) const {
     vertices.emplace_back(vec.x, vec.y, vec.z);
   }
   tinygltf::Model model;
+  model.asset.generator = "AxioDL PrimeDep MapArea uncooker";
+  model.asset.copyright = "AxioDL Team 2025";
+
   auto& vertexBuffer = model.buffers.emplace_back();
   vertexBuffer.data.resize(m_vertices.size() * sizeof(Vector3f));
   memcpy(vertexBuffer.data.data(), vertices.data(), vertices.size() * sizeof(Vector3f));
@@ -155,28 +160,19 @@ bool MapArea::writeUncooked(std::string_view path) const {
       prim.indices = model.accessors.size() - 1;
       prim.attributes["POSITION"] = 0;
 
-      switch (primitive.m_type) {
-      case EPrimitiveType::TriangleFan:
-      case EPrimitiveType::TriangleStrip:
-      case EPrimitiveType::Triangles: {
-        if (primitive.m_type == EPrimitiveType::TriangleStrip) {
-          prim.mode = TINYGLTF_MODE_TRIANGLE_STRIP;
-        } else if (primitive.m_type == EPrimitiveType::TriangleFan) {
-          prim.mode = TINYGLTF_MODE_TRIANGLE_FAN;
-        } else if (primitive.m_type == EPrimitiveType::Triangles) {
-          prim.mode = TINYGLTF_MODE_TRIANGLES;
-        } else if (primitive.m_type == EPrimitiveType::LineStrip) {
-          prim.mode = TINYGLTF_MODE_LINE_STRIP;
-        } else if (primitive.m_type == EPrimitiveType::Lines) {
-          prim.mode = TINYGLTF_MODE_LINE;
-        }
-        for (const auto id : primitive.m_indices) {
-          indices.data.push_back(id);
-        }
-        break;
-      default:
-        break;
+      if (primitive.m_type == EPrimitiveType::TriangleStrip) {
+        prim.mode = TINYGLTF_MODE_TRIANGLE_STRIP;
+      } else if (primitive.m_type == EPrimitiveType::TriangleFan) {
+        prim.mode = TINYGLTF_MODE_TRIANGLE_FAN;
+      } else if (primitive.m_type == EPrimitiveType::Triangles) {
+        prim.mode = TINYGLTF_MODE_TRIANGLES;
+      } else if (primitive.m_type == EPrimitiveType::LineStrip) {
+        prim.mode = TINYGLTF_MODE_LINE_STRIP;
+      } else if (primitive.m_type == EPrimitiveType::Lines) {
+        prim.mode = TINYGLTF_MODE_LINE;
       }
+      for (const auto id : primitive.m_indices) {
+        indices.data.push_back(id);
       }
     }
   }
@@ -219,13 +215,10 @@ bool MapArea::writeUncooked(std::string_view path) const {
   scene.nodes.push_back(0);
   scene.nodes.push_back(1);
   scene.name = modelP.filename().replace_extension().generic_string();
-  model.asset.generator = "AxioDL PrimeDep MapArea uncooker";
-  model.asset.copyright = "AxioDL Team 2025";
 
   tinygltf::TinyGLTF gltf;
-  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, true);
+  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, false, true, false);
 
-  // TODO: Export model data
   athena::io::FileWriter writer(p.generic_string());
   const auto js = j.dump(4) + "\n";
   writer.writeString(js, js.length());

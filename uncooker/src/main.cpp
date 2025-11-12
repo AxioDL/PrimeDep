@@ -1,4 +1,6 @@
 
+#include "PrimeDep/ModelSkinPool.hpp"
+
 #include <PrimeDep/ResourceFactory.hpp>
 #include <PrimeDep/ResourceNameDatabase.hpp>
 #include <PrimeDep/ResourcePool.hpp>
@@ -178,6 +180,16 @@ int main(int argc, char** argv) {
   auto assets = pool.tagsByType(axdl::primedep::kInvalidFourCC);
   std::ranges::sort(assets.begin(), assets.end(), std::less<>());
   auto uniqueTags = std::set(assets.begin(), assets.end());
+  std::cout << "Gathering models and skins..." << std::endl;
+  const auto& models = pool.tagsByType(axdl::primedep::MetroidPrime::Model::ResourceType());
+  const auto& skins = pool.tagsByType(axdl::primedep::MetroidPrime::SkinRules::ResourceType());
+  for (const auto& model : models) {
+    axdl::primedep::ModelSkinPool32Big::instance().addModel(model.id());
+  }
+  for (const auto& skin : skins) {
+    axdl::primedep::ModelSkinPool32Big::instance().addSkin(skin.id());
+  }
+  std::cout << "done!" << std::endl;
 
   printf("\n\n");
   for (int i = 0; const auto& tag : uniqueTags) {

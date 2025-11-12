@@ -5,6 +5,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include <png.h>
+#include <tga.h>
 
 namespace axdl::primedep ::MetroidPrime {
 
@@ -128,50 +129,55 @@ bool Texture::writeCooked(const std::string_view path) const {
 }
 
 bool Texture::writeUncookedImageIndexed(std::string_view path) const {
-  return false;
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
   if (!png) {
     return false;
   }
-  FILE* fp = fopen(path.data(), "wb");
 
-  png_infop info = png_create_info_struct(png);
-  png_init_io(png, fp);
-  png_set_compression_level(png, 0);
+  std::filesystem::path p(path);
+  p.replace_extension(".tga");
+  FILE* fp = fopen(p.generic_string().c_str(), "wb");
 
   auto tlut = convert_tlut(
       RetroFormatToGXFormat(m_palette->format()), std::max(m_palette->width(), m_palette->height()),
       ArrayRef(reinterpret_cast<uint8_t*>(m_palette->entries()), m_palette->entryCount() * sizeof(uint16_t)));
-
-  png_set_IHDR(png, info, m_width, m_height, 8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
-               PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-  png_set_PLTE(png, info, reinterpret_cast<const png_const_colorp>(tlut.data()), m_palette->entryCount());
-  png_write_info(png, info);
   auto tex =
       convert_texture(RetroFormatToGXFormat(m_format), m_width, m_height, m_numMips,
                       ArrayRef(m_data.get(), GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format),
                                                                 m_numMips > 0, m_numMips)));
 
-  int stride = m_width;
+  tga::Header header{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  header.idLength = 0;
+  header.colormapType = 1;
+  header.imageType = tga::UncompressedIndexed;
+  header.colormapLength = m_palette->entryCount();
+  header.colormapDepth = m_format == ETexelFormat::C4 ? 24 : 32;
+  header.bitsPerPixel = 8;
+  header.colormap = tga::Colormap(m_palette->entryCount());
+  header.width = m_width;
+  header.height = m_height;
 
-  for (int y = 0; y < m_height; y++) {
-    png_write_row(png, &tex.data()[(m_height - 1 - y) * stride]);
+  for (int i = 0; i < tlut.size(); i += 4) {
+    header.colormap[i / 4] = *reinterpret_cast<uint32_t*>(&tlut.data()[i]);
   }
 
-  png_write_end(png, nullptr);
-  png_write_flush(png);
-  png_destroy_write_struct(&png, &info);
+  std::vector<uint8_t> buffer;
+  for (int i = 0; i < tex.size(); i += 2) {
+    buffer.push_back(tex.data()[i]);
+  }
+
+  tga::StdioFileInterface file(fp);
+  tga::Encoder encoder(&file);
+  encoder.writeHeader(header);
+  tga::Image image;
+  image.bytesPerPixel = 1;
+  image.pixels = buffer.data();
+  image.rowstride = m_width;
+  encoder.writeImage(header, image);
+  encoder.writeFooter();
+
   fflush(fp);
   fclose(fp);
-
-  static bool wrotePalette = false;
-  if (!wrotePalette && path.contains("deface13b_tex")) {
-    athena::io::FileWriter out("test.palette.bin");
-    athena::io::FileWriter index("test.index.bin");
-    out.writeUBytes(tlut.data(), tlut.size());
-    index.writeUBytes(tex.data(), tex.size());
-    wrotePalette = true;
-  }
 
   return true;
 }
@@ -203,7 +209,7 @@ bool Texture::writeUncookedImage(const std::string_view path) const {
                       ArrayRef(m_data.get(), GXGetTexBufferSize(m_width, m_height, RetroFormatToGXFormat(m_format),
                                                                 m_numMips > 0, m_numMips)));
 
-  int stride = m_width;
+  uint32_t stride = m_width;
   if (m_format != ETexelFormat::I4 && m_format != ETexelFormat::I8) {
     stride *= 4;
   }
@@ -220,6 +226,28 @@ bool Texture::writeUncookedImage(const std::string_view path) const {
   fflush(fp);
   fclose(fp);
 
+  std::filesystem::path targaPath(path);
+  targaPath.replace_extension(".tga");
+  FILE* f = fopen(targaPath.generic_string().c_str(), "wb");
+  tga::StdioFileInterface file(f);
+  tga::Encoder encoder(&file);
+  uint8_t imageType = 2;
+  if (m_format == ETexelFormat::I4 || m_format == ETexelFormat::I8) {
+    imageType = 3;
+  }
+  const tga::Header header{
+      0, 0, imageType, 0, 0, 0, 0, m_height, m_width, m_height, static_cast<uint8_t>(imageType == 3 ? 8 : 32), 0,
+  };
+  encoder.writeHeader(header);
+  const tga::Image image{
+      tex.data(),
+      static_cast<uint8_t>(header.bytesPerPixel()),
+      stride,
+  };
+  encoder.writeImage(header, image);
+  encoder.writeFooter();
+  fflush(f);
+  fclose(f);
   return true;
 }
 bool Texture::writeUncooked(const std::string_view path) const {

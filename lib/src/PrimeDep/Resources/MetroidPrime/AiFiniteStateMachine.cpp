@@ -1,7 +1,7 @@
 #include "PrimeDep/Resources/MetroidPrime/AiFiniteStateMachine.hpp"
 
-#include "../../../../../cmake-build-release/_deps/athena-src/include/athena/FileReader.hpp"
-#include "athena/MemoryReader.hpp"
+#include <athena/FileReader.hpp>
+#include <athena/MemoryReader.hpp>
 
 namespace axdl::primedep::MetroidPrime {
 AiFiniteStateMachine::Trigger::Trigger(athena::io::IStreamReader& in)

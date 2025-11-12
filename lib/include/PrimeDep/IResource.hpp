@@ -101,7 +101,6 @@ public:
   [[nodiscard]] constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
 
   [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
-    const auto rp = rawPath(path).generic_string();
     if (m_pathKnown) {
       return {
           {"ResourceType", typeCode().toString()},
