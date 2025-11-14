@@ -13,6 +13,8 @@ struct EditorId {
   [[nodiscard]] bool operator<(const EditorId& other) const { return (id & 0x3ffffff) < (other.id & 0x3ffffff); }
   [[nodiscard]] bool operator==(const EditorId& other) const { return (id & 0x3ffffff) == (other.id & 0x3ffffff); }
   [[nodiscard]] bool operator!=(const EditorId& other) const { return !(*this == (other)); }
+
+  explicit constexpr operator uint32_t() const noexcept { return id; }
 };
 
 static constexpr EditorId kInvalidEditorId;
