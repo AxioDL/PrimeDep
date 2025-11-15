@@ -95,6 +95,7 @@ constexpr std::array kCompressionInfoMap = {
 void writeResource(athena::io::MemoryCopyWriter& resourceBuffer,
                    std::vector<axdl::primedep::ResourceDescriptor32Big>& descriptors, const axdl::primedep::FourCC type,
                    const std::shared_ptr<axdl::primedep::IResource>& res, const std::filesystem::path& cookedPath) {
+  std::cout << "Writing resource " << cookedPath << " to pak" << std::endl;
   std::unique_ptr<uint8_t[]> buffer;
   athena::io::FileReader reader(cookedPath.generic_string());
   uint64_t size = reader.length();
@@ -105,12 +106,16 @@ void writeResource(athena::io::MemoryCopyWriter& resourceBuffer,
   const auto compInfo =
       std::ranges::find_if(kCompressionInfoMap, [&type](const CompressionInfo& info) { return type == info.type; });
   if (compInfo != kCompressionInfoMap.end() && compInfo->compress) {
+    std::cout << "Compressing..." << std::endl;
     auto compBuffer = std::make_unique<uint8_t[]>(size);
     const auto compLen = athena::io::Compression::compressZlib(buffer.get(), size, compBuffer.get(), size);
     if (compLen > 0 && (compLen >= 0x400 || !compInfo->minium1k)) {
       buffer = std::move(compBuffer);
       size = compLen;
       compressed = true;
+      std::cout << "Success!" << std::endl;
+    } else {
+      std::cout << "Failed to compress, storing full file" << std::endl;
     }
   }
 
@@ -163,7 +168,7 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
       std::cerr << "NamedResource entry malformed: missing `Name` value" << std::endl;
       return false;
     }
-    std::string repPath;
+    std::string resPath;
     axdl::primedep::FourCC type;
     if (!namedResource.contains("Ref")) {
       type = axdl::primedep::FourCC(namedResource.value("Type", axdl::primedep::kInvalidFourCC.toString()));
@@ -172,25 +177,25 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
         return false;
       }
 
-      repPath = namedResource.value("File", "");
-      if (repPath.empty()) {
+      resPath = namedResource.value("File", "");
+      if (resPath.empty()) {
         std::cerr << "Invalid named resource definition `" << name << "` missing rep path" << std::endl;
         return false;
       }
     } else {
       const auto tag = axdl::primedep::ObjectTag32Big::Load(namedResource["Ref"]);
-      repPath = tag.repPath();
+      resPath = tag.repPath();
       type = tag.type;
     }
 
-    const auto res = pool.ingestResourceByRepPath(repPath, type);
+    const auto res = pool.ingestResourceByRepPath(resPath, type);
     if (!res) {
       std::cerr << "Unable to load named resource `" << name << "` not adding..." << std::endl;
       continue;
     }
     pakFile.addNamedResource(name, type, res->assetId32Big());
 
-    const auto cookedPath = pool.filePathFromRepPath(pool.cookedRepPathFromRawRepPath(repPath, type));
+    const auto cookedPath = pool.filePathFromRepPath(pool.cookedRepPathFromRawRepPath(resPath, type));
     if (!exists(cookedPath)) {
       std::cout << "Cooking asset for " << name << std::endl;
       if (!res->writeCooked(cookedPath.generic_string())) {

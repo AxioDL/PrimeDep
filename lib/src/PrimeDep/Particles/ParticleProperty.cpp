@@ -49,7 +49,12 @@ void BoolElementProperty::PutTo(athena::io::IStreamWriter& writer) const {
   }
 }
 
-void BoolElementProperty::PutTo(nlohmann::ordered_json& writer) const { writer[propertyName()] = m_value; }
+void BoolElementProperty::PutTo(nlohmann::ordered_json& writer) const {
+  if (!m_value) {
+    return;
+  }
+  writer[propertyName()] = m_value;
+}
 
 void AssetID32BigElementProperty::loadValue(athena::io::IStreamReader& reader) {
   // We don't need to worry about the class ID because the reader already takes care if it

@@ -136,8 +136,5 @@ private:
   particles::VectorElementProperty m_particleSystemInitialVelocity;
   particles::ModVectorElementProperty m_particleSystemVelocityMod;
   particles::VectorElementProperty m_particleSystemOrientationVelocity;
-
-  std::unique_ptr<const char> m_data;
-  std::size_t m_dataSize;
 };
 } // namespace axdl::primedep::MetroidPrime

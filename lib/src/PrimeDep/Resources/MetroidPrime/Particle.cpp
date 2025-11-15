@@ -106,9 +106,8 @@ Particle::Particle()
 , m_particleSystemOrientationVelocity{FOURCC('PSOV'), "OldParticleSystemOrientationVelocity", this} {}
 
 Particle::Particle(const char* ptr, const std::size_t size) : Particle() {
-  athena::io::MemoryReader in(ptr, size, false);
-  m_data.reset(ptr);
-  m_dataSize = size;
+  athena::io::MemoryReader in(ptr, size, true);
+
   if (particles::ParticleDataFactory::GetClassID(in) != FOURCC('GPSM')) {
     return;
   }
@@ -117,7 +116,6 @@ Particle::Particle(const char* ptr, const std::size_t size) : Particle() {
 
 Particle::Particle(const nlohmann::ordered_json& in) : Particle() {
   for (int loadOrder = 0; const auto& [key, _] : in.items()) {
-    std::cout << key << std::endl;
     const auto property = propertyForName(key);
     if (!property) {
       continue;
@@ -146,16 +144,6 @@ std::shared_ptr<IResource> Particle::ingest(const nlohmann::ordered_json& metada
 
 [[nodiscard]] bool Particle::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
-  auto o = cookedPath(path);
-  while (o.has_extension()) {
-    o.replace_extension();
-  }
-  o.replace_extension(".orig.gpsm.part");
-
-  {
-    athena::io::FileWriter writer(o.generic_string());
-    writer.writeBytes(m_data.get(), m_dataSize);
-  }
 
   nlohmann::ordered_json data = nlohmann::ordered_json::object();
   for (const auto& property : m_properties) {
