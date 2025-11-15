@@ -1,6 +1,5 @@
 #include "PrimeDep/Resources/MetroidPrime/SaveWorld.hpp"
 
-#include "../../../../../cmake-build-debug/_deps/tinygltf-src/json.hpp"
 #include "PrimeDep/Resources/MetroidPrime/AnimPOIData.hpp"
 #include "athena/MemoryReader.hpp"
 

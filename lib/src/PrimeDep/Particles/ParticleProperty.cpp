@@ -38,7 +38,7 @@ void BoolElementProperty::loadValue(athena::io::IStreamReader& reader) {
   m_value = ParticleDataFactory::GetBool(reader, m_defaultValue);
 }
 
-void BoolElementProperty::loadValue(nlohmann::ordered_json& reader) {
+void BoolElementProperty::loadValue(const nlohmann::ordered_json& reader) {
   m_value = reader.value(m_propertyName, m_defaultValue);
 }
 
@@ -56,7 +56,9 @@ void AssetID32BigElementProperty::loadValue(athena::io::IStreamReader& reader) {
   m_value = ParticleDataFactory::GetAssetID32Big(reader, m_type);
 }
 
-void AssetID32BigElementProperty::loadValue(nlohmann::ordered_json& reader) { m_value = AssetId32Big(reader, m_type); }
+void AssetID32BigElementProperty::loadValue(const nlohmann::ordered_json& reader) {
+  m_value = AssetId32Big(reader, m_type);
+}
 
 void AssetID32BigElementProperty::PutTo(athena::io::IStreamWriter& writer) const {
   ParticleDataFactory::SetClassID(writer, m_propertyId);
@@ -82,7 +84,7 @@ void SpawnSystemKeyframeDataElementProperty::loadValue(athena::io::IStreamReader
   m_value = SpawnSystemKeyframeData(reader);
 }
 
-void SpawnSystemKeyframeDataElementProperty::loadValue(nlohmann::ordered_json& reader) {
+void SpawnSystemKeyframeDataElementProperty::loadValue(const nlohmann::ordered_json& reader) {
   if (reader.is_null() || !reader.is_object()) {
     return;
   }

@@ -28,7 +28,7 @@ MetroidWorld::Area::Area(athena::io::IStreamReader& in)
 , transform(Transform4f(in))
 , bounds(AABox(in))
 , areaId(in, FOURCC('MREA'))
-, saveId(in.readUint32Big()) {
+, internalId(in.readUint32Big()) {
   uint32_t attachedAreaCount = in.readUint32Big();
   while (attachedAreaCount--) {
     attachedAreas.push_back(in.readUint16Big());

@@ -163,23 +163,24 @@ ColorElement* GetColorElement(const nlohmann::ordered_json& reader, const std::s
   if (!reader.contains(propertyName)) {
     return nullptr;
   }
-  const auto type = GetClassID(reader);
+  const auto property = reader[propertyName];
+  const auto type = GetClassID(property);
   if (type == CENone::ClassName()) {
-    element = new CENone(reader);
+    element = new CENone(property);
   } else if (type == CEConstant::ClassName()) {
-    element = new CEConstant(reader);
+    element = new CEConstant(property);
   } else if (type == CEKeyframeEmitter::ClassName()) {
-    element = new CEKeyframeEmitter(reader);
+    element = new CEKeyframeEmitter(property);
   } else if (type == CETimeChain::ClassName()) {
-    element = new CETimeChain(reader);
+    element = new CETimeChain(property);
   } else if (type == CEFadeEnd::ClassName()) {
-    element = new CEFadeEnd(reader);
+    element = new CEFadeEnd(property);
   } else if (type == CEFade::ClassName()) {
-    element = new CEFade(reader);
+    element = new CEFade(property);
   } else if (type == CEPulse::ClassName()) {
-    element = new CEPulse(reader);
+    element = new CEPulse(property);
   } else if (type == CEParticleColor::ClassName()) {
-    element = new CEParticleColor(reader);
+    element = new CEParticleColor(property);
   }
   if (element) {
     element->setPropertyName(propertyName);
@@ -271,50 +272,50 @@ IntElement* GetIntElement(const nlohmann::ordered_json& reader, const std::strin
   if (!reader.contains(propertyName)) {
     return nullptr;
   }
-
+  const auto property = reader[propertyName];
   const auto type = GetClassID(reader[propertyName]);
   if (type == IENone::ClassName()) {
-    element = new IENone(reader);
+    element = new IENone(property);
   } else if (type == IEConstant::ClassName()) {
-    element = new IEConstant(reader);
+    element = new IEConstant(property);
   } else if (type == IEKeyframeEmitter::ClassName()) {
-    element = new IEKeyframeEmitter(reader);
+    element = new IEKeyframeEmitter(property);
   } else if (type == IETimeScale::ClassName()) {
-    element = new IETimeScale(reader);
+    element = new IETimeScale(property);
   } else if (type == IEDeath::ClassName()) {
-    element = new IEDeath(reader);
+    element = new IEDeath(property);
   } else if (type == IETimeChain::ClassName()) {
-    element = new IETimeChain(reader);
+    element = new IETimeChain(property);
   } else if (type == IEAdd::ClassName()) {
-    element = new IEAdd(reader);
+    element = new IEAdd(property);
   } else if (type == IEMultiply::ClassName()) {
-    element = new IEMultiply(reader);
+    element = new IEMultiply(property);
   } else if (type == IEModulo::ClassName()) {
-    element = new IEModulo(reader);
+    element = new IEModulo(property);
   } else if (type == IERandom::ClassName()) {
-    element = new IERandom(reader);
+    element = new IERandom(property);
   } else if (type == IEImpulse::ClassName()) {
-    element = new IEImpulse(reader);
+    element = new IEImpulse(property);
   } else if (type == IELifetimePercent::ClassName()) {
-    element = new IELifetimePercent(reader);
+    element = new IELifetimePercent(property);
   } else if (type == IESampleAndHold::ClassName()) {
-    element = new IESampleAndHold(reader);
+    element = new IESampleAndHold(property);
   } else if (type == IEInitialRandom::ClassName()) {
-    element = new IEInitialRandom(reader);
+    element = new IEInitialRandom(property);
   } else if (type == IEClamp::ClassName()) {
-    element = new IEClamp(reader);
+    element = new IEClamp(property);
   } else if (type == IEPulse::ClassName()) {
-    element = new IEPulse(reader);
+    element = new IEPulse(property);
   } else if (type == IERealToInt::ClassName()) {
-    element = new IERealToInt(reader);
+    element = new IERealToInt(property);
   } else if (type == IESubtract::ClassName()) {
-    element = new IESubtract(reader);
+    element = new IESubtract(property);
   } else if (type == IEGetCumulativeParticleCount::ClassName()) {
-    element = new IEGetCumulativeParticleCount(reader);
+    element = new IEGetCumulativeParticleCount(property);
   } else if (type == IEGetActiveParticleCount::ClassName()) {
-    element = new IEGetActiveParticleCount(reader);
+    element = new IEGetActiveParticleCount(property);
   } else if (type == IEGetEmitterTime::ClassName()) {
-    element = new IEGetEmitterTime(reader);
+    element = new IEGetEmitterTime(property);
   }
 
   if (element) {
@@ -464,114 +465,116 @@ RealElement* GetRealElement(const nlohmann::ordered_json& reader, const std::str
   if (!reader.contains(propertyName)) {
     return nullptr;
   }
-  const auto type = GetClassID(reader[propertyName]);
+
+  const auto property = reader[propertyName];
+  const auto type = GetClassID(property);
   if (type == RENone::ClassName()) {
-    element = new RENone(reader);
+    element = new RENone(property);
   }
   if (type == REConstant::ClassName()) {
-    element = new REConstant(reader);
+    element = new REConstant(property);
   }
   if (type == REKeyframeEmitter::ClassName()) {
-    element = new REKeyframeEmitter(reader);
+    element = new REKeyframeEmitter(property);
   }
   if (type == RETimeScale::ClassName()) {
-    element = new RETimeScale(reader);
+    element = new RETimeScale(property);
   }
   if (type == RESineWave::ClassName()) {
-    element = new RESineWave(reader);
+    element = new RESineWave(property);
   }
   if (type == REAdd::ClassName()) {
-    element = new REAdd(reader);
+    element = new REAdd(property);
   }
   if (type == REMultiply::ClassName()) {
-    element = new REMultiply(reader);
+    element = new REMultiply(property);
   }
   if (type == REDotProduct::ClassName()) {
-    element = new REDotProduct(reader);
+    element = new REDotProduct(property);
   }
   if (type == RERandom::ClassName()) {
-    element = new RERandom(reader);
+    element = new RERandom(property);
   }
   if (type == REInitialRandom::ClassName()) {
-    element = new REInitialRandom(reader);
+    element = new REInitialRandom(property);
   }
   if (type == RETimeChain::ClassName()) {
-    element = new RETimeChain(reader);
+    element = new RETimeChain(property);
   }
   if (type == REClamp::ClassName()) {
-    element = new REClamp(reader);
+    element = new REClamp(property);
   }
   if (type == REPulse::ClassName()) {
-    element = new REPulse(reader);
+    element = new REPulse(property);
   }
   if (type == RELifetimePercent::ClassName()) {
-    element = new RELifetimePercent(reader);
+    element = new RELifetimePercent(property);
   }
   if (type == RELifetimeTween::ClassName()) {
-    element = new RELifetimeTween(reader);
+    element = new RELifetimeTween(property);
   }
   if (type == REParticleRotationOrLineWidth::ClassName()) {
-    element = new REParticleRotationOrLineWidth(reader);
+    element = new REParticleRotationOrLineWidth(property);
   }
   if (type == REParticleAccessParameter1::ClassName()) {
-    element = new REParticleAccessParameter1(reader);
+    element = new REParticleAccessParameter1(property);
   }
   if (type == REParticleAccessParameter2::ClassName()) {
-    element = new REParticleAccessParameter2(reader);
+    element = new REParticleAccessParameter2(property);
   }
   if (type == REParticleAccessParameter3::ClassName()) {
-    element = new REParticleAccessParameter3(reader);
+    element = new REParticleAccessParameter3(property);
   }
   if (type == REParticleAccessParameter4::ClassName()) {
-    element = new REParticleAccessParameter4(reader);
+    element = new REParticleAccessParameter4(property);
   }
   if (type == REParticleAccessParameter5::ClassName()) {
-    element = new REParticleAccessParameter5(reader);
+    element = new REParticleAccessParameter5(property);
   }
   if (type == REParticleAccessParameter6::ClassName()) {
-    element = new REParticleAccessParameter6(reader);
+    element = new REParticleAccessParameter6(property);
   }
   if (type == REParticleAccessParameter7::ClassName()) {
-    element = new REParticleAccessParameter7(reader);
+    element = new REParticleAccessParameter7(property);
   }
   if (type == REParticleAccessParameter8::ClassName()) {
-    element = new REParticleAccessParameter8(reader);
+    element = new REParticleAccessParameter8(property);
   }
   if (type == REVectorXToReal::ClassName()) {
-    element = new REVectorXToReal(reader);
+    element = new REVectorXToReal(property);
   }
   if (type == REVectorYToReal::ClassName()) {
-    element = new REVectorYToReal(reader);
+    element = new REVectorYToReal(property);
   }
   if (type == REVectorZToReal::ClassName()) {
-    element = new REVectorZToReal(reader);
+    element = new REVectorZToReal(property);
   }
   if (type == REVectorMagnitude::ClassName()) {
-    element = new REVectorMagnitude(reader);
+    element = new REVectorMagnitude(property);
   }
   if (type == RECompareLessThan::ClassName()) {
-    element = new RECompareLessThan(reader);
+    element = new RECompareLessThan(property);
   }
   if (type == RECompareEqual::ClassName()) {
-    element = new RECompareEqual(reader);
+    element = new RECompareEqual(property);
   }
   if (type == REConstantRange::ClassName()) {
-    element = new REConstantRange(reader);
+    element = new REConstantRange(property);
   }
   if (type == RESubtract::ClassName()) {
-    element = new RESubtract(reader);
+    element = new RESubtract(property);
   }
   if (type == REGetComponentRed::ClassName()) {
-    element = new REGetComponentRed(reader);
+    element = new REGetComponentRed(property);
   }
   if (type == REGetComponentGreen::ClassName()) {
-    element = new REGetComponentGreen(reader);
+    element = new REGetComponentGreen(property);
   }
   if (type == REGetComponentBlue::ClassName()) {
-    element = new REGetComponentBlue(reader);
+    element = new REGetComponentBlue(property);
   }
   if (type == REGetComponentAlpha::ClassName()) {
-    element = new REGetComponentAlpha(reader);
+    element = new REGetComponentAlpha(property);
   }
   if (element) {
     element->setPropertyName(propertyName);
@@ -663,49 +666,50 @@ VectorElement* GetVectorElement(const nlohmann::ordered_json& reader, const std:
   if (!reader.contains(propertyName)) {
     return nullptr;
   }
-  const auto type = GetClassID(reader[propertyName]);
+  const auto property = reader[propertyName];
+  const auto type = GetClassID(property);
   if (type == VENone::ClassName()) {
-    element = new VENone(reader);
+    element = new VENone(property);
   } else if (type == VEConstant::ClassName()) {
-    element = new VEConstant(reader);
+    element = new VEConstant(property);
   } else if (type == VEKeyframeEmitter::ClassName()) {
-    element = new VEKeyframeEmitter(reader);
+    element = new VEKeyframeEmitter(property);
   } else if (type == VECone::ClassName()) {
-    element = new VECone(reader);
+    element = new VECone(property);
   } else if (type == VEAngleCone::ClassName()) {
-    element = new VEAngleCone(reader);
+    element = new VEAngleCone(property);
   } else if (type == VECircleCluster::ClassName()) {
-    element = new VECircleCluster(reader);
+    element = new VECircleCluster(property);
   } else if (type == VECircle::ClassName()) {
-    element = new VECircle(reader);
+    element = new VECircle(property);
   } else if (type == VEAdd::ClassName()) {
-    element = new VEAdd(reader);
+    element = new VEAdd(property);
   } else if (type == VEMultiply::ClassName()) {
-    element = new VEMultiply(reader);
+    element = new VEMultiply(property);
   } else if (type == VETimeChain::ClassName()) {
-    element = new VETimeChain(reader);
+    element = new VETimeChain(property);
   } else if (type == VEPulse::ClassName()) {
-    element = new VEPulse(reader);
+    element = new VEPulse(property);
   } else if (type == VERealToVector::ClassName()) {
-    element = new VERealToVector(reader);
+    element = new VERealToVector(property);
   } else if (type == VEParticleColor::ClassName()) {
-    element = new VEParticleColor(reader);
+    element = new VEParticleColor(property);
   } else if (type == VEParticleLocation::ClassName()) {
-    element = new VEParticleLocation(reader);
+    element = new VEParticleLocation(property);
   } else if (type == VEParticleVelocity::ClassName()) {
-    element = new VEParticleVelocity(reader);
+    element = new VEParticleVelocity(property);
   } else if (type == VEParticleSystemOrientationFront::ClassName()) {
-    element = new VEParticleSystemOrientationFront(reader);
+    element = new VEParticleSystemOrientationFront(property);
   } else if (type == VEParticleSystemOrientationUp::ClassName()) {
-    element = new VEParticleSystemOrientationUp(reader);
+    element = new VEParticleSystemOrientationUp(property);
   } else if (type == VEParticleSystemOrientationRight::ClassName()) {
-    element = new VEParticleSystemOrientationRight(reader);
+    element = new VEParticleSystemOrientationRight(property);
   } else if (type == VEParticleSystemTranslation::ClassName()) {
-    element = new VEParticleSystemTranslation(reader);
+    element = new VEParticleSystemTranslation(property);
   } else if (type == VESubtract::ClassName()) {
-    element = new VESubtract(reader);
+    element = new VESubtract(property);
   } else if (type == VEColorToVector::ClassName()) {
-    element = new VEColorToVector(reader);
+    element = new VEColorToVector(property);
   }
 
   if (element) {
@@ -752,13 +756,14 @@ EmitterElement* GetEmitterElement(const nlohmann::ordered_json& reader, const st
     return nullptr;
   }
 
-  const auto type = GetClassID(reader[propertyName]);
+  const auto property = !propertyName.empty() ? reader[propertyName] : reader;
+  const auto type = GetClassID(property);
   if (type == EESimpleEmitter::ClassName()) {
-    element = new EESimpleEmitter(reader);
+    element = new EESimpleEmitter(property);
   } else if (type == VESphere::ClassName()) {
-    element = new VESphere(reader);
+    element = new VESphere(property);
   } else if (type == VEAngleSphere::ClassName()) {
-    element = new VEAngleSphere(reader);
+    element = new VEAngleSphere(property);
   }
   if (element) {
     element->setPropertyName(propertyName);
@@ -829,33 +834,34 @@ ModVectorElement* GetModVectorElement(const nlohmann::ordered_json& reader, cons
   if (!reader.contains(propertyName)) {
     return nullptr;
   }
-  const auto type = GetClassID(reader[propertyName]);
+  const auto property = !propertyName.empty() ? reader[propertyName] : reader;
+  const auto type = GetClassID(property);
   if (type == MVENone::ClassName()) {
-    element = new MVENone(reader);
+    element = new MVENone(property);
   } else if (type == MVEConstant::ClassName()) {
-    element = new MVEConstant(reader);
+    element = new MVEConstant(property);
   } else if (type == MVEGravity::ClassName()) {
-    element = new MVEGravity(reader);
+    element = new MVEGravity(property);
   } else if (type == MVEWind::ClassName()) {
-    element = new MVEWind(reader);
+    element = new MVEWind(property);
   } else if (type == MVEExplode::ClassName()) {
-    element = new MVEExplode(reader);
+    element = new MVEExplode(property);
   } else if (type == MVETimeChain::ClassName()) {
-    element = new MVETimeChain(reader);
+    element = new MVETimeChain(property);
   } else if (type == MVEPulse::ClassName()) {
-    element = new MVEPulse(reader);
+    element = new MVEPulse(property);
   } else if (type == MVEImplosion::ClassName()) {
-    element = new MVEImplosion(reader);
+    element = new MVEImplosion(property);
   } else if (type == MVELinearImplosion::ClassName()) {
-    element = new MVELinearImplosion(reader);
+    element = new MVELinearImplosion(property);
   } else if (type == MVEExponentialImplosion::ClassName()) {
-    element = new MVEExponentialImplosion(reader);
+    element = new MVEExponentialImplosion(property);
   } else if (type == MVESwirl::ClassName()) {
-    element = new MVESwirl(reader);
+    element = new MVESwirl(property);
   } else if (type == MVEBounce::ClassName()) {
-    element = new MVEBounce(reader);
+    element = new MVEBounce(property);
   } else if (type == MVESetPosition::ClassName()) {
-    element = new MVESetPosition(reader);
+    element = new MVESetPosition(property);
   }
 
   if (element) {
@@ -898,14 +904,15 @@ UVElement* GetUVElement(const nlohmann::ordered_json& reader, const std::string_
     return nullptr;
   }
 
-  const auto type = GetClassID(reader[propertyName]);
+  const auto property = reader[propertyName];
+  const auto type = GetClassID(property);
 
   if (type == UVENone::ClassName()) {
-    element = new UVENone(reader);
+    element = new UVENone(property);
   } else if (type == UVEConstant32Big::ClassName()) {
-    element = new UVEConstant32Big(reader);
+    element = new UVEConstant32Big(property);
   } else if (type == UVEAnimated32Big::ClassName()) {
-    element = new UVEAnimated32Big(reader);
+    element = new UVEAnimated32Big(property);
   }
 
   if (element) {

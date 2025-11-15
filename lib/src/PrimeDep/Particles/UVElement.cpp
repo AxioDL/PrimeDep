@@ -10,8 +10,10 @@ UVEConstant32Big::UVEConstant32Big(athena::io::IStreamReader& reader)
 : UVElement(reader), m_textureId(ParticleDataFactory::GetAssetID32Big(reader, MetroidPrime::Texture::ResourceType())) {}
 
 UVEConstant32Big::UVEConstant32Big(const nlohmann::ordered_json& reader) : UVElement(reader) {
-  m_textureId = AssetId32Big(reader, MetroidPrime::Texture::ResourceType());
+  m_textureId =
+      AssetId32Big(reader.value("Texture", nlohmann::ordered_json::object()), MetroidPrime::Texture::ResourceType());
 }
+
 void UVEConstant32Big::PutToInternal(athena::io::IStreamWriter& out) const {
   if (!m_textureId || *m_textureId == kInvalidAssetId32Big) {
     ParticleDataFactory::SetClassID(out, FOURCC('NONE'));

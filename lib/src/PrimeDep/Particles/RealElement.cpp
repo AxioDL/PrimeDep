@@ -8,7 +8,7 @@
 
 namespace axdl::primedep::particles {
 REConstant::REConstant(athena::io::IStreamReader& in) : RealElement(in), m_value(ParticleDataFactory::GetReal(in)) {}
-REConstant::REConstant(const nlohmann::ordered_json& in) : RealElement(in), m_value(in.value("Value", 0)) {}
+REConstant::REConstant(const nlohmann::ordered_json& in) : RealElement(in), m_value(in.value("Value", 0.f)) {}
 
 void REConstant::PutToInternal(athena::io::IStreamWriter& out) const { ParticleDataFactory::SetReal(out, m_value); }
 

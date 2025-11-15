@@ -26,7 +26,9 @@ public:
   IParticleProperty* propertyForClass(const FourCC& id);
   IParticleProperty* propertyForName(std::string_view name);
 
-private:
+  void sortProperties();
+
+protected:
   std::vector<IParticleProperty*> m_properties;
 };
 class IParticleProperty {
@@ -44,11 +46,15 @@ public:
   virtual void PutTo(nlohmann::ordered_json& writer) const = 0;
 
   virtual void loadValue(athena::io::IStreamReader& reader) = 0;
-  virtual void loadValue(nlohmann::ordered_json& reader) = 0;
+  virtual void loadValue(const nlohmann::ordered_json& reader) = 0;
+
+  int loadOrder() const { return m_loadOrder; }
+  void setLoadOrder(const int loadOrder) { m_loadOrder = loadOrder; }
 
 protected:
   FourCC m_propertyId;
   std::string m_propertyName;
+  int m_loadOrder = -1;
 };
 
 class ElementParticleProperty : public IParticleProperty {
@@ -82,7 +88,7 @@ public:
       m_element->setPropertyId(m_propertyId);
     }
   }
-  void loadValue(nlohmann::ordered_json& reader) override {
+  void loadValue(const nlohmann::ordered_json& reader) override {
     m_element.reset(ParticleDataFactory::GetElement<ElementType>(reader, m_propertyName));
     if (m_element) {
       m_element->setPropertyId(m_propertyId);
@@ -98,7 +104,7 @@ public:
                       IPropertyContainer* parent);
 
   void loadValue(athena::io::IStreamReader& reader) override;
-  void loadValue(nlohmann::ordered_json& reader) override;
+  void loadValue(const nlohmann::ordered_json& reader) override;
 
   void PutTo(athena::io::IStreamWriter& writer) const override;
   void PutTo(nlohmann::ordered_json& writer) const override;
@@ -115,7 +121,7 @@ public:
   : IParticleProperty(propertyId, propertyName, parent), m_type(assetType) {}
 
   void loadValue(athena::io::IStreamReader& reader) override;
-  void loadValue(nlohmann::ordered_json& reader) override;
+  void loadValue(const nlohmann::ordered_json& reader) override;
 
   void PutTo(athena::io::IStreamWriter& writer) const override;
   void PutTo(nlohmann::ordered_json& writer) const override;
@@ -132,7 +138,7 @@ public:
   : IParticleProperty(propertyId, propertyName, parent) {}
 
   void loadValue(athena::io::IStreamReader& reader) override;
-  void loadValue(nlohmann::ordered_json& reader) override;
+  void loadValue(const nlohmann::ordered_json& reader) override;
 
   void PutTo(athena::io::IStreamWriter& writer) const override;
   void PutTo(nlohmann::ordered_json& writer) const override;
@@ -140,6 +146,12 @@ public:
 private:
   std::optional<SpawnSystemKeyframeData> m_value;
 };
+
+inline void IPropertyContainer::sortProperties() {
+  std::ranges::sort(m_properties, [](const IParticleProperty* lhs, const IParticleProperty* rhs) {
+    return lhs->loadOrder() < rhs->loadOrder();
+  });
+}
 
 using IntElementProperty = TypedElementProperty<IntElement>;
 using RealElementProperty = TypedElementProperty<RealElement>;

@@ -12,32 +12,157 @@
 #include "PrimeDep/Resources/MetroidPrime/Model.hpp"
 #include "PrimeDep/Resources/MetroidPrime/ParticleElectric.hpp"
 #include "PrimeDep/Resources/MetroidPrime/ParticleSwoosh.hpp"
+#include "athena/FileReader.hpp"
 #include "athena/MemoryReader.hpp"
 
 #include <iostream>
 
 namespace axdl::primedep::MetroidPrime {
-Particle::Particle(const char* ptr, const std::size_t size) {
+
+Particle::Particle()
+: m_particleSystemLifetime{FOURCC('PSLT'), "ParticleSystemLifetime", this}
+, m_particleSystemWarmupTime{FOURCC('PSWT'), "ParticleSystemWarmupTime", this}
+, m_particleSystemTimeScale{FOURCC('PSTS'), "ParticleSystemTimeScale", this}
+, m_particleSystemOffset{FOURCC('POFS'), "ParticleSystemOffset", this}
+, m_particleSystemSeed{FOURCC('SEED'), "ParticleSystemSeed", this}
+, m_lineLength{FOURCC('LENG'), "LineLength", this}
+, m_lineWidth{FOURCC('WIDT'), "LineWidth", this}
+, m_maxParticles{FOURCC('MAXP'), "MaxParticles", this}
+, m_particleColor{FOURCC('COLR'), "ParticleColor", this}
+, m_generationRate{FOURCC('GRTE'), "GenerationRate", this}
+, m_particleLifetime{FOURCC('LTME'), "ParticleLifetime", this}
+, m_emitter{FOURCC('EMTR'), "Emitter", this}
+, m_lines{kDefaultLines, FOURCC('LINE'), "Lines", this}
+, m_scaleLeadingLinePoint{kDefaultScaleLeadingLinePoint, FOURCC('FXLL'), "ScaleLeadingLinePoint", this}
+, m_additiveAlpha{kDefaultAdditiveAlpha, FOURCC('AAPH'), "AdditiveAlpha", this}
+, m_enableZBuffer{kDefaultEnableZBuffer, FOURCC('ZBUF'), "EnableZBuffer", this}
+, m_sort{kDefaultSort, FOURCC('SORT'), "EnableSort", this}
+, m_enableLighting{kDefaultEnableLighting, FOURCC('LIT_'), "EnableLighting", this}
+
+, m_orientToOrigin{kDefaultOrientToOrigin, FOURCC('ORNT'), "OrientToOrigin", this}
+
+, m_rightVectorScaledOnParticle{kDefaultRightVectorScaledOnParticle, FOURCC('RSOP'), "RightVectorScaledOnParticle",
+                                this}
+, m_motionBlur{kDefaultMotionBlur, FOURCC('MBLR'), "MotionBlur", this}
+, m_particleModelAdditiveAlpha{kDefaultParticleModelAdditiveAlpha, FOURCC('PMAB'), "ParticleModelAdditiveAlpha", this}
+, m_particleModelUnorientedSquare{kDefaultParticleModelUnorientedSquare, FOURCC('PMUS'),
+                                  "ParticleModelUnorientedSquare", this}
+, m_particleModelOrientation{kDefaultParticleModelOrientation, FOURCC('PMOO'), "ParticleModelOrientation", this}
+, m_vectorMod1Local{kDefaultVectorMod1Local, FOURCC('VMD1'), "VectorMod1Local", this}
+, m_vectorMod2Local{kDefaultVectorMod2Local, FOURCC('VMD2'), "VectorMod2Local", this}
+, m_vectorMod3Local{kDefaultVectorMod3Local, FOURCC('VMD3'), "VectorMod3Local", this}
+, m_vectorMod4Local{kDefaultVectorMod4Local, FOURCC('VMD4'), "VectorMod4Local", this}
+, m_colorIndirect{kDefaultColorIndirect, FOURCC('CIND'), "ColorIndirect", this}
+, m_optionalSystem{kDefaultOptionalSystem, FOURCC('OPTS'), "OptionalSystem", this}
+, m_motionBlurSamples{FOURCC('MBSP'), "MotionBlurSamples", this}
+, m_particleSize{FOURCC('SIZE'), "ParticleSize", this}
+, m_particleAngle{FOURCC('ROTA'), "ParticleAngle", this}
+, m_texture{FOURCC('TEXR'), "Texture", this}
+, m_indirectTexture{FOURCC('TIND'), "IndirectTexture", this}
+, m_particleModel{Model::ResourceType(), FOURCC('PMDL'), "ParticleModel", this}
+, m_particleModelOffset{FOURCC('PMOP'), "ParticleModelOffset", this}
+, m_particleModelRotation{FOURCC('PMRT'), "ParticleModelRotation", this}
+, m_particleModelScale{FOURCC('PMSC'), "ParticleModelScale", this}
+, m_particleModelColor{FOURCC('PMCL'), "ParticleModelColor", this}
+, m_particleVelocity1{FOURCC('VEL1'), "ParticleVelocity1", this}
+, m_particleVelocity2{FOURCC('VEL2'), "ParticleVelocity2", this}
+, m_particleVelocity3{FOURCC('VEL3'), "ParticleVelocity3", this}
+, m_particleVelocity4{FOURCC('VEL4'), "ParticleVelocity4", this}
+, m_countedChildSystem{ResourceType(), FOURCC('ICTS'), "CountedChildSystem", this}
+, m_childSystemSpawnCount{FOURCC('NCSY'), "ChildSystemSpawnCount", this}
+, m_childSystemSpawnFrame{FOURCC('CSSD'), "ChildSystemSpawnFrame", this}
+, m_doneChildSystem{ResourceType(), FOURCC('IDTS'), "DoneChildSystem", this}
+, m_doneChildSystemSpawnCount{FOURCC('NDSY'), "DoneSystemSpawnCount", this}
+, m_intervalChildSystem{ResourceType(), FOURCC('IITS'), "IntervalChildSystem", this}
+, m_intervalChildSystemSpawnInterval{FOURCC('PISY'), "IntervalChildSystemSpawnInterval", this}
+, m_intervalChildSystemSpawnFrame{FOURCC('SISY'), "IntervalChildSystemSpawnFrame", this}
+, m_spawnSystems{FOURCC('KSSM'), "SpawnSystems", this}
+, m_childSwooshSystem{ParticleSwoosh::ResourceType(), FOURCC('SSWH'), "ChildSwooshSystem", this}
+, m_childSwooshSystemSpawnFrame{FOURCC('SSSD'), "ChildSwooshSpawnFrame", this}
+, m_childSwooshSystemOffset{FOURCC('SSPO'), "ChildSwooshSystemOffset", this}
+, m_childElectricSystem{ParticleElectric::ResourceType(), FOURCC('SELC'), "ChildElectricSystem", this}
+, m_childElectricSystemSpawnFrame{FOURCC('SESD'), "ChildElectricSystemSpawnFrame", this}
+, m_childElectricSystemOffset{FOURCC('SEPO'), "ChildElectricSystemOffset", this}
+, m_lightType{FOURCC('LTYP'), "LightType", this}
+, m_lightColor{FOURCC('LCLR'), "LightColor", this}
+, m_lightIntensity{FOURCC('LINT'), "LightIntensity", this}
+, m_lightOffset{FOURCC('LOFF'), "LightOffset", this}
+, m_lightDirection{FOURCC('LDIR'), "LightDirection", this}
+, m_lightFallOffType{FOURCC('LFOT'), "LightFallOffType", this}
+, m_lightFallOffRadius{FOURCC('LFOR'), "LightFallOffRadius", this}
+, m_lightCutOffAngle{FOURCC('LSLA'), "LightCutOffAngle", this}
+, m_accessParameter1{FOURCC('ADV1'), "AccessParameter1", this}
+, m_accessParameter2{FOURCC('ADV2'), "AccessParameter2", this}
+, m_accessParameter3{FOURCC('ADV3'), "AccessParameter3", this}
+, m_accessParameter4{FOURCC('ADV4'), "AccessParameter4", this}
+, m_accessParameter5{FOURCC('ADV5'), "AccessParameter5", this}
+, m_accessParameter6{FOURCC('ADV6'), "AccessParameter6", this}
+, m_accessParameter7{FOURCC('ADV7'), "AccessParameter7", this}
+, m_accessParameter8{FOURCC('ADV8'), "AccessParameter8", this}
+, m_initialLocation{FOURCC('ILOC'), "OldInitialLocation", this}
+, m_initialVector{FOURCC('IVEC'), "OldInitialVector", this}
+, m_particleSystemInitialVelocity{FOURCC('PSIV'), "OldParticleSystemInitialVelocity", this}
+, m_particleSystemVelocityMod{FOURCC('PSVM'), "OldParticleSystemVelocityMod", this}
+, m_particleSystemOrientationVelocity{FOURCC('PSOV'), "OldParticleSystemOrientationVelocity", this} {}
+
+Particle::Particle(const char* ptr, const std::size_t size) : Particle() {
   athena::io::MemoryReader in(ptr, size, false);
+  m_data.reset(ptr);
+  m_dataSize = size;
   if (particles::ParticleDataFactory::GetClassID(in) != FOURCC('GPSM')) {
     return;
   }
   loadParticleProperties(in);
 }
+
+Particle::Particle(const nlohmann::ordered_json& in) : Particle() {
+  for (int loadOrder = 0; const auto& [key, _] : in.items()) {
+    std::cout << key << std::endl;
+    const auto property = propertyForName(key);
+    if (!property) {
+      continue;
+    }
+
+    property->loadValue(in);
+    property->setLoadOrder(loadOrder);
+    ++loadOrder;
+  }
+
+  sortProperties();
+}
+
 Particle::~Particle() {}
 
 std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t size) {
   return std::make_shared<Particle>(ptr, size);
 }
 
+std::shared_ptr<IResource> Particle::ingest(const nlohmann::ordered_json& metadata, std::string_view path) {
+  const auto p = GetRawPath(path);
+  athena::io::FileReader reader(p.generic_string());
+  nlohmann::ordered_json in = nlohmann::ordered_json::parse(reader.readString());
+  return std::make_shared<Particle>(in);
+}
+
 [[nodiscard]] bool Particle::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
-
-  if (m_loadOrder.empty()) {
-    return false;
+  auto o = cookedPath(path);
+  while (o.has_extension()) {
+    o.replace_extension();
   }
+  o.replace_extension(".orig.gpsm.part");
+
+  {
+    athena::io::FileWriter writer(o.generic_string());
+    writer.writeBytes(m_data.get(), m_dataSize);
+  }
+
   nlohmann::ordered_json data = nlohmann::ordered_json::object();
-  for (const auto& property : m_loadOrder) {
+  for (const auto& property : m_properties) {
+    if (property->loadOrder() == -1) {
+      continue;
+    }
+
     property->PutTo(data);
   }
 
@@ -52,7 +177,10 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
 
   athena::io::FileWriter writer(p.generic_string());
   particles::ParticleDataFactory::SetClassID(writer, FOURCC('GPSM'));
-  for (const auto& property : m_loadOrder) {
+  for (const auto& property : m_properties) {
+    if (property->loadOrder() == -1) {
+      continue;
+    }
     property->PutTo(writer);
   }
   particles::ParticleDataFactory::SetClassID(writer, FOURCC('_END'));
@@ -63,248 +191,19 @@ std::shared_ptr<IResource> Particle::loadCooked(const char* ptr, std::size_t siz
 void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
   auto classId = particles::ParticleDataFactory::GetClassID(reader);
 
+  int loadOrder = 0;
   while (classId != FOURCC('_END') && !reader.hasError()) {
     if (auto* cls = propertyForClass(classId)) {
       cls->loadValue(reader);
-      m_loadOrder.emplace_back(cls);
+      cls->setLoadOrder(loadOrder);
+      ++loadOrder;
     } else {
       std::cout << "Unhandled class " << classId.toString() << std::endl;
     }
-#if 0
-    switch (classId.num) {
-    case SBIG('PSLT'):
-      m_particleSystemLifetime.setElement(particles::ParticleDataFactory::GetIntElement(reader));
-      m_loadOrder.emplace_back(&m_particleSystemLifetime);
-      break;
-    case SBIG('PSWT'):
-      m_particleSystemWarmupTime.setElement(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('PSTS'):
-      m_particleSystemTimeScale.setElement(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('POFS'):
-      m_particleSystemOffset.setElement(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('SEED'):
-      m_particleSystemSeed.setElement(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('LENG'):
-      m_lineLength.setElement(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('WIDT'):
-      m_lineWidth.setElement(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('MAXP'):
-      m_maxParticles.setElement(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('GRTE'):
-      m_generationRate.setElement(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('COLR'):
-      m_particleColor.reset(particles::ParticleDataFactory::GetColorElement(reader));
-      break;
-    case SBIG('LTME'):
-      m_particleLifetime.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('EMTR'):
-      m_emitter.reset(particles::ParticleDataFactory::GetEmitterElement(reader));
-      break;
-    case SBIG('LINE'):
-      m_lines = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('FXLL'):
-      m_scaleLeadingLinePoint = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('AAPH'):
-      m_additiveAlpha = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('ZBUF'):
-      m_enableZBuffer = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('SORT'):
-      m_sort = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('LIT_'):
-      m_enableLighting = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('ORNT'):
-      m_orientToOrigin = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('RSOP'):
-      m_rightVectorScaledOnParticle = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('MBLR'):
-      m_motionBlur = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('PMAB'):
-      m_particleModelAdditiveAlpha = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('PMUS'):
-      m_particleModelUnorientedSquare = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('PMOO'):
-      m_particleModelOrientation = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('VMD1'):
-      m_vectorMod1Local = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('VMD2'):
-      m_vectorMod2Local = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('VMD3'):
-      m_vectorMod3Local = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('VMD4'):
-      m_vectorMod4Local = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('CIND'):
-      m_colorIndirect = particles::ParticleDataFactory::GetInt(reader);
-      break;
-    case SBIG('OPTS'):
-      m_optionalSystem = particles::ParticleDataFactory::GetBool(reader);
-      break;
-    case SBIG('MBSP'):
-      m_motionBlurSamples.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('SIZE'):
-      m_particleSize.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ROTA'):
-      m_particleAngle.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('TEXR'):
-      m_texture.reset(particles::ParticleDataFactory::GetUVElement(reader));
-      break;
-    case SBIG('TIND'):
-      m_indirectTexture.reset(particles::ParticleDataFactory::GetUVElement(reader));
-      break;
-    case SBIG('PMDL'):
-      m_particleModel = particles::ParticleDataFactory::GetAssetID32Big(reader, Model::ResourceType());
-      break;
-    case SBIG('PMOP'):
-      m_particleModelOffset.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('PMRT'):
-      m_particleModelRotation.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('PMSC'):
-      m_particleModelScale.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('PMCL'):
-      m_particleModelColor.reset(particles::ParticleDataFactory::GetColorElement(reader));
-      break;
-    case SBIG('VEL1'):
-      m_particleVelocity1.reset(particles::ParticleDataFactory::GetModVectorElement(reader));
-      break;
-    case SBIG('VEL2'):
-      m_particleVelocity2.reset(particles::ParticleDataFactory::GetModVectorElement(reader));
-      break;
-    case SBIG('VEL3'):
-      m_particleVelocity3.reset(particles::ParticleDataFactory::GetModVectorElement(reader));
-      break;
-    case SBIG('VEL4'):
-      m_particleVelocity4.reset(particles::ParticleDataFactory::GetModVectorElement(reader));
-      break;
-    case SBIG('ICTS'):
-      m_countedChildSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, Particle::ResourceType());
-      break;
-    case SBIG('NCSY'):
-      m_childSystemSpawnCount.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('CSSD'):
-      m_childSystemSpawnFrame.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('IDTS'):
-      m_doneChildSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, Particle::ResourceType());
-      break;
-    case SBIG('NDSY'):
-      m_doneChildSystemSpawnCount.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('IITS'):
-      m_intervalChildSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, Particle::ResourceType());
-      break;
-    case SBIG('PISY'):
-      m_intervalChildSystemSpawnInterval.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('SISY'):
-      m_intervalChildSystemSpawnFrame.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('KSSM'):
-      m_spawnSystems = particles::SpawnSystemKeyframeData(reader);
-      break;
-    case SBIG('SSWH'):
-      m_childSwooshSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, ParticleSwoosh::ResourceType());
-      break;
-    case SBIG('SSSD'):
-      m_childSwooshSystemSpawnFrame.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('SSPO'):
-      m_childSwooshSystemOffset.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('SELC'):
-      m_childElectricSystem = particles::ParticleDataFactory::GetAssetID32Big(reader, ParticleElectric::ResourceType());
-      break;
-    case SBIG('SESD'):
-      m_childElectricSystemSpawnFrame.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('SEPO'):
-      m_childElectricSystemOffset.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('LTYP'):
-      m_lightType.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('LCLR'):
-      m_lightColor.reset(particles::ParticleDataFactory::GetColorElement(reader));
-      break;
-    case SBIG('LINT'):
-      m_lightIntensity.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('LOFF'):
-      m_lightOffset.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('LDIR'):
-      m_lightDirection.reset(particles::ParticleDataFactory::GetVectorElement(reader));
-      break;
-    case SBIG('LFOT'):
-      m_lightFallOffType.reset(particles::ParticleDataFactory::GetIntElement(reader));
-      break;
-    case SBIG('LFOR'):
-      m_lightFallOffRadius.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('LSLA'):
-      m_lightCutOffAngle.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV1'):
-      m_accessParameter1.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV2'):
-      m_accessParameter2.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV3'):
-      m_accessParameter3.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV4'):
-      m_accessParameter4.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV5'):
-      m_accessParameter5.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV6'):
-      m_accessParameter6.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV7'):
-      m_accessParameter7.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    case SBIG('ADV8'):
-      m_accessParameter8.reset(particles::ParticleDataFactory::GetRealElement(reader));
-      break;
-    default:
-      std::cout << "Unhandled particle type" << classId.toString() << std::endl;
-      break;
-    }
-#endif
     classId = particles::ParticleDataFactory::GetClassID(reader);
   }
+
+  sortProperties();
 }
 
 } // namespace axdl::primedep::MetroidPrime
