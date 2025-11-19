@@ -138,12 +138,7 @@ nlohmann::ordered_json PakFile::metadata() const {
     nlohmann::ordered_json& descriptor = namedResources.emplace_back();
     descriptor["Name"] = namedRes.name();
     const auto tag = ObjectTag32Big{namedRes.type(), namedRes.assetId()};
-    if (const auto res = ResourcePool32Big::instance()->resourceById(tag)) {
-      descriptor["Type"] = res->typeCode().toString();
-      descriptor["File"] = res->cookedPath(res->repPath());
-    } else {
-      tag.PutTo(descriptor["Ref"]);
-    }
+    tag.PutTo(descriptor["Ref"]);
   }
 
   return ret;

@@ -43,7 +43,7 @@ public:
     m_currentSource = source;
   }
 
-  void setFactory(ResourceFactory<ResourceDescriptorType>& factory) { m_factory = factory; }
+  void setFactory(ResourceFactory& factory) { m_factory = factory; }
 
   std::vector<ObjectTagType> tagsByType(const FourCC& type) {
     std::vector<ObjectTagType> tags;
@@ -68,18 +68,24 @@ public:
 
   [[nodiscard]] std::string cookedRepPathFromRawRepPath(const std::string_view repPath, const FourCC& type) const {
     auto path = filePathFromRepPath(repPath);
+    while (path.has_extension()) {
+      path.replace_extension();
+    }
     path.replace_extension(m_factory.cookedExtension(type));
     return repPathFromFilePath(path);
   }
 
   [[nodiscard]] std::string rawRepPathFromCookedRepPath(const std::string_view repPath, const FourCC& type) const {
     auto path = filePathFromRepPath(repPath);
+    while (path.has_extension()) {
+      path.replace_extension();
+    }
     path.replace_extension(m_factory.rawExtension(type));
     return repPathFromFilePath(path);
   }
 
 protected:
-  ResourceFactory<ResourceDescriptorType> m_factory;
+  ResourceFactory m_factory;
   std::filesystem::path m_rootPath;
   std::shared_ptr<IResourceSource<ResourceDescriptorType, ObjectTagType>> m_currentSource;
   std::vector<std::shared_ptr<IResourceSource<ResourceDescriptorType, ObjectTagType>>> m_sources;

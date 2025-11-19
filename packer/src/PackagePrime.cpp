@@ -2,6 +2,7 @@
 
 #include "PrimeDep/ResourceFactory.hpp"
 #include "PrimeDep/ResourcePool.hpp"
+#include "PrimeDep/Resources/MetroidPrime/Tweak.hpp"
 
 #include <PrimeDep/Resources/MetroidPrime/AiFiniteStateMachine.hpp>
 #include <PrimeDep/Resources/MetroidPrime/AnimCharacterSet.hpp>
@@ -44,37 +45,38 @@
 #include <athena/FileWriter.hpp>
 #include <athena/MemoryWriter.hpp>
 
-void addFactories(axdl::primedep::ResourceFactory32Big& factory) {
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::StringTable>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::Model>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::Texture>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::SkinRules>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AnimSource>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::CharLayoutInfo>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AnimCharacterSet>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::CollisionResponseData>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::ParticleSwoosh>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::Particle>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::ParticleElectric>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::ProjectileWeapon>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::GuiFrame>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::RasterFont>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::ScannableObjectInfo>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AnimPOIData>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AiFiniteStateMachine>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AudioGroup>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::CollidableOBBTreeGroup>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::DecalData>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::AudioTranslationTable>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::PathFindArea>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapWorld>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MetroidArea>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapArea>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MapUniverse>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MidiData>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::SaveWorld>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::MetroidWorld>(factory);
-  axdl::primedep::RegisterFactory32Big<axdl::primedep::MetroidPrime::DependencyGroup>(factory);
+void addFactories(axdl::primedep::ResourceFactory& factory) {
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::StringTable>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::Model>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::Texture>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::SkinRules>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AnimSource>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::CharLayoutInfo>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AnimCharacterSet>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::CollisionResponseData>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::ParticleSwoosh>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::Particle>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::ParticleElectric>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::ProjectileWeapon>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::GuiFrame>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::RasterFont>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::ScannableObjectInfo>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AnimPOIData>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AiFiniteStateMachine>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AudioGroup>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::CollidableOBBTreeGroup>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::DecalData>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::AudioTranslationTable>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::PathFindArea>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MapWorld>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MetroidArea>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MapArea>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MapUniverse>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MidiData>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::SaveWorld>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MetroidWorld>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::DependencyGroup>(factory);
+  axdl::primedep::RegisterSpecialFactory<axdl::primedep::MetroidPrime::ITweak>(factory);
 }
 
 struct CompressionInfo {
@@ -150,7 +152,7 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
   std::filesystem::path packagePath(outPath / packageMeta.value("PackageName", ""));
   packagePath.replace_extension(".pak");
 
-  axdl::primedep::ResourceFactory32Big factory;
+  axdl::primedep::ResourceFactory factory;
   addFactories(factory);
   axdl::primedep::ResourcePool32Big pool(repPath);
   pool.setFactory(factory);
@@ -166,31 +168,22 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
     const auto name = namedResource.value("Name", "");
     if (name.empty()) {
       std::cerr << "NamedResource entry malformed: missing `Name` value" << std::endl;
-      return false;
+      continue;
     }
     std::string resPath;
     axdl::primedep::FourCC type;
-    if (!namedResource.contains("Ref")) {
-      type = axdl::primedep::FourCC(namedResource.value("Type", axdl::primedep::kInvalidFourCC.toString()));
-      if (type == axdl::primedep::kInvalidFourCC) {
-        std::cerr << "Invalid named resource definition `" << name << "` Type value missing" << std::endl;
-        return false;
-      }
-
-      resPath = namedResource.value("File", "");
-      if (resPath.empty()) {
-        std::cerr << "Invalid named resource definition `" << name << "` missing rep path" << std::endl;
-        return false;
-      }
-    } else {
+    if (namedResource.contains("Ref")) {
       const auto tag = axdl::primedep::ObjectTag32Big::Load(namedResource["Ref"]);
       resPath = tag.repPath();
       type = tag.type;
+    } else {
+      std::cerr << "NamedResource entry malformed: missing `Ref` value" << std::endl;
+      continue;
     }
 
     const auto res = pool.ingestResourceByRepPath(resPath, type);
     if (!res) {
-      std::cerr << "Unable to load named resource `" << name << "` not adding..." << std::endl;
+      std::cerr << "Unable to load named resource `" << name << "` -> `" << resPath << "` not adding..." << std::endl;
       continue;
     }
     pakFile.addNamedResource(name, type, res->assetId32Big());
@@ -205,6 +198,9 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
 
     if (const auto children = res->children()) {
       for (const auto& child : *children) {
+        if (!child) {
+          continue;
+        }
         writeResource(resourceBuffer, descriptors, child->typeCode(), child, cookedPath);
       }
     }

@@ -101,15 +101,18 @@ public:
   [[nodiscard]] constexpr std::string_view cookedExtension() const override { return CookedExtension(); }
 
   [[nodiscard]] nlohmann::ordered_json metadata(const std::string_view path) const override {
+    const bool usesCookedDirectory = path.contains("/cooked/");
     if (m_pathKnown) {
       return {
           {"ResourceType", typeCode().toString()},
+          {"UseCookedDirectory", usesCookedDirectory},
       };
     }
 
     nlohmann::ordered_json metadata;
     metadata["ResourceType"] = typeCode().toString();
     metadata["AssetID"] = assetId32Big().id;
+    metadata["UsesCookedDirectory"] = usesCookedDirectory;
     return metadata;
   }
 

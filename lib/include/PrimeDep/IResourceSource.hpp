@@ -16,6 +16,7 @@ public:
   virtual bool hasNamedResource(std::string_view name) { return false; };
   virtual ResourceDescriptorType descriptorByName(std::string_view name) { return {}; };
   virtual ResourceDescriptorType descriptorById(const ObjectTagType& tag) { return {}; };
+  virtual std::string nameForDescriptor(const ResourceDescriptorType& tag) { return {}; };
   virtual std::string repPathByDescriptor(const ResourceDescriptorType& descriptor) { return {}; };
   virtual std::tuple<const char*, uint32_t> loadData(const ResourceDescriptorType&) { return {nullptr, 0}; };
   virtual std::vector<ObjectTagType> tagsByType(const FourCC& type) = 0;

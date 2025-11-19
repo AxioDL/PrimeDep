@@ -93,16 +93,9 @@ RasterFont::FontInfo::FontInfo(athena::io::IStreamReader& in)
 , m_name(in.readString()) {}
 
 RasterFont::FontInfo::FontInfo(const nlohmann::ordered_json& in) {
-  // Lets future-proof these unknowns
-  if (in.contains("Unknown1")) {
-    m_unknown1 = in["Unknown1"].get<bool>();
-  }
-  if (in.contains("Unknown2")) {
-    m_unknown2 = in["Unknown2"].get<bool>();
-  }
-  if (in.contains("Unknown3")) {
-    m_unknown3 = in["Unknown3"].get<bool>();
-  }
+  m_unknown1 = in.value("Unknown3", m_unknown3);
+  m_unknown2 = in.value("Unknown3", m_unknown3);
+  m_unknown3 = in.value("Unknown3", m_unknown3);
   m_fontSize = in.value("FontSize", 0);
   m_name = in.value("Name", "");
 }

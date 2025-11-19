@@ -52,6 +52,17 @@ public:
   ResourceDescriptor32Big descriptorByName(std::string_view name) override;
   ResourceDescriptor32Big descriptorById(const ObjectTag32Big& tag) override;
 
+  std::string nameForDescriptor(const ResourceDescriptor32Big& desc) override {
+    const auto it = std::ranges::find_if(m_namedResources, [&desc](const auto& resource) {
+      return resource.assetId() == desc.assetId() && resource.type() == desc.type();
+    });
+    if (it == m_namedResources.end()) {
+      return {};
+    }
+
+    return it->name();
+  }
+
   std::tuple<const char*, uint32_t> loadData(const ResourceDescriptor32Big& desc) override;
 
   std::vector<ObjectTag32Big> tagsByType(const FourCC& type) override {

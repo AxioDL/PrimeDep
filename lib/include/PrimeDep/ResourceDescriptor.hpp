@@ -51,7 +51,7 @@ using ResourceDescriptor32Big = ResourceDescriptor<AssetId32Big, true>;
 
 template <>
 struct std::hash<axdl::primedep::ResourceDescriptor32Big> {
-  std::size_t operator()(const axdl::primedep::ResourceDescriptor32Big& key) const {
+  std::size_t operator()(const axdl::primedep::ResourceDescriptor32Big& key) const noexcept {
     return std::hash<string>()(key.type().toString()) << 32 | key.assetId().id;
   }
 };

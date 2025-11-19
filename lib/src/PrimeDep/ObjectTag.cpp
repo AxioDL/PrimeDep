@@ -13,7 +13,7 @@ void ObjectTag32Big::PutTo(athena::io::IStreamWriter& out, const bool reversed) 
   }
 }
 void ObjectTag32Big::PutTo(nlohmann::ordered_json& j) const {
-  if (id() == kInvalidAssetId32Big && m_repPath.empty()) {
+  if (id() == kInvalidAssetId32Big && id().repPath().empty()) {
     return;
   }
 

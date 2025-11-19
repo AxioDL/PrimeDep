@@ -6,7 +6,7 @@
 #include <nlohmann/json.hpp>
 
 namespace axdl::primedep {
-ResourceDescriptor32Big ResourcePool32Big::resourceDescriptorByName(std::string_view name) {
+ResourceDescriptor32Big ResourcePool32Big::resourceDescriptorByName(const std::string_view name) {
   if (m_currentSource && m_currentSource->hasNamedResource(name)) {
     return m_currentSource->descriptorByName(name);
   }
@@ -37,6 +37,10 @@ ResourcePool32Big::internalResourceByDescriptor(const ResourceDescriptor32Big& n
   const auto& [data, size] = m_currentSource->loadData(newDesc);
   if (const auto& factory = m_factory.cookedFactory(newDesc.type()); data != nullptr && size != 0 && factory) {
     return factory(data, size);
+  }
+
+  if (const auto& factory = m_factory.specialCookedFactory(newDesc.type()); data != nullptr && size != 0 && factory) {
+    return factory(data, size, m_currentSource->nameForDescriptor(newDesc));
   }
   delete[] data;
   return nullptr;
