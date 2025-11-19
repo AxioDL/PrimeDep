@@ -122,8 +122,7 @@ Particle::Particle(const nlohmann::ordered_json& in) : Particle() {
     }
 
     property->loadValue(in);
-    property->setLoadOrder(loadOrder);
-    ++loadOrder;
+    property->setLoadOrder(loadOrder++);
   }
 
   sortProperties();

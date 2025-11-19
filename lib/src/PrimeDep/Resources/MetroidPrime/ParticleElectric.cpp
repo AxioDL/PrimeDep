@@ -50,6 +50,20 @@ ParticleElectric::ParticleElectric(const char* ptr, const std::size_t size) : Pa
   sortProperties();
 }
 
+ParticleElectric::ParticleElectric(const nlohmann::ordered_json& in) : ParticleElectric() {
+  for (int loadOrder = 0; const auto& [key, _] : in.items()) {
+    const auto property = propertyForName(key);
+    if (!property) {
+      continue;
+    }
+
+    property->loadValue(in);
+    property->setLoadOrder(loadOrder++);
+  }
+
+  sortProperties();
+}
+
 bool ParticleElectric::writeCooked(const std::string_view path) const {
   const auto p = cookedPath(path);
   athena::io::FileWriter writer(p.generic_string());
@@ -71,7 +85,7 @@ std::shared_ptr<IResource> ParticleElectric::ingest(const nlohmann::ordered_json
   const auto p = GetRawPath(path);
   athena::io::FileReader reader(p.generic_string());
   nlohmann::ordered_json in = nlohmann::ordered_json::parse(reader.readString());
-  return std::make_shared<Particle>(in);
+  return std::make_shared<ParticleElectric>(in);
 }
 
 bool ParticleElectric::writeUncooked(const std::string_view path) const {

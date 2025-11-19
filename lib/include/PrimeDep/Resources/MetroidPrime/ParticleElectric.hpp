@@ -9,7 +9,7 @@ class ParticleElectric final
   particles::IPropertyContainer {
 public:
   ParticleElectric(const char* ptr, std::size_t size);
-
+  explicit ParticleElectric(const nlohmann::ordered_json& in);
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
 
