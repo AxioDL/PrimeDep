@@ -217,7 +217,7 @@ bool MapArea::writeUncooked(std::string_view path) const {
   scene.name = modelP.filename().replace_extension().generic_string();
 
   tinygltf::TinyGLTF gltf;
-  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, false, true, false);
+  gltf.WriteGltfSceneToFile(&model, modelP.generic_string(), false, true, true, true);
 
   athena::io::FileWriter writer(p.generic_string());
   const auto js = j.dump(4) + "\n";

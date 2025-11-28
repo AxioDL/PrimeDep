@@ -7,6 +7,8 @@
 #include "PrimeDep/ResourceDescriptor.hpp"
 #include "SoundGroupData.hpp"
 
+#include <zconf.h>
+
 namespace axdl::primedep ::MetroidPrime {
 class StringTable;
 class MetroidWorld final : public TypedResource('MLVL', ".world", ".mwld", DESCRIPTION("Metroid World Definition")) {
@@ -26,6 +28,9 @@ public:
     bool active;
 
     explicit Relay(athena::io::IStreamReader& in);
+    explicit Relay(const nlohmann::ordered_json& in);
+    void PutTo(athena::io::IStreamWriter& out) const;
+    void PutTo(nlohmann::ordered_json& out) const;
   };
 
   struct Dock {
@@ -33,11 +38,17 @@ public:
       uint32_t areaIdx;
       uint32_t dockIdx;
       explicit DockReference(athena::io::IStreamReader& in);
+      explicit DockReference(const nlohmann::ordered_json& in);
+      void PutTo(athena::io::IStreamWriter& out) const;
+      void PutTo(nlohmann::ordered_json& out) const;
     };
     std::vector<DockReference> dockReferences;
-    std::array<Vector3f, 4> planeVertices;
+    std::vector<Vector3f> planeVertices;
 
     explicit Dock(athena::io::IStreamReader& in);
+    explicit Dock(const nlohmann::ordered_json& in);
+    void PutTo(athena::io::IStreamWriter& out) const;
+    void PutTo(nlohmann::ordered_json& out) const;
   };
 
   struct Area {
@@ -53,19 +64,29 @@ public:
     std::vector<Dock> docks;
 
     explicit Area(athena::io::IStreamReader& in);
+    explicit Area(const nlohmann::ordered_json& in);
+    void PutTo(athena::io::IStreamWriter& out) const;
+    void PutTo(nlohmann::ordered_json& out) const;
   };
 
   struct AreaLayer {
     uint32_t layerCount;
     uint64_t layerBits;
     explicit AreaLayer(athena::io::IStreamReader& in);
+    explicit AreaLayer(const nlohmann::ordered_json& in);
+
+    void PutTo(athena::io::IStreamWriter& out) const;
+    void PutTo(nlohmann::ordered_json& out) const;
   };
 
   MetroidWorld(const char* ptr, std::size_t size);
 
+  bool writeCooked(std::string_view path) const override;
+  bool writeUncooked(std::string_view path) const override;
+
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
-  std::optional<std::vector<ObjectTag32Big>> childTags() const override {
+  std::optional<std::vector<ObjectTag32Big>> allChildTags() const override {
     std::vector<ObjectTag32Big> childTags;
     /* TODO: Acquire child tags, don't just rely on stored values */
     for (const auto& area : m_areas) {
@@ -98,7 +119,7 @@ public:
     return childTags;
   }
 
-  std::optional<std::vector<std::shared_ptr<IResource>>> children() const override;
+  std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const override;
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
     return metadata["ResourceType"] == ResourceType().toString();

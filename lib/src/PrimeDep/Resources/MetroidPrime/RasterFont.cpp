@@ -93,8 +93,8 @@ RasterFont::FontInfo::FontInfo(athena::io::IStreamReader& in)
 , m_name(in.readString()) {}
 
 RasterFont::FontInfo::FontInfo(const nlohmann::ordered_json& in) {
-  m_unknown1 = in.value("Unknown3", m_unknown3);
-  m_unknown2 = in.value("Unknown3", m_unknown3);
+  m_unknown1 = in.value("Unknown1", m_unknown1);
+  m_unknown2 = in.value("Unknown2", m_unknown2);
   m_unknown3 = in.value("Unknown3", m_unknown3);
   m_fontSize = in.value("FontSize", 0);
   m_name = in.value("Name", "");
@@ -199,7 +199,7 @@ RasterFont::RasterFont(const nlohmann::ordered_json& in)
   }
 }
 
-std::optional<std::vector<std::shared_ptr<IResource>>> RasterFont::children() const {
+std::optional<std::vector<std::shared_ptr<IResource>>> RasterFont::immediateChildren() const {
   std::vector<std::shared_ptr<IResource>> children;
   /* First try by id */
   auto res = ResourcePool32Big::instance()->resourceById(ObjectTag32Big(FOURCC('TXTR'), m_texture));

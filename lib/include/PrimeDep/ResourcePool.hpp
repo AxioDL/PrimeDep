@@ -68,19 +68,23 @@ public:
 
   [[nodiscard]] std::string cookedRepPathFromRawRepPath(const std::string_view repPath, const FourCC& type) const {
     auto path = filePathFromRepPath(repPath);
-    while (path.has_extension()) {
+    int i = 2;
+    while (i > 0) {
       path.replace_extension();
+      --i;
     }
-    path.replace_extension(m_factory.cookedExtension(type));
+    path.replace_extension(path.extension().generic_string() + m_factory.cookedExtension(type));
     return repPathFromFilePath(path);
   }
 
   [[nodiscard]] std::string rawRepPathFromCookedRepPath(const std::string_view repPath, const FourCC& type) const {
     auto path = filePathFromRepPath(repPath);
-    while (path.has_extension()) {
+    int i = 2;
+    while (i > 0) {
       path.replace_extension();
+      --i;
     }
-    path.replace_extension(m_factory.rawExtension(type));
+    path.replace_extension(path.extension().generic_string() + m_factory.rawExtension(type));
     return repPathFromFilePath(path);
   }
 

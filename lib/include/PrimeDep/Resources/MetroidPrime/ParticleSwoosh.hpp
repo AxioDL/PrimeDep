@@ -7,7 +7,7 @@ class ParticleSwoosh final : public TypedResource('SWHC', ".swsh", ".swsh.swhc",
                              particles::IPropertyContainer {
 public:
   ParticleSwoosh(const char* ptr, std::size_t size);
-  ParticleSwoosh(const nlohmann::ordered_json& in);
+  explicit ParticleSwoosh(const nlohmann::ordered_json& in);
 
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
@@ -18,6 +18,10 @@ public:
     return metadata["ResourceType"] == ResourceType().toString();
   }
   static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
+
+  [[nodiscard]] uint32_t immediateChildCount() const override;
+  [[nodiscard]] std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const override;
+  std::optional<std::vector<ObjectTag32Big>> allChildTags() const override;
 
 private:
   ParticleSwoosh();

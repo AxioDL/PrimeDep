@@ -20,8 +20,13 @@ class Particle final : public TypedResource('PART', ".gpsm", ".gpsm.part", DESCR
                        particles::IPropertyContainer {
 public:
   Particle(const char* ptr, std::size_t size);
-  Particle(const nlohmann::ordered_json& in);
+  explicit Particle(const nlohmann::ordered_json& in);
   ~Particle() override;
+
+  uint32_t immediateChildCount() const override;
+
+  std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const override;
+  std::optional<std::vector<ObjectTag32Big>> allChildTags() const override;
 
   [[nodiscard]] bool writeUncooked(std::string_view path) const override;
   [[nodiscard]] bool writeCooked(std::string_view path) const override;
@@ -34,6 +39,8 @@ public:
   static std::shared_ptr<IResource> ingest(const nlohmann::ordered_json& metadata, std::string_view path);
 
 private:
+  static void addChildRes(std::vector<std::shared_ptr<IResource>> children,
+                          const particles::AssetID32BigElementProperty& resId);
   Particle();
   void loadParticleProperties(athena::io::IStreamReader & reader);
   particles::IntElementProperty m_particleSystemLifetime;

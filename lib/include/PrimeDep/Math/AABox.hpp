@@ -20,9 +20,14 @@ public:
     }
   }
 
+  explicit AABox(const nlohmann::ordered_json& in)
+  : m_min(in.value("Min", nlohmann::ordered_json::object()))
+  , m_max(in.value("Max", nlohmann::ordered_json::object())) {}
+
   void loadBig(athena::io::IStreamReader& in);
   void loadLittle(athena::io::IStreamReader& in);
 
+  void PutTo(athena::io::IStreamWriter& out) const;
   void PutTo(nlohmann::ordered_json& j) const {
     m_min.PutTo(j["Min"]);
     m_max.PutTo(j["Max"]);

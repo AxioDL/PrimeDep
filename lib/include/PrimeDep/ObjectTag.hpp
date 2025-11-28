@@ -50,7 +50,13 @@ struct ObjectTag32Big final : ObjectTag<AssetId32Big> {
   bool operator<(const ObjectTag32Big& other) const { return m_id < other.m_id; }
   explicit operator bool() const { return type != kInvalidFourCC && m_id != AssetId32Big(); }
 
-  std::string_view repPath() const override { return m_id.repPath(); }
+  std::string_view repPath() const override {
+    // If the ID's rep path is invalid, attempt to resolve it
+    if (m_id.repPath().empty()) {
+      const_cast<ObjectTag32Big*>(this)->m_id.resolveRepPath(type);
+    }
+    return m_id.repPath();
+  }
 
 private:
   AssetId32Big m_id;

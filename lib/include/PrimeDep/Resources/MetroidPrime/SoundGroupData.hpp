@@ -4,8 +4,11 @@
 namespace axdl::primedep::MetroidPrime {
 class SoundGroupData {
 public:
-  explicit SoundGroupData(athena::io::IStreamReader& in)
-  : m_groupId(in.readUint32Big()), m_assetId(in, FOURCC('AGSC')) {}
+  explicit SoundGroupData(athena::io::IStreamReader& in);
+  explicit SoundGroupData(const nlohmann::ordered_json& in);
+
+  void PutTo(athena::io::IStreamWriter& out) const;
+  void PutTo(nlohmann::ordered_json& out) const;
 
 private:
   uint32_t m_groupId;

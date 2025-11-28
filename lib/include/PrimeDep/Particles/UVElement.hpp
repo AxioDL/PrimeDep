@@ -9,6 +9,8 @@ class UVElement : public IElement {
 public:
   explicit UVElement(athena::io::IStreamReader& reader) : IElement(reader) {}
   explicit UVElement(const nlohmann::ordered_json& reader) : IElement(reader) {}
+
+  virtual std::optional<AssetId32Big> textureId() const { return std::nullopt; };
 };
 
 class UVENone : public UVElement {
@@ -31,9 +33,13 @@ public:
   explicit UVEConstant32Big(const nlohmann::ordered_json& reader);
   bool isValid() const override { return true; }
 
+  std::optional<AssetId32Big> textureId() const override { return m_textureId; }
+
 private:
   void PutToInternal(athena::io::IStreamWriter& out) const override;
   void PutToInternal(nlohmann::ordered_json& out) const override;
+
+protected:
   std::optional<AssetId32Big> m_textureId;
 };
 
@@ -47,6 +53,8 @@ public:
   bool isValid() const override {
     return m_tileWidth && m_tileHeight && m_strideWidth && m_strideHeight && m_cycleFrames;
   }
+
+  std::optional<AssetId32Big> textureId() const override { return m_textureId; }
 
 private:
   void PutToInternal(athena::io::IStreamWriter& out) const override;

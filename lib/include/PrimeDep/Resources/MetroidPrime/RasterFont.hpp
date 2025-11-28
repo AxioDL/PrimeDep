@@ -124,8 +124,8 @@ public:
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
 
-  [[nodiscard]] uint32_t childCount() const override { return 1; }
-  [[nodiscard]] std::optional<std::vector<std::shared_ptr<IResource>>> children() const override;
+  [[nodiscard]] uint32_t immediateChildCount() const override { return 1; }
+  [[nodiscard]] std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const override;
 
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 

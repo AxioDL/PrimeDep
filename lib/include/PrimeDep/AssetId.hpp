@@ -63,6 +63,7 @@ public:
   [[nodiscard]] std::string toString() const override { return std::format("{:08X}", id); }
 
 private:
+  friend struct ObjectTag32Big;
   void resolveRepPath(const FourCC& fcc);
 };
 

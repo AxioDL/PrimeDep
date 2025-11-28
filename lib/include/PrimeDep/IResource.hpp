@@ -17,13 +17,20 @@ public:
   IResource() = default;
 
   virtual ~IResource() = default;
-  [[nodiscard]] virtual uint32_t childCount() const { return 0; }
-  [[nodiscard]] virtual std::optional<std::vector<std::shared_ptr<IResource>>> children() const { return std::nullopt; }
+
+  [[nodiscard]] virtual uint32_t immediateChildCount() const { return 0; }
+  /**
+   *
+   * @return A non-flattened list of immediate children.
+   */
+  [[nodiscard]] virtual std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const {
+    return std::nullopt;
+  }
   /**
    * Flattens all dependencies into a single list
    * @return A flattened list of dependencies, including child dependencies
    */
-  [[nodiscard]] virtual std::optional<std::vector<ObjectTag32Big>> childTags() const { return std::nullopt; }
+  [[nodiscard]] virtual std::optional<std::vector<ObjectTag32Big>> allChildTags() const { return std::nullopt; }
 
   [[nodiscard]] virtual nlohmann::ordered_json metadata(std::string_view repPath) const = 0;
 
@@ -118,19 +125,26 @@ public:
 
   static std::filesystem::path GetRawPath(const std::string_view path) {
     std::filesystem::path p = path;
-    while (p.has_extension()) {
+    int i = 2;
+    while (i > 0) {
       p.replace_extension();
+      --i;
     }
-    p.replace_extension(RawExtension());
+
+    p.replace_extension(p.extension().generic_string() + RawExtension().data());
     return p;
   }
 
   static std::filesystem::path GetCookedPath(const std::string_view path) {
     std::filesystem::path p = path;
-    while (p.has_extension()) {
+    int i = 2;
+    while (i > 0) {
       p.replace_extension();
+      --i;
     }
-    p.replace_extension(CookedExtension());
+
+    p.replace_extension(p.extension().generic_string() + CookedExtension().data());
+
     return p;
   }
 

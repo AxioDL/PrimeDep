@@ -2,6 +2,7 @@
 #include "../../../../cmake-build-release/_deps/nlohmann-src/include/nlohmann/thirdparty/hedley/hedley.hpp"
 #include "ParticleDataFactory.hpp"
 #include "PrimeDep/FourCC.hpp"
+#include "PrimeDep/ObjectTag.hpp"
 #include "PrimeDep/Particles/ColorElement.hpp"
 #include "PrimeDep/Particles/EmitterElement.hpp"
 #include "PrimeDep/Particles/IntElement.hpp"
@@ -95,7 +96,7 @@ public:
     }
   }
 
-  ElementType* elementTyped() const { return m_element.get(); }
+  ElementType* elementTyped() const { return static_cast<ElementType*>(m_element.get()); }
 };
 
 class BoolElementProperty final : public IParticleProperty {
@@ -126,6 +127,17 @@ public:
   void PutTo(athena::io::IStreamWriter& writer) const override;
   void PutTo(nlohmann::ordered_json& writer) const override;
 
+  FourCC type() const { return m_type; }
+  const std::optional<AssetId32Big>& value() const { return m_value; }
+
+  ObjectTag32Big asObjectTag() const {
+    if (!m_value) {
+      return {m_type, kInvalidAssetId32Big};
+    }
+
+    return {m_type, *m_value};
+  }
+
 private:
   FourCC m_type;
   std::optional<AssetId32Big> m_value;
@@ -142,6 +154,8 @@ public:
 
   void PutTo(athena::io::IStreamWriter& writer) const override;
   void PutTo(nlohmann::ordered_json& writer) const override;
+
+  const std::optional<SpawnSystemKeyframeData> value() const { return m_value; };
 
 private:
   std::optional<SpawnSystemKeyframeData> m_value;

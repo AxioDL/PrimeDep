@@ -1,5 +1,6 @@
 #include "PrimeDep/Resources/MetroidPrime/ParticleElectric.hpp"
 
+#include "PrimeDep/ResourcePool.hpp"
 #include "PrimeDep/Resources/MetroidPrime/Particle.hpp"
 #include "PrimeDep/Resources/MetroidPrime/ParticleSwoosh.hpp"
 #include "athena/FileReader.hpp"
@@ -29,9 +30,7 @@ ParticleElectric::ParticleElectric()
 , m_zeroY{false, FOURCC('ZERY'), "ZeroY", this} {}
 
 ParticleElectric::ParticleElectric(const char* ptr, const std::size_t size) : ParticleElectric() {
-  athena::io::MemoryReader mr(ptr, size, false);
-  m_data.reset(ptr);
-  m_dataSize = size;
+  athena::io::MemoryReader mr(ptr, size, true);
   if (particles::ParticleDataFactory::GetClassID(mr) != FOURCC('ELSM')) {
     return;
   }
@@ -90,16 +89,7 @@ std::shared_ptr<IResource> ParticleElectric::ingest(const nlohmann::ordered_json
 
 bool ParticleElectric::writeUncooked(const std::string_view path) const {
   const auto p = rawPath(path);
-  auto o = cookedPath(path);
-  while (o.has_extension()) {
-    o.replace_extension();
-  }
-  o.replace_extension(".orig.elsm.elsc");
 
-  {
-    athena::io::FileWriter writer(o.generic_string());
-    writer.writeBytes(m_data.get(), m_dataSize);
-  }
   nlohmann::ordered_json out = nlohmann::json::object();
 
   for (const auto& property : m_properties) {
@@ -118,4 +108,77 @@ bool ParticleElectric::writeUncooked(const std::string_view path) const {
 std::shared_ptr<IResource> ParticleElectric::loadCooked(const char* ptr, std::size_t size) {
   return std::make_shared<ParticleElectric>(ptr, size);
 }
+
+uint32_t ParticleElectric::immediateChildCount() const {
+  return !!m_childSwoosh.value() + !!m_startParticle.value() + !!m_endParticle.value();
+}
+
+std::optional<std::vector<std::shared_ptr<IResource>>> ParticleElectric::immediateChildren() const {
+  std::vector<std::shared_ptr<IResource>> children;
+
+  if (m_childSwoosh.value()) {
+    auto res = ResourcePool32Big::instance()->resourceById(m_childSwoosh.asObjectTag());
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(m_childSwoosh.value()->repPath(),
+                                                                   m_childSwoosh.type());
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (m_startParticle.value()) {
+    auto res = ResourcePool32Big::instance()->resourceById(m_startParticle.asObjectTag());
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(m_startParticle.value()->repPath(),
+                                                                   m_startParticle.type());
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (m_endParticle.value()) {
+    auto res = ResourcePool32Big::instance()->resourceById(m_endParticle.asObjectTag());
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(m_endParticle.value()->repPath(),
+                                                                   m_endParticle.type());
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+
+  return {children};
+}
+
+std::optional<std::vector<ObjectTag32Big>> ParticleElectric::allChildTags() const {
+  std::vector<ObjectTag32Big> children;
+
+  if (const auto childResources = immediateChildren()) {
+    for (const auto& res : *childResources) {
+      if (!res) {
+        continue;
+      }
+      auto tags = res->allChildTags();
+      if (!tags) {
+        // Add the child resource's children
+        children.insert(children.end(), tags->begin(), tags->end());
+        continue;
+      }
+      // We also need to add this resource
+      children.emplace_back(res->typeCode(), res->assetId32Big());
+    }
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+  return {children};
+}
+
 } // namespace axdl::primedep::MetroidPrime

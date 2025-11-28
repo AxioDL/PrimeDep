@@ -196,7 +196,7 @@ bool packagePrime(const std::filesystem::path& packageDefPath, const std::filesy
       }
     }
 
-    if (const auto children = res->children()) {
+    if (const auto children = res->immediateChildren()) {
       for (const auto& child : *children) {
         if (!child) {
           continue;

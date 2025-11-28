@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
   axdl::primedep::ResourcePool32BigNamer pool(outputFolder, axdl::primedep::ResourceNameDatabase::instance());
   pool.setFactory(factory);
 
-#if 1
+  // #if 1
 
   // TODO: Gather this information from the binary
   nlohmann::ordered_json manifest;
@@ -171,6 +171,22 @@ int main(int argc, char** argv) {
     manifest["Packages"].push_back(pool.repPathFromFilePath(path.replace_extension(".prj")));
   }
 
+  // std::shared_ptr<axdl::primedep::MetroidPrime::Particle> particle =
+  //     std::dynamic_pointer_cast<axdl::primedep::MetroidPrime::Particle>(pool.resourceByName("Effect_Ash"));
+  // if (particle) {
+  //   std::cout << particle->typeCode().toString() << " " << particle->assetId32Big().toString() << " -> "
+  //             << particle->repPath() << std::endl;
+  //   std::cout << "----------- CHILDREN -----------" << std::endl;
+  //   const auto tags = particle->allChildTags();
+  //   if (!tags) {
+  //     return 1;
+  //   }
+  //   for (const auto& tag : *tags) {
+  //     std::cout << tag.type.toString() << " " << tag.id().toString() << " -> " << tag.repPath() << std::endl;
+  //   }
+  // }
+  // return 0;
+#if 1
   auto assets = pool.tagsByType(axdl::primedep::kInvalidFourCC);
   std::ranges::sort(assets.begin(), assets.end(), std::less<>());
   auto uniqueTags = std::set(assets.begin(), assets.end());

@@ -16,7 +16,7 @@ AssetId32Big::AssetId32Big(const nlohmann::ordered_json& in, const FourCC& type)
   m_known = !in.contains("AssetID");
   if (in.contains("AssetID")) {
     id = in["AssetID"].get<uint32_t>();
-  } else {
+  } else if (!m_repPath.empty()) {
     auto lowerPath = ResourcePool32Big::instance()->cookedRepPathFromRawRepPath(m_repPath, type);
     athena::utility::tolower(lowerPath);
     id = CRC32::Calculate(lowerPath.c_str(), lowerPath.length());
@@ -28,16 +28,23 @@ void AssetId32Big::PutTo(nlohmann::ordered_json& out, const FourCC& type) const 
   if (*this == kInvalidAssetId32Big) {
     return;
   }
+  out = nlohmann::ordered_json::object();
 
   if (!m_repPath.empty()) {
     out["File"] = ResourcePool32Big::instance()->rawRepPathFromCookedRepPath(m_repPath, type);
   }
-  if (!m_known) {
+  if (!m_known && id != 0) {
     out["AssetID"] = id;
   }
 }
 
 void AssetId32Big::resolveRepPath(const FourCC& fcc) {
+  if (id == 0) {
+    m_known = false;
+    m_repPath.clear();
+    return;
+  }
+
   m_known = ResourceNameDatabase::instance().hasPath(ObjectTag32Big(fcc, *this));
   m_repPath = ResourceNameDatabase::instance().pathForAsset(ObjectTag32Big(fcc, *this));
 }

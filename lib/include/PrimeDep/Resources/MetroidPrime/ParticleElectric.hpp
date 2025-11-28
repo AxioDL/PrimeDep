@@ -13,6 +13,10 @@ public:
   bool writeCooked(std::string_view path) const override;
   bool writeUncooked(std::string_view path) const override;
 
+  uint32_t immediateChildCount() const override;
+  std::optional<std::vector<std::shared_ptr<IResource>>> immediateChildren() const override;
+  std::optional<std::vector<ObjectTag32Big>> allChildTags() const override;
+
   static std::shared_ptr<IResource> loadCooked(const char* ptr, std::size_t size);
 
   static bool canIngest(const nlohmann::ordered_json& metadata) {
@@ -43,7 +47,5 @@ private:
   particles::AssetID32BigElementProperty m_startParticle;
   particles::AssetID32BigElementProperty m_endParticle;
   particles::BoolElementProperty m_zeroY;
-  std::unique_ptr<const char> m_data;
-  std::size_t m_dataSize;
 };
 } // namespace axdl::primedep::MetroidPrime

@@ -17,6 +17,8 @@ public:
     void PutTo(athena::io::IStreamWriter& out) const;
     void PutTo(nlohmann::ordered_json& out) const;
 
+    const AssetId32Big& particleSystemId() const { return m_particleSystemId; }
+
   private:
     AssetId32Big m_particleSystemId;
     uint32_t m_unknown1;
@@ -30,6 +32,10 @@ public:
 
   void PutTo(athena::io::IStreamWriter& out) const;
   void PutTo(nlohmann::ordered_json& out) const;
+
+  const std::vector<std::pair<uint32_t, std::vector<SpawnSystemKeyframeInfo>>>& keyframeData() const {
+    return m_frames;
+  };
 
 private:
   bool m_valid{};

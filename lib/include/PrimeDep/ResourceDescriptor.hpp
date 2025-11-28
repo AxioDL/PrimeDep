@@ -35,7 +35,7 @@ public:
   explicit operator bool() const { return m_assetId != AssetIdType() && m_type != kInvalidFourCC; }
 
   bool operator==(const ResourceDescriptor& other) const {
-    return m_isCompressed == other.m_isCompressed && m_assetId == other.assetId() && m_type == other.m_type;
+    return m_assetId == other.assetId() && m_type == other.m_type;
   }
 
 private:

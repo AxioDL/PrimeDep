@@ -1,5 +1,6 @@
 #include "PrimeDep/Resources/MetroidPrime/ParticleSwoosh.hpp"
 
+#include "PrimeDep/ResourcePool.hpp"
 #include "athena/FileReader.hpp"
 #include "athena/MemoryReader.hpp"
 
@@ -112,6 +113,60 @@ std::shared_ptr<IResource> ParticleSwoosh::ingest(const nlohmann::ordered_json& 
   athena::io::FileReader reader(p.generic_string());
   nlohmann::ordered_json in = nlohmann::ordered_json::parse(reader.readString());
   return std::make_shared<ParticleSwoosh>(in);
+}
+
+std::optional<std::vector<ObjectTag32Big>> ParticleSwoosh::allChildTags() const {
+  std::vector<ObjectTag32Big> children;
+  if (m_texture.elementTyped() && m_texture.elementTyped()->textureId()) {
+    children.emplace_back(FOURCC('TXTR'), *m_texture.elementTyped()->textureId());
+  }
+
+  if (m_wireframeTexture.elementTyped() && m_wireframeTexture.elementTyped()->textureId()) {
+    children.emplace_back(FOURCC('TXTR'), *m_wireframeTexture.elementTyped()->textureId());
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+
+  return {children};
+}
+
+uint32_t ParticleSwoosh::immediateChildCount() const {
+  return (m_texture.elementTyped() && m_texture.elementTyped()->textureId()) +
+         (m_wireframeTexture.elementTyped() && m_wireframeTexture.elementTyped()->textureId());
+}
+
+std::optional<std::vector<std::shared_ptr<IResource>>> ParticleSwoosh::immediateChildren() const {
+  std::vector<std::shared_ptr<IResource>> children;
+
+  if (m_texture.elementTyped() && m_texture.elementTyped()->textureId()) {
+    const auto id = *m_texture.elementTyped()->textureId();
+    auto res = ResourcePool32Big::instance()->resourceById({FOURCC('TXTR'), id});
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(id.repPath(), FOURCC('TXTR'));
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (m_wireframeTexture.elementTyped() && m_wireframeTexture.elementTyped()->textureId()) {
+    const auto id = *m_wireframeTexture.elementTyped()->textureId();
+    auto res = ResourcePool32Big::instance()->resourceById({FOURCC('TXTR'), id});
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(id.repPath(), FOURCC('TXTR'));
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+
+  return {children};
 }
 
 } // namespace axdl::primedep::MetroidPrime

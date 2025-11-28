@@ -9,6 +9,7 @@
 #include "PrimeDep/Particles/UVElement.hpp"
 #include "PrimeDep/Particles/VectorElement.hpp"
 
+#include "PrimeDep/ResourcePool.hpp"
 #include "PrimeDep/Resources/MetroidPrime/Model.hpp"
 #include "PrimeDep/Resources/MetroidPrime/ParticleElectric.hpp"
 #include "PrimeDep/Resources/MetroidPrime/ParticleSwoosh.hpp"
@@ -191,6 +192,105 @@ void Particle::loadParticleProperties(athena::io::IStreamReader& reader) {
   }
 
   sortProperties();
+}
+
+uint32_t Particle::immediateChildCount() const {
+  uint32_t count = !!m_particleModel.value() + !!m_countedChildSystem.value() + !!m_doneChildSystem.value() +
+                   !!m_intervalChildSystem.value() + !!m_childSwooshSystem.value() + !!m_childElectricSystem.value() +
+                   (m_texture.elementTyped() && m_texture.elementTyped()->textureId()) +
+                   (m_indirectTexture.elementTyped() && m_indirectTexture.elementTyped()->textureId());
+  if (m_spawnSystems.value()) {
+    for (const auto& keyframes = m_spawnSystems.value();
+         const auto& val : keyframes->keyframeData() | std::views::values) {
+      for (const auto& spawn : val) {
+        count += spawn.particleSystemId() != kInvalidAssetId32Big;
+      }
+    }
+  }
+
+  return count;
+};
+
+void Particle::addChildRes(std::vector<std::shared_ptr<IResource>> children,
+                           const particles::AssetID32BigElementProperty& resId) {
+  if (resId.value()) {
+    auto res = ResourcePool32Big::instance()->resourceById(resId.asObjectTag());
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(resId.value()->repPath(), resId.type());
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+}
+std::optional<std::vector<std::shared_ptr<IResource>>> Particle::immediateChildren() const {
+  std::vector<std::shared_ptr<IResource>> children;
+  addChildRes(children, m_particleModel);
+  addChildRes(children, m_countedChildSystem);
+  addChildRes(children, m_intervalChildSystem);
+  addChildRes(children, m_doneChildSystem);
+  addChildRes(children, m_childSwooshSystem);
+  addChildRes(children, m_childElectricSystem);
+
+  if (m_texture.elementTyped() && m_texture.elementTyped()->textureId()) {
+    const auto resId = *m_texture.elementTyped()->textureId();
+    auto res = ResourcePool32Big::instance()->resourceById({FOURCC('TXTR'), resId});
+    if (!res) {
+      res = ResourcePool32Big::instance()->ingestResourceByRepPath(resId.repPath(), FOURCC('TXTR'));
+    }
+    if (res) {
+      children.emplace_back(res);
+    }
+  }
+
+  if (m_spawnSystems.value()) {
+    for (const auto& keyframes = m_spawnSystems.value();
+         const auto& val : keyframes->keyframeData() | std::views::values) {
+      for (const auto& spawn : val) {
+        const auto& resId = spawn.particleSystemId();
+        if (resId == kInvalidAssetId32Big) {
+          continue;
+        }
+        auto res = ResourcePool32Big::instance()->resourceById({FOURCC('PART'), resId});
+        if (!res) {
+          res = ResourcePool32Big::instance()->ingestResourceByRepPath(resId.repPath(), FOURCC('PART'));
+        }
+        if (res) {
+          children.emplace_back(res);
+        }
+      }
+    }
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+
+  return {children};
+}
+
+std::optional<std::vector<ObjectTag32Big>> Particle::allChildTags() const {
+  std::vector<ObjectTag32Big> children;
+
+  if (const auto childResources = immediateChildren()) {
+    for (const auto& res : *childResources) {
+      if (!res || res.get() == this) {
+        continue;
+      }
+      if (auto tags = res->allChildTags()) {
+        // Add the child resource's children
+        children.insert(children.end(), tags->begin(), tags->end());
+        continue;
+      }
+      // We also need to add this resource
+      children.emplace_back(res->typeCode(), res->assetId32Big());
+    }
+  }
+
+  if (children.empty()) {
+    return std::nullopt;
+  }
+  return {children};
 }
 
 } // namespace axdl::primedep::MetroidPrime

@@ -63,6 +63,7 @@ add_library(
   src/PrimeDep/Particles/ParticleProperty.cpp
   src/PrimeDep/Particles/UVElement.cpp
   src/PrimeDep/Resources/MetroidPrime/Tweak.cpp
+  src/PrimeDep/Resources/MetroidPrime/SoundGroupData.cpp
 )
 
 target_include_directories(PrimeDep PUBLIC include ${tinygltf_SOURCE_DIR} ${tga_SOURCE_DIR})
