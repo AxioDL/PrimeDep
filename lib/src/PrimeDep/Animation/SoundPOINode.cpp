@@ -9,7 +9,13 @@ SoundPOINode::SoundPOINode()
 , x40_maxDist(0.f) {}
 
 SoundPOINode::SoundPOINode(athena::io::IStreamReader& in)
-: POINode(in), x38_sfxId(in.readUint32Big()), x3c_falloff(in.readFloatBig()), x40_maxDist(in.readFloatBig()) {}
+: POINode(in)
+, x38_sfxId(in.readUint32Big())
+, x3c_falloff(in.readFloatBig())
+, x40_maxDist(in.readFloatBig())
+, m_looped(x38_sfxId & (1 << 31)) {
+  x38_sfxId &= ~(1 << 31);
+}
 
 SoundPOINode::SoundPOINode(const std::string_view name, const EPOIType type, const CharAnimTime& time,
                            const uint32_t index, const bool unique, const float weight, const int32_t charIdx,
@@ -23,7 +29,8 @@ SoundPOINode::SoundPOINode(const nlohmann::ordered_json& in)
 : POINode(in)
 , x38_sfxId(in.value("SoundID", x38_sfxId))
 , x3c_falloff(in.value("Falloff", x3c_falloff))
-, x40_maxDist(in.value("MaxDist", x40_maxDist)) {}
+, x40_maxDist(in.value("MaxDist", x40_maxDist))
+, m_looped(in.value("Looped", false)) {}
 
 SoundPOINode SoundPOINode::CopyNodeMinusStartTime(const SoundPOINode& node, const CharAnimTime& startTime) {
   SoundPOINode ret = node;
@@ -33,7 +40,7 @@ SoundPOINode SoundPOINode::CopyNodeMinusStartTime(const SoundPOINode& node, cons
 
 void SoundPOINode::PutTo(athena::io::IStreamWriter& out) const {
   POINode::PutTo(out);
-  out.writeUint32Big(x38_sfxId);
+  out.writeUint32Big(x38_sfxId | (m_looped << 31));
   out.writeFloatBig(x3c_falloff);
   out.writeFloatBig(x40_maxDist);
 }
@@ -41,6 +48,7 @@ void SoundPOINode::PutTo(athena::io::IStreamWriter& out) const {
 void SoundPOINode::PutTo(nlohmann::ordered_json& j) const {
   POINode::PutTo(j);
   j["SoundID"] = x38_sfxId;
+  j["Looped"] = m_looped;
   j["Falloff"] = x3c_falloff;
   j["MaxDist"] = x40_maxDist;
 }

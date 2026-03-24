@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(PrimeDep)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 
 include(cmake/vendors.cmake)
 

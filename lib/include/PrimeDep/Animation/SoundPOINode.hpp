@@ -25,5 +25,6 @@ private:
   uint32_t x38_sfxId;
   float x3c_falloff;
   float x40_maxDist;
+  bool m_looped{false};
 };
 } // namespace axdl::primedep
