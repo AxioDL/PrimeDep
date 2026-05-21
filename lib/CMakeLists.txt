@@ -49,6 +49,7 @@ add_library(
   src/PrimeDep/Resources/MetroidPrime/SkinRules.cpp
   src/PrimeDep/Resources/MetroidPrime/StringTable.cpp
   src/PrimeDep/Resources/MetroidPrime/Texture.cpp
+  src/PrimeDep/Resources/MetroidPrime/Hints.cpp
   src/PrimeDep/texture_decode.cpp
   src/PrimeDep/WorldCommon/MetroidPrime/MappableObject.cpp
   src/PrimeDep/Particles/ParticleDataFactory.cpp

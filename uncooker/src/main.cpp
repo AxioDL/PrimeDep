@@ -17,6 +17,7 @@
 #include <PrimeDep/Resources/MetroidPrime/DecalData.hpp>
 #include <PrimeDep/Resources/MetroidPrime/DependencyGroup.hpp>
 #include <PrimeDep/Resources/MetroidPrime/GuiFrame.hpp>
+#include <PrimeDep/Resources/MetroidPrime/Hints.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MapArea.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MapUniverse.hpp>
 #include <PrimeDep/Resources/MetroidPrime/MapWorld.hpp>
@@ -100,6 +101,7 @@ void addFactories(axdl::primedep::ResourceFactory& factory) {
   axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::SaveWorld>(factory);
   axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::MetroidWorld>(factory);
   axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::DependencyGroup>(factory);
+  axdl::primedep::RegisterFactory<axdl::primedep::MetroidPrime::Hints>(factory);
   axdl::primedep::RegisterSpecialFactory<axdl::primedep::MetroidPrime::ITweak>(factory);
 }
 

@@ -49,6 +49,10 @@ public:
 
 static constexpr FourCC kInvalidFourCC = {};
 
+static constexpr FourCC FOURCCByChar(const char a, const char b, const char c, const char d) {
+  const char fcc[4] = {a, b, c, d};
+  return FourCC(fcc);
+}
 } // namespace axdl::primedep
 
 #define FOURCC(fcc) axdl::primedep::FourCC(SBIG(fcc))
